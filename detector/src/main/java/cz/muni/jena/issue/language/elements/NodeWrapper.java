@@ -24,13 +24,17 @@ public record NodeWrapper<T extends Node>(T node)
     public long calculateComplexity()
     {
         return Stream.of(
-                        node.findAll(IfStmt.class).stream(),
+                        node.findAll(IfStmt.class).stream().flatMap(ifStmt -> Stream.concat(
+                                Stream.of(ifStmt),
+                                ifStmt.getElseStmt().stream()
+                        )),
                         node.findAll(ForStmt.class).stream(),
                         node.findAll(ForEachStmt.class).stream(),
                         node.findAll(WhileStmt.class).stream(),
                         node.findAll(DoStmt.class).stream(),
                         node.findAll(SwitchStmt.class).stream(),
                         node.findAll(ConditionalExpr.class).stream(),
+                        node.findAll(CatchClause.class).stream(),
                         node.findAll(TryStmt.class).stream(),
                         node.findAll(BinaryExpr.class).stream()
                                 .filter(

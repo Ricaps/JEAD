@@ -5,6 +5,7 @@ import cz.muni.jena.issue.IssueDao;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.IssueTypeComparator;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
 import org.springframework.stereotype.Service;
 
@@ -48,8 +49,14 @@ public class AntipatternCorrelationTestService
             issueTypesCountsArray[i] = mapToArray(issueTypesCounts.get(i));
         }
         Array2DRowRealMatrix matrix = new Array2DRowRealMatrix(issueTypesCountsArray);
-        double[][] data = roundAll(new SpearmansCorrelation(matrix).getRankCorrelation().getCorrelationPValues().getData());
-        return presentData(data);
+        SpearmansCorrelation spearmansCorrelation = new SpearmansCorrelation(matrix);
+        PearsonsCorrelation rankCorrelation = spearmansCorrelation.getRankCorrelation();
+        double[][] pValues = roundAll(rankCorrelation.getCorrelationPValues().getData());
+        double[][] correlationValues = roundAll(rankCorrelation.getCorrelationMatrix().getData());
+        return "pValues: " + System.lineSeparator() +
+                presentData(pValues) + System.lineSeparator() +
+                "correlations: " + System.lineSeparator()
+                + presentData(correlationValues);
     }
 
     private String presentData(double[][] data)

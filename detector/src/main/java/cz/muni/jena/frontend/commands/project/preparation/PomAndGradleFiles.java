@@ -1,4 +1,4 @@
-package cz.muni.jena.frontend.commands.copy.config;
+package cz.muni.jena.frontend.commands.project.preparation;
 
 import java.util.Collection;
 

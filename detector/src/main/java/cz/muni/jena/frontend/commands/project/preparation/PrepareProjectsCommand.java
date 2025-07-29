@@ -1,6 +1,5 @@
 package cz.muni.jena.frontend.commands.project.preparation;
 
-import cz.muni.jena.frontend.commands.copy.config.PomAndGradleFiles;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
@@ -74,7 +73,7 @@ public class PrepareProjectsCommand
                 .collect(Collectors.joining(System.lineSeparator())));
         addTaskToGradleFiles(logger, filesToVisit);
         addPluginsToPomsMissingThem(logger, filesToVisit);
-        return "Default configuration file has been copied to: " + directory;
+        return "The projects in directory: " + directory + "should now have the plugins and tasks needed.";
     }
 
     private void addPluginsToPomsMissingThem(Logger logger, PomAndGradleFiles filesToVisit)
@@ -137,14 +136,18 @@ public class PrepareProjectsCommand
     public void parseMavenPomModelToXmlString(String path, Model model) throws IOException
     {
         MavenXpp3Writer mavenWriter = new MavenXpp3Writer();
-        Writer writer = new FileWriter(path);
-        mavenWriter.write(writer, model);
+        try (Writer writer = new FileWriter(path))
+        {
+            mavenWriter.write(writer, model);
+        }
     }
 
     public Model parsePomXmlFileToMavenPomModel(String path) throws XmlPullParserException, IOException
     {
-        FileReader reader = new FileReader(path);
-        return new MavenXpp3Reader().read(reader);
+        try (FileReader reader = new FileReader(path))
+        {
+            return new MavenXpp3Reader().read(reader);
+        }
     }
 
     private void addTaskToGradleFiles(Logger logger, PomAndGradleFiles filesToVisit)
