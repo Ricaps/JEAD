@@ -52,7 +52,7 @@
     },
     "securityConfiguration" : {
         "sensitiveInformationRegex" : "(password:*)|(?<=user)(.*)(?=:)",
-        "configurationFileRegex" : "(?<!target\\\\classes\\\\)(application.yml|application.properties)",
+        "configurationFileRegex" : "(?<!target[\\\\\/]classes[\\\\\/])(application.ya?ml|application.properties)",
         "tokenLifetimeSettings" : {
             "maxTokenLifetime" : 2,
             "unit" : "HOURS"
