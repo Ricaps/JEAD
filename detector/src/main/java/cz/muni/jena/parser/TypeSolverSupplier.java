@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class TypeSolverSupplier implements Supplier<List<TypeSolver>>
+class TypeSolverSupplier implements Supplier<List<TypeSolver>>
 {
     private final Path path;
 
