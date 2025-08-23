@@ -3,15 +3,19 @@ package cz.muni.jena.codeminer.outputformatter;
 import jakarta.annotation.Nonnull;
 import org.springframework.stereotype.Component;
 
+import javax.inject.Inject;
 import java.util.Map;
 import java.util.Optional;
 
 @Component
 public class OutputFormatterFactory {
 
-    private static final Map<String, ? extends OutputFormatter> codeSerializerMapping = Map.of(
-        "json", new JsonOutput()
-    );
+    private final Map<String, OutputFormatter> outputFormatterMap;
+
+    @Inject
+    public OutputFormatterFactory(Map<String, OutputFormatter> outputFormatterMap) {
+        this.outputFormatterMap = outputFormatterMap;
+    }
 
     /**
      * Returns code serializer based on the desired format
@@ -19,14 +23,10 @@ public class OutputFormatterFactory {
      * @return CodeSerializer wrapped in the Optional
      */
     public Optional<OutputFormatter> getCodeSerializer(@Nonnull String format) {
-        return Optional.of(codeSerializerMapping.get(format));
+        return Optional.ofNullable(outputFormatterMap.get(getBeanName(format)));
     }
 
-    /**
-     * Returns possible formats as readable string delimited by ', '
-     * @return readable String
-     */
-    public static String getPossibleFormatsAsString() {
-        return String.join(", ", codeSerializerMapping.keySet());
+    private static String getBeanName(String format) {
+        return format + "OutputFormatter";
     }
 }

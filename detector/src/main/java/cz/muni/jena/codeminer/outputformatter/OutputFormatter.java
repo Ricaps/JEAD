@@ -2,7 +2,9 @@ package cz.muni.jena.codeminer.outputformatter;
 
 import java.util.List;
 
-public interface OutputFormatter {
+public interface OutputFormatter extends AutoCloseable {
 
-    void saveInFormat(List<String> codeSnippets);
+    void add(List<Object> codeSnippets);
+
+    void setOutputPath(String path);
 }

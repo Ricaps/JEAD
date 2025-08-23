@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -20,14 +21,19 @@ public class CommentsCodeExtractor extends BaseCodeExtractor {
     }
 
     @Override
-    public void extract(ClassOrInterfaceDeclaration classOrInterface, OutputFormatter codeSerializer) {
+    public void extract(ClassOrInterfaceDeclaration classOrInterface, OutputFormatter outputFormatter) {
         List<String> comments = classOrInterface
                 .findAll(Comment.class)
                 .stream()
                 .map(Comment::toString)
+                .filter(comment -> !comment.isBlank())
                 .toList();
 
         LOGGER.info("Extracted {} comments", comments.size());
-        codeSerializer.saveInFormat(comments);
+
+        if (comments.isEmpty()) {
+            return;
+        }
+        outputFormatter.add(new ArrayList<>(comments));
     }
 }

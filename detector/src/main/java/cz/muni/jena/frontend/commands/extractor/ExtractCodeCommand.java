@@ -21,6 +21,7 @@ public class ExtractCodeCommand {
     public static final String FORMAT_CMD_DESCRIPTION = "Choose the format of the output: json";
     public static final String PROJECT_PATH_CMD_DESCRIPTION = "Absolute path to project you wish to extract code";
     public static final String EXTRACTOR_CMD_DESCRIPTION = "Extractor defines what code snippets should be extracted from the project";
+    private static final String OUTPUT_PATH_CMD_DESCRIPTION = "Path to the output file";
     private final OutputFormatterFactory outputFormatterFactory;
     private final List<CodeExtractor> codeExtractorList;
 
@@ -34,23 +35,28 @@ public class ExtractCodeCommand {
     public String extractCode(
             @Option(longNames = "projectPath", shortNames = 'p', required = true, description = PROJECT_PATH_CMD_DESCRIPTION) String projectPath,
             @Option(longNames = "format", shortNames = 'f', required = true, defaultValue = "json", description = FORMAT_CMD_DESCRIPTION) String format,
-            @Option(longNames = "extractor", shortNames = 'e', required = true, description = EXTRACTOR_CMD_DESCRIPTION) String extractorName
+            @Option(longNames = "extractor", shortNames = 'e', required = true, description = EXTRACTOR_CMD_DESCRIPTION) String extractorName,
+            @Option(longNames = "outputPath", shortNames = 'o', required = true, description = OUTPUT_PATH_CMD_DESCRIPTION) String outputPath
     ) {
 
-        OutputFormatter outputFormatter = outputFormatterFactory
+        try (OutputFormatter outputFormatter = outputFormatterFactory
                 .getCodeSerializer(format)
-                .orElseThrow(() -> new InvalidOptionException("Invalid output formatter. Possible values are: %s".formatted(OutputFormatterFactory.getPossibleFormatsAsString())));
+                .orElseThrow(() -> new InvalidOptionException("Invalid output formatter."));) {
+            outputFormatter.setOutputPath(outputPath);
 
-        CodeExtractor codeExtractor = codeExtractorList.stream()
-                .filter(extractor -> extractor.getIdentifier().equals(extractorName))
-                .findFirst()
-                .orElseThrow(() -> new InvalidOptionException("Invalid code extractor. Possible values are: %s".formatted(getExtractorNames(codeExtractorList))));
+            CodeExtractor codeExtractor = codeExtractorList.stream()
+                    .filter(extractor -> extractor.getIdentifier().equals(extractorName))
+                    .findFirst()
+                    .orElseThrow(() -> new InvalidOptionException("Invalid code extractor. Possible values are: %s".formatted(getExtractorNames(codeExtractorList))));
 
-        CodeMinerCallback callback = new CodeMinerCallback(codeExtractor, outputFormatter);
-        AsyncCompilationUnitParser asyncCompilationUnitParser = new AsyncCompilationUnitParser(projectPath);
+            CodeMinerCallback callback = new CodeMinerCallback(codeExtractor, outputFormatter);
+            AsyncCompilationUnitParser asyncCompilationUnitParser = new AsyncCompilationUnitParser(projectPath);
 
-        asyncCompilationUnitParser.processCompilationUnits(callback);
+            asyncCompilationUnitParser.processCompilationUnits(callback);
 
-        return "Code extracted successfully!";
+            return "Code extracted successfully!";
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
