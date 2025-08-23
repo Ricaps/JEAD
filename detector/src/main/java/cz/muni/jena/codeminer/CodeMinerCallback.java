@@ -5,7 +5,6 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.utils.SourceRoot;
 import cz.muni.jena.codeminer.extractor.CodeExtractor;
-import cz.muni.jena.codeminer.outputformatter.BufferedOutput;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
 
 import java.nio.file.Path;

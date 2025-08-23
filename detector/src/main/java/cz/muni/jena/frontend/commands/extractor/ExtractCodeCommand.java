@@ -6,6 +6,7 @@ import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatterFactory;
 import cz.muni.jena.frontend.commands.InvalidOptionException;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
+import org.springframework.shell.command.CommandExecution;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
 
@@ -41,7 +42,7 @@ public class ExtractCodeCommand {
 
         try (OutputFormatter outputFormatter = outputFormatterFactory
                 .getCodeSerializer(format)
-                .orElseThrow(() -> new InvalidOptionException("Invalid output formatter."));) {
+                .orElseThrow(() -> new InvalidOptionException("Invalid output formatter."))) {
             outputFormatter.setOutputPath(outputPath);
 
             CodeExtractor codeExtractor = codeExtractorList.stream()
@@ -56,7 +57,7 @@ public class ExtractCodeCommand {
 
             return "Code extracted successfully!";
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new CommandExecution.CommandExecutionException(e);
         }
     }
 }
