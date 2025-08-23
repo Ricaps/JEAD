@@ -35,7 +35,9 @@ public class JsonOutput extends BaseOutputFormatter {
     public void close() {
         try (OutputStream outputStream = getOutputStream()) {
             buffer.add("// \"test\"");
-            objectMapper.writeValue(outputStream, buffer);
+            objectMapper
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValue(outputStream, buffer);
         } catch (IOException e) {
             LOGGER.error("Failed to write JSON output to file", e);
         } finally {
