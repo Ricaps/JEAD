@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Component("jsonOutputFormatter")
@@ -24,7 +25,7 @@ public class JsonOutput extends BaseOutputFormatter {
     }
 
     @Override
-    public void add(@Nonnull List<Object> codeSnippets) {
+    public void add(@Nonnull Collection<Object> codeSnippets) {
         if (codeSnippets.isEmpty()) {
             return;
         }
