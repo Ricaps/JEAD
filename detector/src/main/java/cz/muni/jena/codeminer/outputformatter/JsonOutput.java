@@ -35,7 +35,6 @@ public class JsonOutput extends BaseOutputFormatter {
     @Override
     public void close() {
         try (OutputStream outputStream = getOutputStream()) {
-            buffer.add("// \"test\"");
             objectMapper
                     .writerWithDefaultPrettyPrinter()
                     .writeValue(outputStream, buffer);
