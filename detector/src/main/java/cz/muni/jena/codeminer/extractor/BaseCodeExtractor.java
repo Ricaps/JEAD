@@ -1,11 +1,11 @@
 package cz.muni.jena.codeminer.extractor;
 
 
-abstract class BaseCodeExtractor implements CodeExtractor {
+public abstract class BaseCodeExtractor implements CodeExtractor {
 
     private final String identifier;
 
-    BaseCodeExtractor(String identifier) {
+    protected BaseCodeExtractor(String identifier) {
         this.identifier = identifier;
     }
 
