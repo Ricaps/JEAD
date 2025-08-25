@@ -78,7 +78,7 @@ public class CommentsCodeExtractor extends BaseCodeExtractor {
     }
 
     private String processJavadocComment(JavadocComment comment) {
-        return CommentUtils.getTrimmedContent(comment);
+        return CommentUtils.getTrimmedContent(comment); // TODO:
     }
 
     private String processBlockComment(BlockComment comment) {
