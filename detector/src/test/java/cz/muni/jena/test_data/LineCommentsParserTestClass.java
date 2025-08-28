@@ -8,7 +8,7 @@ public class LineCommentsParserTestClass {
         // Another context
     }
 
-//    @Beanxx
+//    @Bean
 //    public EditDistance<?> similarityMatcher() {
 //        return new LevenshteinDistance();
 //    }

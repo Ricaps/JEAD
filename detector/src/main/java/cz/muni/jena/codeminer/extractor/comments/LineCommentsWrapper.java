@@ -5,24 +5,19 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.comments.Comment;
 import com.github.javaparser.ast.comments.LineComment;
 
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
-record LineCommentsWrapper(List<LineComment> lineComments) {
+class LineCommentsWrapper {
 
-    public LineCommentsWrapper {
-        lineComments = lineComments.stream()
+    private final List<LineComment> lineComments;
+
+    public LineCommentsWrapper(List<Comment> comments) {
+        lineComments = comments.stream()
                 .filter(Comment::isLineComment)
                 .map(Comment::asLineComment)
-                .sorted(Comparator.comparing(comment -> {
-                    if (comment.getRange().isPresent()) {
-                        return comment.getRange().get().begin.line;
-                    }
-
-                    return -1;
-                }))
+                .sorted(CommentUtils.getLineSortComparator())
                 .toList();
     }
 
@@ -31,15 +26,14 @@ record LineCommentsWrapper(List<LineComment> lineComments) {
      * If there are comments on consecutive lines, it squashes them
      * @return list of strings. Each element contains one comment.
      */
-    public List<String> processLineComment() {
+    public LinkedList<String> processLineComment() {
         int lastLine = -1;
         LinkedList<String> result = new LinkedList<>();
         StringBuilder toBeSquashed = new StringBuilder();
 
         for (LineComment lineComment : lineComments) {
             Optional<Integer> optionalLineNumber = getStartLineNumber(lineComment);
-            Optional<LineComment> previousLineComment = getPreviousLineComment(lineComment);
-            if (optionalLineNumber.isPresent() && optionalLineNumber.get() - 1 == lastLine && !isLineWithCommentAndCode(previousLineComment.orElse(null))) {
+            if (canBeSquashed(lineComment, lastLine)) {
 
                 if (toBeSquashed.isEmpty()) {
                     toBeSquashed.append(result.getLast()).append("\n");
@@ -64,6 +58,27 @@ record LineCommentsWrapper(List<LineComment> lineComments) {
         }
 
         return result;
+    }
+
+    private boolean canBeSquashed(LineComment lineComment, int lastLine) {
+        Optional<Integer> optionalLineNumber = getStartLineNumber(lineComment);
+        Optional<LineComment> previousLineComment = getPreviousLineComment(lineComment);
+
+        if (optionalLineNumber.isEmpty()) {
+            return false;
+        }
+
+        if (optionalLineNumber.get() - 1 != lastLine) {
+            return false;
+        }
+
+        if (isLineWithCommentAndCode(previousLineComment.orElse(null))) {
+            // If previous line is comment with code, cannot be squashed
+            return false;
+        }
+
+        // If previous line is comment with code and current line is just comment, also cannot be squashed
+        return !isLineWithCommentAndCode(lineComment);
     }
 
     private Optional<LineComment> getPreviousLineComment(LineComment lineComment) {

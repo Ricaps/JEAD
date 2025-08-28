@@ -57,8 +57,7 @@ public class CommentsCodeExtractor extends BaseCodeExtractor {
     }
 
     private List<String> processLineComments(List<Comment> comments) {
-        List<LineComment> lineComments = comments.stream().filter(Comment::isLineComment).map(Comment::asLineComment).toList();
-        return new LineCommentsWrapper(lineComments).processLineComment();
+        return new LineCommentsWrapper(comments).processLineComment();
     }
 
     private List<String> processJavadocComments(List<Comment> comments) {
