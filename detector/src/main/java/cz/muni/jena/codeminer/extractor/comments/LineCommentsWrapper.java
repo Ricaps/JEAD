@@ -2,13 +2,29 @@ package cz.muni.jena.codeminer.extractor.comments;
 
 import com.github.javaparser.Range;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.comments.Comment;
 import com.github.javaparser.ast.comments.LineComment;
 
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
 record LineCommentsWrapper(List<LineComment> lineComments) {
+
+    public LineCommentsWrapper {
+        lineComments = lineComments.stream()
+                .filter(Comment::isLineComment)
+                .map(Comment::asLineComment)
+                .sorted(Comparator.comparing(comment -> {
+                    if (comment.getRange().isPresent()) {
+                        return comment.getRange().get().begin.line;
+                    }
+
+                    return -1;
+                }))
+                .toList();
+    }
 
     /**
      * Processes line comments.

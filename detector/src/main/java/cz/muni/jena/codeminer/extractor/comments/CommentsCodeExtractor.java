@@ -52,29 +52,15 @@ public class CommentsCodeExtractor extends BaseCodeExtractor {
             }
         }
 
-        List<String> lineComments = processLineComments(getSortedLineComments(comments));
+        List<String> lineComments = processLineComments(comments);
 
         output.addAll(lineComments);
         return output;
     }
 
-    private List<String> processLineComments(List<LineComment> lineComments) {
+    private List<String> processLineComments(List<Comment> comments) {
+        List<LineComment> lineComments = comments.stream().filter(Comment::isLineComment).map(Comment::asLineComment).toList();
         return new LineCommentsWrapper(lineComments).processLineComment();
-    }
-
-
-    private List<LineComment> getSortedLineComments(List<Comment> comments) {
-        return comments.stream()
-                .filter(Comment::isLineComment)
-                .map(Comment::asLineComment)
-                .sorted(Comparator.comparing(comment -> {
-                    if (comment.getRange().isPresent()) {
-                        return comment.getRange().get().begin.line;
-                    }
-
-                    return -1;
-                }))
-                .toList();
     }
 
     private String processJavadocComment(JavadocComment comment) {
