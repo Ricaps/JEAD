@@ -1,10 +1,8 @@
 package cz.muni.jena.codeminer.extractor.comments;
 
-import com.github.javaparser.Range;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.comments.BlockComment;
 import com.github.javaparser.ast.comments.Comment;
-import com.github.javaparser.ast.comments.LineComment;
 import cz.muni.jena.codeminer.extractor.BaseCodeExtractor;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
 import org.slf4j.Logger;
@@ -14,7 +12,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 public class CommentsCodeExtractor extends BaseCodeExtractor {
@@ -68,9 +65,4 @@ public class CommentsCodeExtractor extends BaseCodeExtractor {
         return CommentUtils.getTrimmedContent(comment);
     }
 
-    private Optional<Integer> getStartLineNumber(Comment lineComment) {
-        Optional<Range> range = lineComment.getRange();
-        return range.map(value -> value.begin.line);
-
-    }
 }

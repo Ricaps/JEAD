@@ -1,5 +1,6 @@
 package cz.muni.jena.test_data;
 
+@SuppressWarnings("all")
 public class LineCommentsParserTestClass {
 
     public void someMethod() {
