@@ -4,7 +4,6 @@ import com.github.javaparser.Range;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.comments.BlockComment;
 import com.github.javaparser.ast.comments.Comment;
-import com.github.javaparser.ast.comments.JavadocComment;
 import com.github.javaparser.ast.comments.LineComment;
 import cz.muni.jena.codeminer.extractor.BaseCodeExtractor;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
@@ -46,14 +45,14 @@ public class CommentsCodeExtractor extends BaseCodeExtractor {
         for (Comment comment : comments) {
             if (comment.isBlockComment()) {
                 output.add(processBlockComment(comment.asBlockComment()));
-            } else if (comment.isJavadocComment()) {
-                output.add(processJavadocComment(comment.asJavadocComment()));
             }
         }
 
         List<String> lineComments = processLineComments(comments);
+        List<String> javadocComments = processJavadocComments(comments);
 
         output.addAll(lineComments);
+        output.addAll(javadocComments);
         return output;
     }
 
@@ -62,8 +61,8 @@ public class CommentsCodeExtractor extends BaseCodeExtractor {
         return new LineCommentsWrapper(lineComments).processLineComment();
     }
 
-    private String processJavadocComment(JavadocComment comment) {
-        return CommentUtils.getTrimmedContent(comment); // TODO:
+    private List<String> processJavadocComments(List<Comment> comments) {
+        return new JavadocCommentsWrapper(comments).parseJavadocComments();
     }
 
     private String processBlockComment(BlockComment comment) {
