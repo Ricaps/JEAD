@@ -3,7 +3,6 @@ package cz.muni.jena.codeminer.extractor.comments;
 import com.github.javaparser.ast.comments.Comment;
 
 import java.util.Comparator;
-import java.util.regex.Pattern;
 
 public class CommentUtils {
 
