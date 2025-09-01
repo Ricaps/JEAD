@@ -42,15 +42,24 @@ class JavadocCommentsWrapperTest {
     }
 
     @Test
-    void parseJavadocComments_description_isIncluded() {
-        List<String> comments = dummyMethodCommentsWrapper.parseJavadocComments();
+    void parseJavadocComments_commentType_allJavadoc() {
+        List<CommentDto> dummyMethodComment = dummyMethodCommentsWrapper.parseJavadocComments();
+        List<CommentDto> formatMethodComment = dummyMethodCommentsWrapper.parseJavadocComments();
 
-        assertThat(comments).first().isEqualTo(dummyMethodJavadoc.getDescription().toText());
+        assertThat(dummyMethodComment).allMatch(commentDto -> commentDto.commentType().equals(CommentType.JAVADOC));
+        assertThat(formatMethodComment).allMatch(commentDto -> commentDto.commentType().equals(CommentType.JAVADOC));
+    }
+
+    @Test
+    void parseJavadocComments_description_isIncluded() {
+        List<CommentDto> comments = dummyMethodCommentsWrapper.parseJavadocComments();
+
+        assertThat(comments.get(0).text()).isEqualTo(dummyMethodJavadoc.getDescription().toText());
     }
 
     @Test
     void parseJavadocComments_tags_authorExcluded() {
-        List<String> comments = dummyMethodCommentsWrapper.parseJavadocComments();
+        List<CommentDto> comments = dummyMethodCommentsWrapper.parseJavadocComments();
 
         String authorTagValue = dummyMethodJavadoc.getBlockTags().stream()
                 .filter(tag -> tag.getType() == JavadocBlockTag.Type.AUTHOR)
@@ -58,13 +67,13 @@ class JavadocCommentsWrapperTest {
                 .orElseThrow()
                 .toText();
 
-        assertThat(comments).doesNotContain(authorTagValue);
+        assertThat(comments).doesNotContain(CommentDto.ofJavadoc(authorTagValue));
 
     }
 
     @Test
     void parseJavadocComments_allExpectedTags_areIncluded() {
-        List<String> comments = dummyMethodCommentsWrapper.parseJavadocComments();
+        List<CommentDto> comments = dummyMethodCommentsWrapper.parseJavadocComments();
 
         SoftAssertions softAssertions = new SoftAssertions();
 
@@ -74,7 +83,7 @@ class JavadocCommentsWrapperTest {
                     .findFirst();
 
             softAssertions.assertThat(testedTag).isNotEmpty();
-            softAssertions.assertThat(comments).contains(testedTag.orElseThrow().toText());
+            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(testedTag.orElseThrow().toText()));
         });
 
         softAssertions.assertAll();
@@ -82,7 +91,7 @@ class JavadocCommentsWrapperTest {
 
     @Test
     void parseJavadocComments_tags_haveExpectedValues() {
-        List<String> comments = dummyMethodCommentsWrapper.parseJavadocComments();
+        List<CommentDto> comments = dummyMethodCommentsWrapper.parseJavadocComments();
 
         SoftAssertions softAssertions = new SoftAssertions();
 
@@ -90,7 +99,7 @@ class JavadocCommentsWrapperTest {
             String tagName = new JavadocBlockTag(tagType, "").getTagName();
             String expectedValue = "@%s %s value".formatted(tagName, tagName);
 
-            softAssertions.assertThat(comments).contains(expectedValue);
+            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(expectedValue));
         });
 
         softAssertions.assertAll();
@@ -98,10 +107,10 @@ class JavadocCommentsWrapperTest {
 
     @Test
     void parseJavadocComments_spaces_consecutiveSpacesRemoved() {
-        List<String> comments = formatMethodCommentsWrapper.parseJavadocComments();
+        List<CommentDto> comments = formatMethodCommentsWrapper.parseJavadocComments();
 
         assertThat(comments).hasSize(1);
-        assertThat(comments.get(0)).doesNotContainPattern(SPACES_PATTERN);
+        assertThat(comments.get(0).text()).doesNotContainPattern(SPACES_PATTERN);
     }
 
     private void forEachIncludedTag(Consumer<JavadocBlockTag.Type> consumer) {

@@ -23,7 +23,7 @@ public class JavadocCommentsWrapper {
                 .toList();
     }
 
-    public List<String> parseJavadocComments() {
+    public List<CommentDto> parseJavadocComments() {
         return this.comments.stream()
                 .map(JavadocComment::parse)
                 .flatMap(javadoc -> Stream.concat(
@@ -31,6 +31,7 @@ public class JavadocCommentsWrapper {
                         resolveBlockTags(javadoc))
                 )
                 .map(CommentUtils::getTrimmedContent)
+                .map(CommentDto::ofJavadoc)
                 .toList();
     }
 

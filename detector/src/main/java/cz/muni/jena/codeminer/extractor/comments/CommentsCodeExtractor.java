@@ -27,7 +27,7 @@ public class CommentsCodeExtractor extends BaseCodeExtractor {
     public void extract(ClassOrInterfaceDeclaration classOrInterface, OutputFormatter outputFormatter) {
         List<Comment> comments = classOrInterface.getAllContainedComments();
 
-        List<String> outputComments = processComments(comments);
+        List<CommentDto> outputComments = processComments(comments);
 
         LOGGER.info("Extracted {} comments from {}", comments.size(), classOrInterface.getNameAsString());
 
@@ -37,32 +37,32 @@ public class CommentsCodeExtractor extends BaseCodeExtractor {
         outputFormatter.add(new ArrayList<>(outputComments));
     }
 
-    private List<String> processComments(List<Comment> comments) {
-        List<String> output = new LinkedList<>();
+    private List<CommentDto> processComments(List<Comment> comments) {
+        List<CommentDto> output = new LinkedList<>();
         for (Comment comment : comments) {
             if (comment.isBlockComment()) {
                 output.add(processBlockComment(comment.asBlockComment()));
             }
         }
 
-        List<String> lineComments = processLineComments(comments);
-        List<String> javadocComments = processJavadocComments(comments);
+        List<CommentDto> lineComments = processLineComments(comments);
+        List<CommentDto> javadocComments = processJavadocComments(comments);
 
         output.addAll(lineComments);
         output.addAll(javadocComments);
         return output;
     }
 
-    private List<String> processLineComments(List<Comment> comments) {
+    private List<CommentDto> processLineComments(List<Comment> comments) {
         return new LineCommentsWrapper(comments).processLineComment();
     }
 
-    private List<String> processJavadocComments(List<Comment> comments) {
+    private List<CommentDto> processJavadocComments(List<Comment> comments) {
         return new JavadocCommentsWrapper(comments).parseJavadocComments();
     }
 
-    private String processBlockComment(BlockComment comment) {
-        return CommentUtils.getTrimmedContent(comment);
+    private CommentDto processBlockComment(BlockComment comment) {
+        return CommentDto.ofBlock(CommentUtils.getTrimmedContent(comment));
     }
 
 }

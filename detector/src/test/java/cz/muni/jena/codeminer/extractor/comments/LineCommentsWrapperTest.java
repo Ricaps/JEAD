@@ -35,30 +35,38 @@ class LineCommentsWrapperTest {
     }
 
     @Test
+    void processComments_commentType_isLineComment() {
+        LinkedList<CommentDto> comments = commentsWrapper.processLineComment();
+
+        assertThat(comments).allMatch(comment -> comment.commentType().equals(CommentType.LINE));
+    }
+
+    @Test
     void processComments_commentsSquashed() {
-        LinkedList<String> comments = commentsWrapper.processLineComment();
+        LinkedList<CommentDto> comments = commentsWrapper.processLineComment();
 
         String beanDeclaration = allContainedComments.get(3).getContent();
         String methodDeclaration = allContainedComments.get(4).getContent();
         String methodBlock = allContainedComments.get(5).getContent();
         String bracket = allContainedComments.get(6).getContent();
 
-        Optional<String> comment = getCommentContaining(SIMILARITY_MATCHER_COMMENT, comments);
+        Optional<CommentDto> comment = getCommentContaining(SIMILARITY_MATCHER_COMMENT, comments);
         assertThat(comment).isPresent();
-        assertThat(comment.get()).isEqualTo(getSquashedComment(beanDeclaration, methodDeclaration, methodBlock, bracket));
+        assertThat(comment.get().text()).isEqualTo(getSquashedComment(beanDeclaration, methodDeclaration, methodBlock, bracket));
     }
 
     @Test
     void processComments_consecutiveSpaces_removed() {
-        LinkedList<String> comments = commentsWrapper.processLineComment();
+        LinkedList<CommentDto> comments = commentsWrapper.processLineComment();
 
-        Optional<String> comment = getCommentContaining(A_LOT_OF_SPACES_COMMENT, comments);
+        Optional<CommentDto> comment = getCommentContaining(A_LOT_OF_SPACES_COMMENT, comments);
         assertThat(comment).isPresent();
-        assertThat(comment.get()).doesNotContainPattern(SPACES_PATTERN);
+        assertThat(comment.get().text()).doesNotContainPattern(SPACES_PATTERN);
+        assertThat(comment.get().commentType()).isEqualTo(CommentType.LINE);
     }
 
-    private static Optional<String> getCommentContaining(String containedText, LinkedList<String> comments) {
-        return comments.stream().filter(comm -> comm.contains(containedText)).findFirst();
+    private static Optional<CommentDto> getCommentContaining(String containedText, LinkedList<CommentDto> comments) {
+        return comments.stream().filter(comm -> comm.text().contains(containedText)).findFirst();
     }
 
     private String getSquashedComment(String ... comments) {

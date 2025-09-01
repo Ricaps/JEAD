@@ -26,9 +26,9 @@ class LineCommentsWrapper {
      * If there are comments on consecutive lines, it squashes them
      * @return list of strings. Each element contains one comment.
      */
-    public LinkedList<String> processLineComment() {
+    public LinkedList<CommentDto> processLineComment() {
         int lastLine = -1;
-        LinkedList<String> result = new LinkedList<>();
+        LinkedList<CommentDto> result = new LinkedList<>();
         StringBuilder toBeSquashed = new StringBuilder();
 
         for (LineComment lineComment : lineComments) {
@@ -36,15 +36,15 @@ class LineCommentsWrapper {
             if (canBeSquashed(lineComment, lastLine)) {
 
                 if (toBeSquashed.isEmpty()) {
-                    toBeSquashed.append(result.getLast()).append("\n");
+                    toBeSquashed.append(result.getLast().text()).append("\n");
                     result.removeLast();
                 }
                 toBeSquashed.append(CommentUtils.getTrimmedContent(lineComment)).append("\n");
             } else {
                  if (!toBeSquashed.isEmpty()) {
-                    result.add(toBeSquashed.toString());
+                    result.add(CommentDto.ofLine(toBeSquashed.toString()));
                 }
-                result.add(CommentUtils.getTrimmedContent(lineComment));
+                result.add(CommentDto.ofLine(CommentUtils.getTrimmedContent(lineComment)));
                 toBeSquashed.setLength(0);
             }
 
@@ -54,7 +54,7 @@ class LineCommentsWrapper {
         }
 
         if (!toBeSquashed.isEmpty()) {
-            result.add(toBeSquashed.toString());
+            result.add(CommentDto.ofLine(toBeSquashed.toString()));
         }
 
         return result;
