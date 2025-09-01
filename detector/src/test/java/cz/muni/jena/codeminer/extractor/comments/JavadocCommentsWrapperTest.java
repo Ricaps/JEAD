@@ -26,6 +26,7 @@ class JavadocCommentsWrapperTest {
     private static final Set<JavadocBlockTag.Type> filteredTags = Set.of(JavadocBlockTag.Type.AUTHOR, JavadocBlockTag.Type.UNKNOWN);
     private static final String DUMMY_METHOD = "dummyMethod";
     private static final String FORMAT_METHOD = "formatMethodComment";
+    private static final Pattern SPACES_PATTERN = Pattern.compile(CommentUtils.SPACES_PATTERN);
     private JavadocCommentsWrapper dummyMethodCommentsWrapper;
     private JavadocCommentsWrapper formatMethodCommentsWrapper;
     private Javadoc dummyMethodJavadoc;
@@ -100,7 +101,7 @@ class JavadocCommentsWrapperTest {
         List<String> comments = formatMethodCommentsWrapper.parseJavadocComments();
 
         assertThat(comments).hasSize(1);
-        assertThat(comments.get(0)).doesNotContainPattern(Pattern.compile(CommentUtils.SPACES_PATTERN));
+        assertThat(comments.get(0)).doesNotContainPattern(SPACES_PATTERN);
     }
 
     private void forEachIncludedTag(Consumer<JavadocBlockTag.Type> consumer) {

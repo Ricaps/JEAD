@@ -13,4 +13,5 @@ public class LineCommentsParserTestClass {
 //    public EditDistance<?> similarityMatcher() {
 //        return new LevenshteinDistance();
 //    }
+// Some comment with -       a lot of spaces
 }
