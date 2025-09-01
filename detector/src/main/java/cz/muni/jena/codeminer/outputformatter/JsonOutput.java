@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@Component("jsonOutputFormatter")
 public class JsonOutput extends BaseOutputFormatter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JsonOutput.class);
@@ -34,6 +32,10 @@ public class JsonOutput extends BaseOutputFormatter {
 
     @Override
     public void close() {
+        if (buffer.isEmpty()) {
+            return;
+        }
+
         try (OutputStream outputStream = getOutputStream()) {
             objectMapper
                     .writerWithDefaultPrettyPrinter()
