@@ -25,4 +25,12 @@ public class JavadocCommentsTestClass {
     public String dummyMethod(String param) throws Exception {
         return param;
     }
+
+    /**
+     * Some dummy comment
+     *        - with multiple spaces
+     */
+    public String formatMethodComment() {
+        return null;
+    }
 }

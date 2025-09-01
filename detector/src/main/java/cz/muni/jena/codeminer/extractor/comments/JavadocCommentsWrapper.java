@@ -29,7 +29,9 @@ public class JavadocCommentsWrapper {
                 .flatMap(javadoc -> Stream.concat(
                         Stream.of(javadoc.getDescription().toText()),
                         resolveBlockTags(javadoc))
-                ).toList();
+                )
+                .map(CommentUtils::getTrimmedContent)
+                .toList();
     }
 
     private Stream<String> resolveBlockTags(Javadoc javadoc) {

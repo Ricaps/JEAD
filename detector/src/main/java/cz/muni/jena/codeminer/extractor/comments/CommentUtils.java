@@ -3,15 +3,22 @@ package cz.muni.jena.codeminer.extractor.comments;
 import com.github.javaparser.ast.comments.Comment;
 
 import java.util.Comparator;
+import java.util.regex.Pattern;
 
 public class CommentUtils {
+
+    public static final String SPACES_PATTERN = " {2,}";
 
     private CommentUtils() {
         super();
     }
 
     public static String getTrimmedContent(Comment comment) {
-        return comment.getContent().trim();
+        return getTrimmedContent(comment.getContent());
+    }
+
+    public static String getTrimmedContent(String string) {
+        return string.trim().replaceAll(SPACES_PATTERN, " ");
     }
 
     public static Comparator<Comment> getLineSortComparator() {
