@@ -19,4 +19,9 @@ public class OutputConfig {
 
         return mapper;
     }
+
+    @Bean(destroyMethod = "")
+    public OutputFormatter jsonOutputFormatter(ObjectMapper objectMapper) {
+        return new JsonOutput(objectMapper);
+    }
 }
