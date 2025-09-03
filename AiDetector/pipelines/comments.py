@@ -1,14 +1,14 @@
+import logging, sys
 from pathlib import Path
 
 from comments.llm_labeling import label_dataset
 from shared.deduplicate import JsonDeduplicator
-import logging
 
 logging.basicConfig(level=logging.INFO)
 
-def process_comments():
+def process_comments(input_path: str):
     deduplicator = JsonDeduplicator()
-    file_path = Path("/media/martin/Big data1/datasets/pa165-git/output.json")
+    file_path = Path(input_path)
 
     deduplicated_file_path = deduplicator.deduplicate_dataset_file(file_path)
 
@@ -19,4 +19,8 @@ def process_comments():
 
 
 if __name__ == "__main__":
-    process_comments()
+    # TODO: use argparse
+    if len(sys.argv) != 2:
+        print("Please provide path argument!")
+    path_arg = sys.argv[1]
+    process_comments(path_arg)
