@@ -40,7 +40,7 @@ class OllamaConnector:
         })
 
         response = self._send_to_llm()
-        self.__logger.info(f"Received response: {response}")
+        self.__logger.debug(f"Received response: {response}")
 
         return response
 
@@ -49,7 +49,7 @@ class OllamaConnector:
         Clears current session
         :return: None
         """
-        self.__logger.info("Clearing context")
+        self.__logger.debug("Clearing context")
         self.__messages.clear()
 
     def send(self, prompt: str) -> str:
@@ -63,10 +63,10 @@ class OllamaConnector:
             "content": prompt
         })
 
-        self.__logger.info(f"Sending message: {prompt}")
+        self.__logger.debug(f"Sending message: {prompt}")
         response = self._send_to_llm()
 
-        self.__logger.info(f"Received response: {response}")
+        self.__logger.debug(f"Received response: {response}")
 
         return response
 
