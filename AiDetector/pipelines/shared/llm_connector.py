@@ -1,6 +1,6 @@
 from typing import TypedDict, List
 from enum import Enum
-from ollama import chat, ChatResponse
+from ollama import chat, ChatResponse, AsyncClient
 import logging
 
 class Role(Enum):
@@ -25,7 +25,7 @@ class OllamaConnector:
         self.__messages: List[Message] = []
         self.__logger = logging.getLogger(self.__class__.__name__)
 
-    def init_session(self, init_prompt: str) -> str:
+    async def init_session(self, init_prompt: str) -> str:
         """
         Inits the new session with the LLM
         Clears the previous session if it was started before
@@ -39,7 +39,7 @@ class OllamaConnector:
             "content": init_prompt
         })
 
-        response = self._send_to_llm()
+        response = await self._send_to_llm()
         self.__logger.debug(f"Received response: {response}")
 
         return response
@@ -52,7 +52,7 @@ class OllamaConnector:
         self.__logger.debug("Clearing context")
         self.__messages.clear()
 
-    def send(self, prompt: str) -> str:
+    async def send(self, prompt: str) -> str:
         """
         Sends a prompt to the LLM and returns response
         :param prompt: prompt to be sent
@@ -64,14 +64,14 @@ class OllamaConnector:
         })
 
         self.__logger.debug(f"Sending message: {prompt}")
-        response = self._send_to_llm()
+        response = await self._send_to_llm()
 
         self.__logger.debug(f"Received response: {response}")
 
         return response
 
-    def _send_to_llm(self) -> str:
-        response: ChatResponse = chat(model=self.__model.value, messages=self.__messages)
+    async def _send_to_llm(self) -> str:
+        response: ChatResponse = await AsyncClient().chat(model=self.__model.value, messages=self.__messages)
 
         response_content = response["message"]["content"]
         self.__messages.append({

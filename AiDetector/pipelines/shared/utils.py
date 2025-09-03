@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Iterable, Any, Callable, TypeVar
+from typing import Iterable, Any, Callable, TypeVar, Coroutine
 
 from shared.types import JSONDatasetList
 
@@ -26,7 +26,7 @@ def change_file_name(path: Path, new_name: str) -> Path:
 
 
 T = TypeVar('T')
-def batched_iterator(call_iterations: int, items: Iterable[T], call_fnc: Callable[[], Any], for_each_fnc: Callable[[T, int], None]) -> None:
+async def batched_iterator(call_iterations: int, items: Iterable[T], call_fnc: Callable[[], Coroutine[Any, Any, Any]], for_each_fnc: Callable[[T, int], Coroutine[Any, Any, None]]) -> None:
     """
     Iterates given items. After call_iterations number is reached, calls the call_fnc.
     call_fnc is called also before first iteration
@@ -37,12 +37,12 @@ def batched_iterator(call_iterations: int, items: Iterable[T], call_fnc: Callabl
     :return: None
     """
     current_iteration = 0
-    call_fnc()
+    await call_fnc()
 
     for index, item in enumerate(items):
-        for_each_fnc(item, index)
+        await for_each_fnc(item, index)
         current_iteration += 1
 
         if current_iteration == call_iterations:
-            call_fnc()
+            await call_fnc()
             current_iteration = 0
