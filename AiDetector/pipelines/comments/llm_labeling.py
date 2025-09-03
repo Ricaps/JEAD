@@ -50,7 +50,7 @@ async def label_dataset(path: Path) -> Path:
     """
 
     dataset: JSONDatasetList = load_dataset(path)
-    number_of_parts = 5
+    number_of_parts = 20
     parts = np.array_split(dataset, number_of_parts)
 
     futures = [look_for_unfinished_code(parts[i].tolist(), i) for i in range(number_of_parts)]
