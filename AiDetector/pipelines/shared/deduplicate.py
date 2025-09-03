@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Generic, TypeVar
 
-from pipelines.shared import JSONDatasetList
-from pipelines.shared import change_file_name, save_dataset
-from pipelines.shared.exception import PathNotFileException
+from shared import JSONDatasetList
+from shared import change_file_name, save_dataset
+from shared.exception import PathNotFileException
 
 T = TypeVar('T')
 class DatasetDeduplicator(ABC, Generic[T]):

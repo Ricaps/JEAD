@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Iterable, Any, Callable, TypeVar
 
-from pipelines.shared.types import JSONDatasetList
+from shared.types import JSONDatasetList
 
 
 def load_dataset(path: Path) -> JSONDatasetList:

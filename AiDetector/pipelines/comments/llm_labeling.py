@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any
 
-from pipelines.comments import prompts
+from comments import prompts
 from shared import JSONDatasetList, load_dataset, save_dataset, change_file_name, batched_iterator
 from shared.llm_connector import OllamaConnector, Model
 import logging
