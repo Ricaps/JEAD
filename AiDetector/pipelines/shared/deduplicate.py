@@ -1,10 +1,11 @@
-from typing import Any, Generic, TypeVar
-from pathlib import Path
-from abc import ABC, abstractmethod
-from .exception import PathNotFileException
 import json
+from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Generic, TypeVar
 
-JSONDatasetList = list[dict[str, Any]]
+from pipelines.shared import JSONDatasetList
+from pipelines.shared import change_file_name, save_dataset
+from pipelines.shared.exception import PathNotFileException
 
 T = TypeVar('T')
 class DatasetDeduplicator(ABC, Generic[T]):
@@ -18,12 +19,13 @@ class DatasetDeduplicator(ABC, Generic[T]):
         pass
 
 class JsonDeduplicator(DatasetDeduplicator[JSONDatasetList]):
+    _OUTPUT_FILE_SUFFIX = "-deduplicated.json"
 
-    def deduplicate_dataset_file(self, path: Path) -> None:
+    def deduplicate_dataset_file(self, path: Path) -> Path | None:
         """
+        Deduplicates provided file with JSON-array like content
         :param path: Path to the input file
-        :raises: PathNotFileException when provided path is not file
-        :return:
+        :return: Path: Path to the output file
         """
         if path.is_dir():
             raise PathNotFileException("Specified path is not file")
@@ -34,15 +36,13 @@ class JsonDeduplicator(DatasetDeduplicator[JSONDatasetList]):
             deduplicated = self.deduplicate_dataset(json_dataset)
 
         if deduplicated is None:
-            return
+            return None
 
-        parent_folder = path.parents[0]
-        file_name = path.name.split(".")[0]
-        output_file_name = file_name + "-deduplicated.json"
-        output_path = parent_folder.joinpath(Path(output_file_name))
+        output_path = change_file_name(path, self._OUTPUT_FILE_SUFFIX)
 
-        with open(output_path, "w+") as output_file:
-            output_file.write(json.dumps(deduplicated, indent = 3))
+        save_dataset(output_path, deduplicated)
+
+        return output_path
 
 
     def deduplicate_dataset(self, dataset: JSONDatasetList):
