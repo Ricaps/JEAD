@@ -1,4 +1,4 @@
 from shared.types import JSONDatasetList
-from shared.utils import load_dataset, save_dataset, change_file_name, batched_iterator
+from shared.utils import load_dataset, save_dataset, add_filename_suffix, batched_iterator
 
-__all__ = ["load_dataset", "save_dataset", "change_file_name", "batched_iterator", "JSONDatasetList"]
+__all__ = ["load_dataset", "save_dataset", "add_filename_suffix", "batched_iterator", "JSONDatasetList"]

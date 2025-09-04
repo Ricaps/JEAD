@@ -17,7 +17,7 @@ def save_dataset(path: Path, dataset: JSONDatasetList) -> None:
     with open(path, "w") as file:
         file.write(json.dumps(dataset, indent=2))
 
-def change_file_name(path: Path, new_name: str) -> Path:
+def add_filename_suffix(path: Path, new_name: str) -> Path:
     parent_folder = path.parents[0]
     file_name = path.name.split(".")[0]
     output_file_name = file_name + new_name

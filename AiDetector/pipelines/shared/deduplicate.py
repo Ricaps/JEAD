@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Generic, TypeVar
 
 from shared import JSONDatasetList
-from shared import change_file_name, save_dataset
+from shared import add_filename_suffix, save_dataset
 from shared.exception import PathNotFileException
 
 T = TypeVar('T')
@@ -38,7 +38,7 @@ class JsonDeduplicator(DatasetDeduplicator[JSONDatasetList]):
         if deduplicated is None:
             return None
 
-        output_path = change_file_name(path, self._OUTPUT_FILE_SUFFIX)
+        output_path = add_filename_suffix(path, self._OUTPUT_FILE_SUFFIX)
 
         save_dataset(output_path, deduplicated)
 

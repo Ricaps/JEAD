@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 
 from comments import prompts
-from shared import JSONDatasetList, load_dataset, save_dataset, change_file_name, batched_iterator
+from shared import JSONDatasetList, load_dataset, save_dataset, add_filename_suffix, batched_iterator
 from shared.llm_connector import OllamaConnector, Model
 
 UNFINISHED_COMMENT_ATTR = "unfinished_comment_llm"
@@ -58,6 +58,6 @@ async def label_dataset(path: Path) -> Path:
 
     labeled_dataset = [item for sublist in gathered_futures for item in sublist]
 
-    new_path = change_file_name(path, "dataset-llm-labeled.json")
+    new_path = add_filename_suffix(path, "-todo-comment-llm-labeled.json")
 
     save_dataset(new_path, labeled_dataset)
