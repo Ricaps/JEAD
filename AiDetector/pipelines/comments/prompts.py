@@ -1,4 +1,4 @@
-__INIT_PROMPT = """I will give you a piece of text. You must check it and answer with one of these numbers:
+INIT_PROMPT = """I will give you a piece of text. You must check it and answer with one of these numbers:
 
 * **0** → if the text contains code syntax and is not piece of JavaDoc.
 * **1** → The text has the word TODO or FIXME, or says the code is not done yet (like "not implemented", "to be finished").
@@ -12,7 +12,7 @@ Indicator: <number>
 Provide also short explanation.
 """
 
-__INIT_PROMPT_2 = """I will give you a text snippet.
+INIT_PROMPT_2 = """I will give you a text snippet.
 The text snippets includes comments extracted from the code of open-source projects.
 You must not try to understand meaning or run the code.
 You must only check if the text contains signs that the code is unfinished.
@@ -45,3 +45,5 @@ Snippets containing **to be** and **expected** words are marked as **no**.
 
 * `Done and working fine` → **no**
 """
+
+RUN_PROMPT_1 = "Here is the text snippet: "

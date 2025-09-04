@@ -5,61 +5,81 @@ from typing import Any
 
 import numpy as np
 
-from comments import prompts
 from shared import JSONDatasetList, load_dataset, save_dataset, add_filename_suffix, batched_iterator
 from shared.llm_connector import OllamaConnector, Model
 
-UNFINISHED_COMMENT_ATTR = "unfinished_comment_llm"
 
-__LOGGER = logging.getLogger(__name__)
+class LLMLabeler:
 
-async def __evaluate_unfinished_code(connector: OllamaConnector, element: dict[str, Any], index: int, part_number: int):
-    __LOGGER.info(f"Evaluating element no. {index} of part: {part_number}")
+    def __init__(self, init_prompt: str, run_prompt: str, labeled_attribute: str, response_mapping: dict[str, int], model: Model):
+        """
+        :param init_prompt: prompt send at the beginning / after reset of the session
+        :param run_prompt: Prompt sent with each value
+        :param labeled_attribute: attribute to the added to dataset with the labeling result
+        :param response_mapping: mapping of possible responses to the result
+        """
+        self.init_prompt = init_prompt
+        self.run_prompt = run_prompt
+        self.labeled_attribute = labeled_attribute
+        self.response_mapping = response_mapping
+        self.model = model
+        self.__logger = logging.getLogger(self.__class__.__name__)
 
-    if UNFINISHED_COMMENT_ATTR in element:
-        __LOGGER.info("Skipping")
+    async def __evaluate_element(self, connector: OllamaConnector, element: dict[str, Any], index: int,
+                                 part_number: int):
+        self.__logger.info(f"Evaluating element no. {index} of part: {part_number}")
 
-    response = await connector.send(f"Here is the snippet: **{element["text"]}**")
-    result = -1
-    if "**no**" in response:
-        result = 0
-    elif "**yes**" in response:
-        result = 1
+        if self.labeled_attribute in element:
+            self.__logger.info(f"Skipping element no. {index} of part: {part_number}")
 
-    element[UNFINISHED_COMMENT_ATTR] = result
+        response = await connector.send(f"{self.run_prompt}: **{element["text"]}**")
 
-async def look_for_unfinished_code(dataset: JSONDatasetList, part_number: int) -> JSONDatasetList:
-    connector = OllamaConnector(Model.LLAMA_3_1_8b)
+        matching_key = [key for key in response if key in self.response_mapping.keys()]
 
-    init_session_fnc = lambda : connector.init_session(prompts.__INIT_PROMPT_2)
+        result = -1
+        if len(matching_key) == 1:
+            result = self.response_mapping[matching_key[0]]
+        else:
+            self.__logger.warning(
+                f"Response for element no. {index} of part: {part_number} matches unexpected number of possible responses!")
 
-    __LOGGER.info(f"Total number of elements: {len(dataset)}")
+        element[self.labeled_attribute] = result
 
-    try:
-        await batched_iterator(10, dataset, init_session_fnc, lambda element, index : __evaluate_unfinished_code(connector, element, index, part_number))
-    except KeyboardInterrupt:
-        pass
-    return dataset
+    async def __label_dataset_part(self, dataset: JSONDatasetList, part_number: int) -> JSONDatasetList:
+        connector = OllamaConnector(self.model)
 
-async def label_dataset(path: Path) -> Path:
-    """
-    Performs labeling of the provided dataset
+        init_session_fnc = lambda: connector.init_session(self.init_prompt)
 
-    :param path: path to dataset file
-    :return: path to labeled dataset file
-    """
+        self.__logger.info(f"Total number of elements: {len(dataset)}")
 
-    dataset: JSONDatasetList = load_dataset(path)
-    number_of_parts = 20
-    parts = np.array_split(dataset, number_of_parts)
+        try:
+            await batched_iterator(10, dataset, init_session_fnc,
+                                   lambda element, index: self.__evaluate_element(connector, element, index,
+                                                                                  part_number))
+        except KeyboardInterrupt:
+            pass
 
-    futures = [look_for_unfinished_code(parts[i].tolist(), i) for i in range(number_of_parts)]
-    gathered_futures = await asyncio.gather(*futures)
+        return dataset
 
-    labeled_dataset = [item for sublist in gathered_futures for item in sublist]
+    async def label_dataset(self, path: Path) -> Path:
+        """
+        Performs labeling of the provided dataset
 
-    new_path = add_filename_suffix(path, "-todo-comment-llm-labeled.json")
+        :param path: path to dataset file
+        :return: path to labeled dataset file
+        """
 
-    save_dataset(new_path, labeled_dataset)
+        dataset: JSONDatasetList = load_dataset(path)
+        number_of_parts = 20
+        parts = np.array_split(dataset, number_of_parts)
 
-    return new_path
+        futures = [self.__label_dataset_part(parts[i].tolist(), i) for i in range(number_of_parts)]
+        gathered_futures = await asyncio.gather(*futures)
+
+        labeled_dataset = [item for sublist in gathered_futures for item in sublist]
+
+        new_path = add_filename_suffix(path, "-todo-comment-llm-labeled.json")
+
+        save_dataset(new_path, labeled_dataset)
+
+        return new_path
