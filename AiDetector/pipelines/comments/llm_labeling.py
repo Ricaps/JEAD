@@ -61,3 +61,5 @@ async def label_dataset(path: Path) -> Path:
     new_path = add_filename_suffix(path, "-todo-comment-llm-labeled.json")
 
     save_dataset(new_path, labeled_dataset)
+
+    return new_path
