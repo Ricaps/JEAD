@@ -46,3 +46,15 @@ async def batched_iterator(call_iterations: int, items: Iterable[T], call_fnc: C
         if current_iteration == call_iterations:
             await call_fnc()
             current_iteration = 0
+
+
+def input_until_integer(input_str: str) -> int:
+    while True:
+        value = input(input_str).strip()
+        if value.startswith("+"):
+            if value[1:].isdigit(): return int(value)
+        elif value.startswith("-"):
+            if value[1:].isdigit(): return -int(value)
+        elif value.isdigit():
+            return int(value)
+
