@@ -1,18 +1,4 @@
-INIT_PROMPT = """I will give you a piece of text. You must check it and answer with one of these numbers:
-
-* **0** → if the text contains code syntax and is not piece of JavaDoc.
-* **1** → The text has the word TODO or FIXME, or says the code is not done yet (like "not implemented", "to be finished").
-* **2** → if the text is plain string.
-
-Your answer must be in this format:
-
-```
-Indicator: <number>
-```
-Provide also short explanation.
-"""
-
-INIT_PROMPT_2 = """I will give you a text snippet.
+TODO_COMMENTS_INIT_PROMPT = """I will give you a text snippet.
 The text snippets includes comments extracted from the code of open-source projects.
 You must not try to understand meaning or run the code.
 You must only check if the text contains signs that the code is unfinished.
@@ -44,6 +30,16 @@ Snippets containing **to be** and **expected** words are marked as **no**.
 * `print("Hello, world!")` → **no**
 
 * `Done and working fine` → **no**
+"""
+
+CODE_COMMENTS_INIT_PROMPT = """
+You are a code analysis assistant. 
+Your task is to check if a given comment contains code snippets. 
+
+- A "code snippet" means any fragment of code, keywords, function calls, pseudo-code, or structured code-like expressions. 
+- Ignore Javadoc or documentation tags such as @param, @return, @throws, @see, etc. These do not count as code snippets.
+- Respond only with "yes" if the comment contains code snippets, or "no" if it does not.
+
 """
 
 RUN_PROMPT_1 = "Here is the text snippet: "
