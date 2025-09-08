@@ -6,7 +6,7 @@ from pipelines.shared import JSONDatasetList
 LABELED_ATTRIBUTE = "test_attribute"
 
 
-class JsonDeduplicateTest(unittest.TestCase):
+class StaticLabelingTest(unittest.TestCase):
     TODO_REGEX = re.compile(r"TODO|TO\s+DO", flags=re.IGNORECASE)
     PLAYER_SERVICE_REGEX = re.compile(r"\bplayerService\b", flags=re.IGNORECASE)
     NOT_MATCHING_REGEX = re.compile(r"\bfoo\b", flags=re.IGNORECASE)
