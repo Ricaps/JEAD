@@ -1,9 +1,10 @@
-import json
+import json, logging
 from pathlib import Path
 from typing import Iterable, Any, Callable, TypeVar, Coroutine
 
 from shared.types import JSONDatasetList
 
+__LOGGER = logging.getLogger(__name__)
 
 def load_dataset(path: Path) -> JSONDatasetList:
     dataset: JSONDatasetList = []
@@ -58,3 +59,34 @@ def input_until_integer(input_str: str) -> int:
         elif value.isdigit():
             return int(value)
 
+def map_labels(mapping: dict[str, str], fallback_label: str, dataset: JSONDatasetList) -> JSONDatasetList:
+    """Maps properties from format 'name: 1/0' to format 'labels: ['name']'
+    :param mapping: Mapping of the keys from the old to the new format
+    :param fallback_label: Added label if the none key in mapping matches
+    :param dataset: dataset to be mapped
+    """
+    for element in dataset:
+        labels = []
+        for key in mapping.keys():
+            if key not in element:
+                __LOGGER.error(f"Failed to find key {key} for element {element["text"]}")
+                continue
+            element_value = element[key]
+            if element_value == 1:
+                labels.append(mapping[key])
+
+        if len(labels) == 0:
+            labels.append(fallback_label)
+        element["labels"] = labels
+
+    return dataset
+
+def dataset_remove_properties(properties: list[str], dataset: JSONDatasetList) -> JSONDatasetList:
+    for element in dataset:
+        for prop in properties:
+            if prop not in element:
+                continue
+
+            del element[prop]
+
+    return dataset
