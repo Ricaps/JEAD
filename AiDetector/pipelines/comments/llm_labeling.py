@@ -1,52 +1,48 @@
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar, Callable, Generic, Type, Optional
 
 import numpy as np
 
 from shared import JSONDatasetList, load_dataset, save_dataset, add_filename_suffix, batched_iterator
 from shared.llm_connector import OllamaConnector, Model
+from pydantic import BaseModel
+
+T = TypeVar('T', bound=BaseModel)
 
 
-class LLMLabeler:
+class LLMLabeler(Generic[T]):
 
-    def __init__(self, init_prompt: str, run_prompt: str, labeled_attribute: str, response_mapping: dict[str, int], model: Model):
+    def __init__(self, init_prompt: str, run_prompt: str, labeled_attribute: str,
+                 model: Model, process_response: Callable[[Optional[T], dict[str, Any]], None], response_class: Type[T]):
         """
         :param init_prompt: prompt send at the beginning / after reset of the session
         :param run_prompt: Prompt sent with each value
         :param labeled_attribute: attribute to the added to dataset with the labeling result
-        :param response_mapping: mapping of possible responses to the result
         """
         self.init_prompt = init_prompt
         self.run_prompt = run_prompt
         self.labeled_attribute = labeled_attribute
-        self.response_mapping = response_mapping
         self.model = model
+        self.process_response = process_response
+        self.response_class = response_class
         self.__logger = logging.getLogger(self.__class__.__name__)
 
-    async def __evaluate_element(self, connector: OllamaConnector, element: dict[str, Any], index: int,
+    async def __evaluate_element(self, connector: OllamaConnector[T], element: dict[str, Any], index: int,
                                  part_number: int):
         self.__logger.info(f"Evaluating element no. {index} of part: {part_number}")
 
         if self.labeled_attribute in element:
             self.__logger.info(f"Skipping element no. {index} of part: {part_number}")
 
-        response = await connector.send(f"{self.run_prompt}: **{element["text"]}**")
+        # response = await connector.send(f"{self.run_prompt}: **{element["text"]}**")
+        response = await connector.send(element["text"])
 
-        matching_key = [key for key in self.response_mapping.keys() if key in response.lower()]
-
-        result = -1
-        if len(matching_key) == 1:
-            result = self.response_mapping[matching_key[0]]
-        else:
-            self.__logger.warning(
-                f"Response for element no. {index} of part: {part_number} matches unexpected number of possible responses!")
-
-        element[self.labeled_attribute] = result
+        self.process_response(response, element)
 
     async def __label_dataset_part(self, dataset: JSONDatasetList, part_number: int) -> JSONDatasetList:
-        connector = OllamaConnector(self.model)
+        connector = OllamaConnector[T](self.model, self.response_class)
 
         init_session_fnc = lambda: connector.init_session(self.init_prompt)
 
