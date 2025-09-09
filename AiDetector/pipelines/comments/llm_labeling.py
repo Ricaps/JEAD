@@ -67,7 +67,7 @@ class LLMLabeler:
 
         :param path: path to dataset file
         :param file_suffix: suffix to be added to the file with results
-        :return: path to labeled dataset file
+        :return: path to labeled dataset filex
         """
 
         dataset: JSONDatasetList = load_dataset(path)
