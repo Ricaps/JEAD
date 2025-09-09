@@ -34,7 +34,7 @@ class LLMLabeler:
 
         response = await connector.send(f"{self.run_prompt}: **{element["text"]}**")
 
-        matching_key = [key for key in response if key in self.response_mapping.keys()]
+        matching_key = [key for key in self.response_mapping.keys() if key in response.lower()]
 
         result = -1
         if len(matching_key) == 1:
@@ -61,11 +61,12 @@ class LLMLabeler:
 
         return dataset
 
-    async def label_dataset(self, path: Path) -> Path:
+    async def label_dataset(self, path: Path, file_suffix: str) -> Path:
         """
         Performs labeling of the provided dataset
 
         :param path: path to dataset file
+        :param file_suffix: suffix to be added to the file with results
         :return: path to labeled dataset file
         """
 
@@ -78,7 +79,7 @@ class LLMLabeler:
 
         labeled_dataset = [item for sublist in gathered_futures for item in sublist]
 
-        new_path = add_filename_suffix(path, "-todo-comment-llm-labeled.json")
+        new_path = add_filename_suffix(path, f"{file_suffix}.json")
 
         save_dataset(new_path, labeled_dataset)
 

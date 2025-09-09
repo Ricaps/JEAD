@@ -63,10 +63,10 @@ class OllamaConnector:
             "content": prompt
         })
 
-        self.__logger.debug(f"Sending message: {prompt}")
+        self.__logger.info(f"Sending message: {prompt}")
         response = await self._send_to_llm()
 
-        self.__logger.debug(f"Received response: {response}")
+        self.__logger.info(f"Received response: {response}")
 
         return response
 
