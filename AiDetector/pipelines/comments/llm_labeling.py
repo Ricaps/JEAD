@@ -49,7 +49,7 @@ class LLMLabeler(Generic[T]):
         self.__logger.info(f"Total number of elements: {len(dataset)}")
 
         try:
-            await batched_iterator(10, dataset, init_session_fnc,
+            await batched_iterator(3, dataset, init_session_fnc,
                                    lambda element, index: self.__evaluate_element(connector, element, index,
                                                                                   part_number))
         except KeyboardInterrupt:
