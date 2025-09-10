@@ -53,15 +53,14 @@ You are a code analysis assistant.
 Your task is to determine whether a given comment contains **Java code syntax**.
 
 Important:  
-- Ignore any keywords, check just syntax.
+- Code keyword doesn't mean it's a code syntax.
 - Only detect the presence of code-like syntax, regardless of its meaning.  
-- Do NOT interpret the semantics of the text. Ignore the intent or description.  
 - Treat this as a surface-level pattern check for Java keywords, symbols, or code structures.  
 
 Definition of "Java code syntax":
 - Any fragment of actual code (e.g., variable declarations, method signatures, function calls, control statements, annotations, structured expressions).  
-- Includes valid keywords, modifiers, operators, or any code-like structure.
-- Keyword alone without any operator is not code syntax.
+- Includes valid modifiers, operators, or any code-like structure.
+- Only keyword itself is not code syntax.
 
 Explicitly exclude:
 - Documentation annotations (e.g., @param, @return, @throws, @see, etc.).  
