@@ -4,6 +4,9 @@ from enum import Enum
 from ollama import ChatResponse, AsyncClient
 import logging
 from pydantic import BaseModel, ValidationError
+from openai import AsyncOpenAI
+from openai.types.responses import ParsedResponse
+import os
 
 
 class Role(Enum):
@@ -100,3 +103,28 @@ class OllamaConnector(Generic[T]):
             return self.response_class.model_validate_json(response_content)
         except ValidationError:
             return None
+
+class ResponseModel(BaseModel):
+    result: list[int]
+
+
+V = TypeVar('V', bound=BaseModel)
+class OpenAIConnector(Generic[V]):
+
+    def __init__(self, response_model: Type[V]):
+        self.client = AsyncOpenAI(api_key=os.getenv("OPEN_API_KEY"))
+        self.last_response_id = None
+        self.response_model = response_model
+
+    def clear_session(self) -> None:
+        self.last_response_id = None
+
+    async def send(self, prompt: str, data: str) -> V:
+        self.clear_session()
+
+        response = await self.client.responses.parse(model="gpt-5-nano", text_format=self.response_model, input=[
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": data}
+        ])
+
+        return response.output_parsed

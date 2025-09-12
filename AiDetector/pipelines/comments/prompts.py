@@ -85,3 +85,11 @@ Input → Output
 """
 
 RUN_PROMPT_1 = "Here is the text snippet: "
+
+GENERATE_VARIATIONS_TODO = """I want you to help me with generating similar snippets based on the input.
+You are helping me with oversampling code comments dataset. 
+You must generate 10 snippets. 
+The snippet must not be longer than 200 characters. 
+The input I provide to you is code comment extracted from the code base. 
+Rephrase it, change keywords, but keep the meaning of the comment (some TODO comments and style, ...).
+Return the snippets as array of string within the provided format."""
