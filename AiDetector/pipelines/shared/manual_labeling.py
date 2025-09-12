@@ -1,31 +1,30 @@
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from shared.utils import load_dataset, input_until_integer, save_dataset
 
 class ManualLabeler:
 
-    def __init__(self, path: Path):
-        self.path = path
+    def __init__(self, include_fnc: Callable[[dict[str, Any]], bool], prop_key: str):
+        self.include_fnc = include_fnc
+        self.prop_key = prop_key
 
-
-    def evaluate_labeled(self, prop_key: str, value: int):
-        dataset = load_dataset(self.path)
+    def evaluate_labeled(self, path: Path):
+        dataset = load_dataset(path)
 
         print(f"Dataset length: {len(dataset)}")
         for index, element in enumerate(dataset):
             try:
-                self.__evaluate_element(index, element, prop_key, value)
+                self.__evaluate_element(index, element)
             except KeyboardInterrupt:
                 break
 
-        save_dataset(self.path, dataset)
+        save_dataset(path, dataset)
 
-    @staticmethod
-    def __evaluate_element(index: int, element: dict[str, Any], prop_key: str, value: int):
-        if prop_key in element and element[prop_key] == value:
+    def __evaluate_element(self, index: int, element: dict[str, Any]):
+        if self.include_fnc(element):
             print(f"Element {index}")
             print(json.dumps(element, indent=2))
             new_value = input_until_integer("Insert value: ")
-            element[prop_key] = new_value
+            element[self.prop_key] = new_value
             print("-------")
