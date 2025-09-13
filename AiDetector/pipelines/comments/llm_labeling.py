@@ -31,7 +31,7 @@ class LLMLabeler(Generic[T]):
 
     async def __evaluate_element(self, connector: OllamaConnector[T], element: dict[str, Any], index: int,
                                  part_number: int):
-        if index % 100 == 0:
+        if index % 25 == 0:
             print(f"Evaluating element no. {index} of part: {part_number}")
 
         if self.labeled_attribute in element:
