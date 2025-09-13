@@ -5,7 +5,7 @@ from shared import load_dataset, save_dataset, StaticRuleLabeling
 __LOGGER = logging.getLogger(__name__)
 
 __UNFINISHED_LABEL = [
-    re.compile(r"TODO|TO\s+DO", flags=re.IGNORECASE), re.compile(r"FIXME|\bFIX\b\s+ME", flags=re.IGNORECASE),
+    re.compile(r"TODO", flags=re.IGNORECASE), re.compile(r"FIXME|\bFIX\b\s+ME", flags=re.IGNORECASE),
     re.compile(r"TBD", flags=re.IGNORECASE), re.compile(r"to\s+be\s+done", flags=re.IGNORECASE),
     re.compile(r"refactor", flags=re.IGNORECASE), re.compile(r"\btemp\b|temporary", flags=re.IGNORECASE),
     re.compile(r"\bbug\b", flags=re.IGNORECASE)]
