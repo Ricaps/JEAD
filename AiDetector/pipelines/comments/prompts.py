@@ -93,3 +93,13 @@ The snippet must not be longer than 200 characters.
 The input I provide to you is code comment extracted from the code base. 
 Rephrase it, change keywords, but keep the meaning of the comment (some TODO comments and style, ...).
 Return the snippets as array of string within the provided format."""
+
+GENERATE_VARIATIONS_CODE = """I want you to help me with generating similar snippets based on the input.
+You are helping me with oversampling code comments dataset. 
+You must generate 10 snippets. 
+The snippet must not be longer than 200 characters. 
+The input I provide to you is code comment extracted from the code base. 
+The snippet includes commented-out out.
+I want you to generate similar code based on the input, with a bit different structure and namings.
+Don't include any comment syntax characters like slashes, stars, ...
+Return the snippets as array of string within the provided format."""

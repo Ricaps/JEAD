@@ -1,6 +1,6 @@
 import json, logging
 from pathlib import Path
-from typing import Iterable, Any, Callable, TypeVar, Coroutine
+from typing import Iterable, Any, Callable, TypeVar, Coroutine, Optional
 
 from shared.types import JSONDatasetList
 
@@ -90,3 +90,9 @@ def dataset_remove_properties(properties: list[str], dataset: JSONDatasetList) -
             del element[prop]
 
     return dataset
+
+def find_by_key(dataset: JSONDatasetList, key: str, value: str) -> Optional[dict[str, Any]]:
+    for element in dataset:
+        if element.get(key) == value:
+            return element
+    return None
