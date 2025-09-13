@@ -5,7 +5,6 @@ from pathlib import Path
 
 import numpy as np
 from pydantic import BaseModel
-from sympy import catalan
 
 from shared import load_dataset, add_filename_suffix
 from shared.llm_connector import OpenAIConnector
