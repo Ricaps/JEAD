@@ -8,4 +8,4 @@ evaluate==0.4.6
 scikit-learn==1.7.2
 accelerate==1.10.1
 torch==2.8.0
-torchvision==0.23.0+cu129
+torchvision==0.23.0
