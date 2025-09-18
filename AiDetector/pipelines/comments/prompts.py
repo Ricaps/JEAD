@@ -88,15 +88,42 @@ RUN_PROMPT_1 = "Here is the text snippet: "
 
 GENERATE_VARIATIONS_TODO = """I want you to help me with generating similar snippets based on the input.
 You are helping me with oversampling code comments dataset. 
-You must generate 10 snippets. 
+You must generate 5 snippets. 
 The snippet must not be longer than 200 characters. 
 The input I provide to you is code comment extracted from the code base. 
-Rephrase it, change keywords, but keep the meaning of the comment (some TODO comments and style, ...).
+Rephrase it, change keywords, but keep the meaning of the comment (TODO comments and style, ...).
+The meaning of the comment has to be that something is not yet finished, undone, or should be fixed.
+Don't include any comment syntax characters like slashes, stars, ...
+You can change name of classes, variables, if present.
 Return the snippets as array of string within the provided format."""
+
+GENERATE_VARIATIONS_TODO_2 = """
+Generate 5 unique, paraphrased variants of a provided code comment, each indicating that the code is unfinished, incomplete, or requires fixing, following these requirements:
+- Goal: Create a diverse dataset of code comments suited for training purposes.
+- Input: A code comment string that clearly communicates an undone, incomplete, or fix-needed state.
+Each generated snippet must:
+- Clearly express that something is unfinished or requires attention/fixing.
+- Not exceed 200 characters in length.
+- Omit all forms of comment syntax.
+- Be rewritten in a format that conveys a TODO or unfinished state, using phrasing distinct from the original input.
+- Use varied keywords and sentence structures while preserving the original meaning.
+- Optionally rename any classes, functions, or variables present to introduce more variation.
+- In a minority of cases, you may use markers such as FIXME, UNDONE, TEMPORARY, TEMP, etc., to indicate incompleteness; in other minority cases, express the undone state directly in the sentence without any TODO-like marker.
+- Ensure all snippets are distinct from one another.
+Confirm that all paraphrases:
+- Convey an undone, incomplete, or needs-fixing state without repeating words or structure from the input.
+- Adhere to the 200 character maximum.
+- Do not include any comment delimiters or syntax.
+After generating snippets, validate that all requirements are met. If any constraint is not satisfied, self-correct and output a revised JSON array of 5 valid strings.
+Output Format:
+- Provide a JSON array of exactly 5 strings, each representing a unique paraphrased code comment. No explanatory text, formatting, or extra markup may be included.
+- If the input does not clearly reference an unfinished, incomplete, or needs-fixing state, return an empty JSON array: [].
+- All output must be strictly valid JSON.
+Refer to the examples provided for guidance on acceptable input and output patterns."""
 
 GENERATE_VARIATIONS_CODE = """I want you to help me with generating similar snippets based on the input.
 You are helping me with oversampling code comments dataset. 
-You must generate 10 snippets. 
+You must generate 5 snippets. 
 The snippet must not be longer than 200 characters. 
 The input I provide to you is code comment extracted from the code base. 
 The snippet includes commented-out out.

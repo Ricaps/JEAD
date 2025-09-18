@@ -13,7 +13,10 @@ class ManualLabeler:
         dataset = load_dataset(path)
 
         print(f"Dataset length: {len(dataset)}")
+        start_number = input_until_integer("Enter start number: ")
         for index, element in enumerate(dataset):
+            if index < start_number:
+                continue
             try:
                 self.__evaluate_element(index, element)
             except KeyboardInterrupt:
