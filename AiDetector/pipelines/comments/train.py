@@ -1,3 +1,4 @@
+import torch
 from datasets import DatasetDict, Column
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding, TrainingArguments, Trainer
 import evaluate
@@ -50,7 +51,7 @@ class CommentsTrainer:
         comment_type: str = element["commentType"]
         text = f"{comment_type.upper()}: {element["text"]}"
 
-        labels = [0. for _ in range(len(self.classes))]
+        labels = torch.zeros(len(self.classes), dtype=torch.float)
         element_labels = element["labels"]
 
         for label in element_labels:
