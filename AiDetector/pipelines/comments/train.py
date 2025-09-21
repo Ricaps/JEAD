@@ -49,6 +49,9 @@ class CommentsTrainer:
         self.__logger.info("Training...")
         trainer.train()
 
+        trainer.save_model(self.output_dir)
+        tokenizer.save_pretrained(self.output_dir)
+
     def __preprocess(self, tokenizer, element: Column):
         comment_type: str = element["commentType"]
         text = f"[{comment_type.upper()}] {element["text"]}"
