@@ -86,7 +86,7 @@ class CommentsTrainer:
     @staticmethod
     def __eval_fnc(prediction):
         predictions, labels = prediction
-        predictions = CommentsTrainer.__get_sigmoid(prediction)
+        predictions = CommentsTrainer.__get_sigmoid(predictions)
         binary_predictions = (predictions > 0.5).astype(int).reshape(-1)
 
         return EVAL_METRICS.compute(predictions=binary_predictions, references=labels.astype(int).reshape(-1))
