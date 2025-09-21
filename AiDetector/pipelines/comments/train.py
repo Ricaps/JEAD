@@ -19,7 +19,7 @@ class CommentsTrainer:
 
     def train_model(self, dataset: DatasetDict):
         self.__logger.info("Initializing tokenizer...")
-        tokenizer = AutoTokenizer.from_pretrained(CODEBERT_BASE, additional_special_tokens=self.special_tokens)
+        tokenizer = AutoTokenizer.from_pretrained(CODEBERT_BASE, additional_special_tokens=self.get_special_tokens())
 
         self.__logger.info("Preprocessing dataset...")
         tokenized_dataset = dataset.map(lambda element: self.__preprocess(tokenizer, element))
@@ -35,6 +35,8 @@ class CommentsTrainer:
             problem_type="multi_label_classification"
         )
 
+        model.resize_token_embeddings(len(tokenizer))
+
         trainer = Trainer(
             model=model,
             args=training_arguments,
@@ -49,7 +51,7 @@ class CommentsTrainer:
 
     def __preprocess(self, tokenizer, element: Column):
         comment_type: str = element["commentType"]
-        text = f"{comment_type.upper()}: {element["text"]}"
+        text = f"[{comment_type.upper()}] {element["text"]}"
 
         labels = torch.zeros(len(self.classes), dtype=torch.float)
         element_labels = element["labels"]
@@ -97,3 +99,7 @@ class CommentsTrainer:
     @staticmethod
     def __get_id2class(classes: list[str]):
         return {index: class_ for index, class_ in enumerate(classes)}
+
+    def get_special_tokens(self) -> list[str]:
+        return list(map(lambda el: f"[{el}]", self.special_tokens))
+
