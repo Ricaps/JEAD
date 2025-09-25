@@ -54,14 +54,10 @@ class CommentsTrainer:
         trainer.save_model(self.output_dir)
         tokenizer.save_pretrained(self.output_dir)
 
-    @staticmethod
-    def evaluate(model_path: str, dataset: Dataset) -> dict[str, float]:
+    def evaluate(self, model_path: str, dataset: Dataset) -> dict[str, float]:
         tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-        def preprocess(examples):
-            return tokenizer(examples["text"], truncation=True, padding="max_length")
-
-        dataset = dataset.map(preprocess)
+        dataset = dataset.map(lambda element: self.__preprocess(tokenizer, element))
 
         model = AutoModelForSequenceClassification.from_pretrained(
             model_path,
