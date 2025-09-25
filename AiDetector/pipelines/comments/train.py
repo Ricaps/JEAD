@@ -1,6 +1,7 @@
 import torch
-from datasets import DatasetDict, Column
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding, TrainingArguments, Trainer
+from datasets import DatasetDict, Column, Dataset
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding, TrainingArguments, \
+    Trainer
 import evaluate
 import numpy as np
 import logging
@@ -8,16 +9,16 @@ import logging
 CODEBERT_BASE = "microsoft/codebert-base"
 EVAL_METRICS = evaluate.combine(["accuracy", "f1", "precision", "recall"])
 
+
 class CommentsTrainer:
-    def __init__(self, output_dir: str, classes: list[str], special_tokens: list[str]):
-        self.output_dir = output_dir
+    def __init__(self, classes: list[str], special_tokens: list[str]):
         self.classes = classes
         self.class2id = self.__get_class2id(classes)
         self.id2class = self.__get_id2class(classes)
         self.special_tokens = special_tokens
         self.__logger = logging.getLogger(self.__class__.__name__)
 
-    def train_model(self, dataset: DatasetDict):
+    def train_model(self, dataset: DatasetDict, output_dir: str):
         self.__logger.info("Initializing tokenizer...")
         tokenizer = AutoTokenizer.from_pretrained(CODEBERT_BASE, additional_special_tokens=self.get_special_tokens())
 
@@ -25,7 +26,7 @@ class CommentsTrainer:
         tokenized_dataset = dataset.map(lambda element: self.__preprocess(tokenizer, element))
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-        training_arguments = self.__build_arguments()
+        training_arguments = self.__build_arguments(output_dir)
 
         model = AutoModelForSequenceClassification.from_pretrained(
             CODEBERT_BASE,
@@ -49,8 +50,26 @@ class CommentsTrainer:
         self.__logger.info("Training...")
         trainer.train()
 
-        trainer.save_model(self.output_dir)
-        tokenizer.save_pretrained(self.output_dir)
+        trainer.save_model(output_dir)
+        tokenizer.save_pretrained(output_dir)
+
+    def evaluate(self, model_path: str, dataset: Dataset) -> dict[str, float]:
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+
+        dataset = dataset.map(lambda element: self.__preprocess(tokenizer, element))
+
+        model = AutoModelForSequenceClassification.from_pretrained(
+            model_path,
+            problem_type="multi_label_classification"
+        )
+
+        trainer = Trainer(
+            model=model,
+            tokenizer=tokenizer,
+            compute_metrics=CommentsTrainer.__eval_fnc,
+        )
+
+        return trainer.evaluate(dataset)
 
     def __preprocess(self, tokenizer, element: Column):
         comment_type: str = element["commentType"]
@@ -68,9 +87,10 @@ class CommentsTrainer:
 
         return tokenized
 
-    def __build_arguments(self):
+    @staticmethod
+    def __build_arguments(output_dir: str):
         args = TrainingArguments(
-            output_dir=self.output_dir,
+            output_dir=output_dir,
             save_strategy="epoch",
             eval_strategy="epoch",
             num_train_epochs=3,
@@ -94,7 +114,6 @@ class CommentsTrainer:
 
         return EVAL_METRICS.compute(predictions=binary_predictions, references=labels.astype(int).reshape(-1))
 
-
     @staticmethod
     def __get_class2id(classes: list[str]):
         return {class_: index for index, class_ in enumerate(classes)}
@@ -105,4 +124,3 @@ class CommentsTrainer:
 
     def get_special_tokens(self) -> list[str]:
         return list(map(lambda el: f"[{el}]", self.special_tokens))
-
