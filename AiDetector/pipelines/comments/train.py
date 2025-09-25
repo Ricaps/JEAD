@@ -11,15 +11,14 @@ EVAL_METRICS = evaluate.combine(["accuracy", "f1", "precision", "recall"])
 
 
 class CommentsTrainer:
-    def __init__(self, output_dir: str, classes: list[str], special_tokens: list[str]):
-        self.output_dir = output_dir
+    def __init__(self, classes: list[str], special_tokens: list[str]):
         self.classes = classes
         self.class2id = self.__get_class2id(classes)
         self.id2class = self.__get_id2class(classes)
         self.special_tokens = special_tokens
         self.__logger = logging.getLogger(self.__class__.__name__)
 
-    def train_model(self, dataset: DatasetDict):
+    def train_model(self, dataset: DatasetDict, output_dir: str):
         self.__logger.info("Initializing tokenizer...")
         tokenizer = AutoTokenizer.from_pretrained(CODEBERT_BASE, additional_special_tokens=self.get_special_tokens())
 
@@ -27,7 +26,7 @@ class CommentsTrainer:
         tokenized_dataset = dataset.map(lambda element: self.__preprocess(tokenizer, element))
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-        training_arguments = self.__build_arguments()
+        training_arguments = self.__build_arguments(output_dir)
 
         model = AutoModelForSequenceClassification.from_pretrained(
             CODEBERT_BASE,
@@ -51,8 +50,8 @@ class CommentsTrainer:
         self.__logger.info("Training...")
         trainer.train()
 
-        trainer.save_model(self.output_dir)
-        tokenizer.save_pretrained(self.output_dir)
+        trainer.save_model(output_dir)
+        tokenizer.save_pretrained(output_dir)
 
     def evaluate(self, model_path: str, dataset: Dataset) -> dict[str, float]:
         tokenizer = AutoTokenizer.from_pretrained(model_path)
@@ -88,9 +87,10 @@ class CommentsTrainer:
 
         return tokenized
 
-    def __build_arguments(self):
+    @staticmethod
+    def __build_arguments(output_dir: str):
         args = TrainingArguments(
-            output_dir=self.output_dir,
+            output_dir=output_dir,
             save_strategy="epoch",
             eval_strategy="epoch",
             num_train_epochs=3,
