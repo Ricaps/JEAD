@@ -55,7 +55,7 @@ class CommentsTrainer:
         tokenizer.save_pretrained(self.output_dir)
 
     @staticmethod
-    def evaluate(model_path: str, dataset: Dataset):
+    def evaluate(model_path: str, dataset: Dataset) -> dict[str, float]:
         tokenizer = AutoTokenizer.from_pretrained(model_path)
 
         def preprocess(examples):
@@ -74,7 +74,7 @@ class CommentsTrainer:
             compute_metrics=CommentsTrainer.__eval_fnc,
         )
 
-        trainer.evaluate(dataset)
+        return trainer.evaluate(dataset)
 
     def __preprocess(self, tokenizer, element: Column):
         comment_type: str = element["commentType"]
