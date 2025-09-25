@@ -1,12 +1,14 @@
 import torch
-from datasets import DatasetDict, Column
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding, TrainingArguments, Trainer
+from datasets import DatasetDict, Column, Dataset
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding, TrainingArguments, \
+    Trainer
 import evaluate
 import numpy as np
 import logging
 
 CODEBERT_BASE = "microsoft/codebert-base"
 EVAL_METRICS = evaluate.combine(["accuracy", "f1", "precision", "recall"])
+
 
 class CommentsTrainer:
     def __init__(self, output_dir: str, classes: list[str], special_tokens: list[str]):
@@ -52,6 +54,28 @@ class CommentsTrainer:
         trainer.save_model(self.output_dir)
         tokenizer.save_pretrained(self.output_dir)
 
+    @staticmethod
+    def evaluate(model_path: str, dataset: Dataset):
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+
+        def preprocess(examples):
+            return tokenizer(examples["text"], truncation=True, padding="max_length")
+
+        dataset = dataset.map(preprocess)
+
+        model = AutoModelForSequenceClassification.from_pretrained(
+            model_path,
+            problem_type="multi_label_classification"
+        )
+
+        trainer = Trainer(
+            model=model,
+            tokenizer=tokenizer,
+            compute_metrics=CommentsTrainer.__eval_fnc,
+        )
+
+        trainer.evaluate(dataset)
+
     def __preprocess(self, tokenizer, element: Column):
         comment_type: str = element["commentType"]
         text = f"[{comment_type.upper()}] {element["text"]}"
@@ -94,7 +118,6 @@ class CommentsTrainer:
 
         return EVAL_METRICS.compute(predictions=binary_predictions, references=labels.astype(int).reshape(-1))
 
-
     @staticmethod
     def __get_class2id(classes: list[str]):
         return {class_: index for index, class_ in enumerate(classes)}
@@ -105,4 +128,3 @@ class CommentsTrainer:
 
     def get_special_tokens(self) -> list[str]:
         return list(map(lambda el: f"[{el}]", self.special_tokens))
-
