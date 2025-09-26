@@ -11,6 +11,5 @@ jobs:
     uses: ./.github/workflows/python-workflow.yml
     with:
       project_path: ./AiDetector/training
-      RUN_UNITTEST:
       python_version: 3.13
       poetry_version: 2.2.1
