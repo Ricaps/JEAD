@@ -1,6 +1,6 @@
 import re, logging
 from pathlib import Path
-from shared import load_dataset, save_dataset, StaticRuleLabeling
+from pipelines.shared import load_dataset, save_dataset, StaticRuleLabeling
 
 __LOGGER = logging.getLogger(__name__)
 

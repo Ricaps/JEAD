@@ -5,8 +5,8 @@ from typing import Any, TypeVar, Callable, Generic, Type, Optional
 
 import numpy as np
 
-from shared import JSONDatasetList, load_dataset, save_dataset, add_filename_suffix, batched_iterator
-from shared.llm_connector import OllamaConnector, Model
+from pipelines.shared import JSONDatasetList, load_dataset, save_dataset, add_filename_suffix, batched_iterator
+from pipelines.shared.llm_connector import OllamaConnector, Model
 from pydantic import BaseModel
 
 T = TypeVar('T', bound=BaseModel)
