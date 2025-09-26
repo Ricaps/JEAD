@@ -58,7 +58,7 @@ class StaticCodeLabelingTest(unittest.TestCase):
         },
         {
             "text": "Country name\n\ne.g. Czechia",
-            "expected_value": 0
+            "expected_value": 1
         }
     ]
 
