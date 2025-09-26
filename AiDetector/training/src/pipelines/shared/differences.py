@@ -1,9 +1,11 @@
 from pipelines.shared import JSONDatasetList, input_until_integer
 from typing import Any
 
-class DifferencesEvaluator:
 
-    def __init__(self, new_key_name: str, to_compare_keys: list[str], no_conflict_key: str):
+class DifferencesEvaluator:
+    def __init__(
+        self, new_key_name: str, to_compare_keys: list[str], no_conflict_key: str
+    ):
         self.new_key_name = new_key_name
         self.to_compare_keys = to_compare_keys
         self.no_conflict_key = no_conflict_key
@@ -28,13 +30,14 @@ class DifferencesEvaluator:
                 element[self.new_key_name] = element[self.no_conflict_key]
                 continue
 
-            print(f"Element {index} of {len(dataset)}: {element["text"]}")
+            print(f"Element {index} of {len(dataset)}: {element['text']}")
             for key in self.to_compare_keys:
                 self.__print_value(key, element[key])
 
-
             try:
-                new_value = input_until_integer(f"Enter value for '{self.new_key_name}': ")
+                new_value = input_until_integer(
+                    f"Enter value for '{self.new_key_name}': "
+                )
                 element[self.new_key_name] = new_value
                 print("-----")
             except KeyboardInterrupt:

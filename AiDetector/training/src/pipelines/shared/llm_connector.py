@@ -13,6 +13,7 @@ class Role(Enum):
     SYSTEM = "system"
     ASSISTANT = "assistant"
 
+
 class Model(Enum):
     CODE_LLAMA_7b = "codellama:7b"
     CODE_LLAMA_7b_INSTRUCT = "codellama:7b-instruct"
@@ -20,13 +21,16 @@ class Model(Enum):
     LLAMA_3_1_8b = "llama3.1:8b"
     LLAMA_3_1 = "llama3.1"
 
+
 class Message(TypedDict):
     role: str
     content: str
 
-T = TypeVar('T', bound=BaseModel)
-class OllamaConnector(Generic[T]):
 
+T = TypeVar("T", bound=BaseModel)
+
+
+class OllamaConnector(Generic[T]):
     def __init__(self, model: Model, response_class: Type[T]):
         self.__model = model
         self.__messages: List[Message] = []
@@ -42,10 +46,7 @@ class OllamaConnector(Generic[T]):
         """
 
         self.clear_session()
-        self.__messages.append({
-            "role": Role.SYSTEM.value,
-            "content": init_prompt
-        })
+        self.__messages.append({"role": Role.SYSTEM.value, "content": init_prompt})
 
         response = await self._send_to_llm()
         self.__logger.debug(f"Received response: {response}")
@@ -66,10 +67,9 @@ class OllamaConnector(Generic[T]):
         :param prompt: prompt to be sent
         :returns: str : response as string
         """
-        self.__messages.append({
-            "role": Role.USER.value,
-            "content": json.dumps({"content": prompt})
-        })
+        self.__messages.append(
+            {"role": Role.USER.value, "content": json.dumps({"content": prompt})}
+        )
 
         self.__logger.info(f"Sending message: {prompt}")
         response = await self._send_to_llm_structured()
@@ -79,37 +79,43 @@ class OllamaConnector(Generic[T]):
         return response
 
     async def _send_to_llm(self) -> str:
-        response: ChatResponse = await AsyncClient().chat(model=self.__model.value, messages=self.__messages)
+        response: ChatResponse = await AsyncClient().chat(
+            model=self.__model.value, messages=self.__messages
+        )
 
         response_content = response["message"]["content"]
-        self.__messages.append({
-            "role": Role.ASSISTANT.value,
-            "content": response_content
-        })
+        self.__messages.append(
+            {"role": Role.ASSISTANT.value, "content": response_content}
+        )
 
         return response_content
 
     async def _send_to_llm_structured(self) -> Optional[T]:
-        response: ChatResponse = await AsyncClient().chat(model=self.__model.value, messages=self.__messages, format=self.response_class.model_json_schema())
+        response: ChatResponse = await AsyncClient().chat(
+            model=self.__model.value,
+            messages=self.__messages,
+            format=self.response_class.model_json_schema(),
+        )
 
         response_content = response["message"]["content"]
-        self.__messages.append({
-            "role": Role.ASSISTANT.value,
-            "content": response_content
-        })
+        self.__messages.append(
+            {"role": Role.ASSISTANT.value, "content": response_content}
+        )
 
         try:
             return self.response_class.model_validate_json(response_content)
         except ValidationError:
             return None
 
+
 class ResponseModel(BaseModel):
     result: list[int]
 
 
-V = TypeVar('V', bound=BaseModel)
-class OpenAIConnector(Generic[V]):
+V = TypeVar("V", bound=BaseModel)
 
+
+class OpenAIConnector(Generic[V]):
     def __init__(self, response_model: Type[V]):
         self.client = AsyncOpenAI(api_key=os.getenv("OPEN_API_KEY"))
         self.last_response_id = None
@@ -121,9 +127,13 @@ class OpenAIConnector(Generic[V]):
     async def send(self, prompt: str, data: str) -> V:
         self.clear_session()
 
-        response = await self.client.responses.parse(model="gpt-5-nano", text_format=self.response_model, input=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": data}
-        ])
+        response = await self.client.responses.parse(
+            model="gpt-5-nano",
+            text_format=self.response_model,
+            input=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": data},
+            ],
+        )
 
         return response.output_parsed

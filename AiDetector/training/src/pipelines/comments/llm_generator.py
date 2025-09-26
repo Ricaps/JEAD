@@ -10,11 +10,12 @@ from pipelines.shared import load_dataset, add_filename_suffix
 from pipelines.shared.llm_connector import OpenAIConnector
 from typing import Callable, Any
 
+
 class ResponseModel(BaseModel):
     generated_snippets: list[str]
 
-class LLMGenerator:
 
+class LLMGenerator:
     def __init__(self, prompt: str, dataset_path: Path, file_suffix: str):
         self.connector = OpenAIConnector[ResponseModel](ResponseModel)
         self.prompt = prompt
@@ -38,7 +39,6 @@ class LLMGenerator:
             with open(path, "w+") as file:
                 file.write(json.dumps([content], indent=2))
 
-
     async def for_each_element(self, filter_fnc: Callable[[dict[str, Any]], bool]):
         dataset = load_dataset(self.dataset_path)
         filtered_dataset = list(filter(filter_fnc, dataset))
@@ -50,11 +50,15 @@ class LLMGenerator:
         await asyncio.gather(*futures)
 
     async def process_part(self, part_number: int, dataset):
-        new_file_path = add_filename_suffix(self.dataset_path, f"-{str(part_number)}-{self.file_suffix}")
+        new_file_path = add_filename_suffix(
+            self.dataset_path, f"-{str(part_number)}-{self.file_suffix}"
+        )
         generated = []
 
         for index, element in enumerate(dataset):
-            self.__logger.info(f"Generating message for element {index} of {len(dataset)}")
+            self.__logger.info(
+                f"Generating message for element {index} of {len(dataset)}"
+            )
 
             input_text = element["text"]
             response = await self.connector.send(self.prompt, input_text)
@@ -62,12 +66,11 @@ class LLMGenerator:
             generated_snippets = response.generated_snippets
             # generated_snippets = ["a", "b", "c", str(part_number)]
             if len(generated_snippets) == 0:
-                self.__logger.warning(f"There was no generated snippet for {input_text}")
+                self.__logger.warning(
+                    f"There was no generated snippet for {input_text}"
+                )
             generated.extend(generated_snippets)
 
-            content = {
-                "origin": input_text,
-                "generated": generated
-            }
+            content = {"origin": input_text, "generated": generated}
             self.__save_content(new_file_path, content)
             generated.clear()
