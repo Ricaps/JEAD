@@ -1,0 +1,40 @@
+[project]
+name = "jena-v3-aidetector-training"
+version = "0.1.0"
+description = ""
+authors = [
+    { name = "Martin Prochazka", email = "pro.nitram@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "ollama (==0.5.3)",
+    "numpy (==2.3.2)",
+    "dotenv (==0.9.9)",
+    "openai (==1.107.0)",
+    "datasets (==4.0.0)",
+    "transformers (==4.55.2)",
+    "evaluate (==0.4.6)",
+    "scikit-learn (==1.7.2)",
+    "accelerate (==1.10.1)",
+    "torch (==2.8.0)",
+    "torchvision (==0.23.0)"
+]
+
+[dependency-groups]
+dev = [
+    "ruff (==0.13.2)"
+]
+
+[tool.poetry]
+packages = [
+    { include = "pipelines", from = "src" }
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+#test = "unittest:python -m unittest discover -s tests -p 'test_*.py' -v"
+test = "unittest:main"
