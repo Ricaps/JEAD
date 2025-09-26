@@ -7,9 +7,10 @@ from pipelines.shared import JSONDatasetList
 from pipelines.shared import add_filename_suffix, save_dataset
 from pipelines.shared.exception import PathNotFileException
 
-T = TypeVar('T')
-class DatasetDeduplicator(ABC, Generic[T]):
+T = TypeVar("T")
 
+
+class DatasetDeduplicator(ABC, Generic[T]):
     @abstractmethod
     def deduplicate_dataset(self, dataset: T):
         pass
@@ -17,6 +18,7 @@ class DatasetDeduplicator(ABC, Generic[T]):
     @abstractmethod
     def deduplicate_dataset_file(self, path: Path):
         pass
+
 
 class JsonDeduplicator(DatasetDeduplicator[JSONDatasetList]):
     _OUTPUT_FILE_SUFFIX = "-deduplicated.json"
@@ -44,7 +46,6 @@ class JsonDeduplicator(DatasetDeduplicator[JSONDatasetList]):
 
         return output_path
 
-
     def deduplicate_dataset(self, dataset: JSONDatasetList):
         unique_items: JSONDatasetList = list()
         dataset_set = set()
@@ -56,6 +57,3 @@ class JsonDeduplicator(DatasetDeduplicator[JSONDatasetList]):
             unique_items.append(element)
 
         return unique_items
-
-
-

@@ -1,10 +1,12 @@
-import json, logging
+import json
+import logging
 from pathlib import Path
 from typing import Iterable, Any, Callable, TypeVar, Coroutine, Optional
 
 from pipelines.shared.types import JSONDatasetList
 
 __LOGGER = logging.getLogger(__name__)
+
 
 def load_dataset(path: Path) -> JSONDatasetList:
     dataset: JSONDatasetList = []
@@ -14,9 +16,11 @@ def load_dataset(path: Path) -> JSONDatasetList:
 
     return dataset
 
+
 def save_dataset(path: Path, dataset: JSONDatasetList) -> None:
     with open(path, "w") as file:
         file.write(json.dumps(dataset, indent=2))
+
 
 def add_filename_suffix(path: Path, new_name: str) -> Path:
     parent_folder = path.parents[0]
@@ -26,8 +30,15 @@ def add_filename_suffix(path: Path, new_name: str) -> Path:
     return parent_folder.joinpath(Path(output_file_name))
 
 
-T = TypeVar('T')
-async def batched_iterator(call_iterations: int, items: Iterable[T], call_fnc: Callable[[], Coroutine[Any, Any, Any]], for_each_fnc: Callable[[T, int], Coroutine[Any, Any, None]]) -> None:
+T = TypeVar("T")
+
+
+async def batched_iterator(
+    call_iterations: int,
+    items: Iterable[T],
+    call_fnc: Callable[[], Coroutine[Any, Any, Any]],
+    for_each_fnc: Callable[[T, int], Coroutine[Any, Any, None]],
+) -> None:
     """
     Iterates given items. After call_iterations number is reached, calls the call_fnc.
     call_fnc is called also before first iteration
@@ -53,13 +64,18 @@ def input_until_integer(input_str: str) -> int:
     while True:
         value = input(input_str).strip()
         if value.startswith("+"):
-            if value[1:].isdigit(): return int(value)
+            if value[1:].isdigit():
+                return int(value)
         elif value.startswith("-"):
-            if value[1:].isdigit(): return -int(value)
+            if value[1:].isdigit():
+                return -int(value)
         elif value.isdigit():
             return int(value)
 
-def map_labels(mapping: dict[str, str], fallback_label: str, dataset: JSONDatasetList) -> JSONDatasetList:
+
+def map_labels(
+    mapping: dict[str, str], fallback_label: str, dataset: JSONDatasetList
+) -> JSONDatasetList:
     """Maps properties from format 'name: 1/0' to format 'labels: ['name']'
     :param mapping: Mapping of the keys from the old to the new format
     :param fallback_label: Added label if the none key in mapping matches
@@ -69,7 +85,9 @@ def map_labels(mapping: dict[str, str], fallback_label: str, dataset: JSONDatase
         labels = []
         for key in mapping.keys():
             if key not in element:
-                __LOGGER.error(f"Failed to find key {key} for element {element["text"]}")
+                __LOGGER.error(
+                    f"Failed to find key {key} for element {element['text']}"
+                )
                 continue
             element_value = element[key]
             if element_value == 1:
@@ -81,7 +99,10 @@ def map_labels(mapping: dict[str, str], fallback_label: str, dataset: JSONDatase
 
     return dataset
 
-def dataset_remove_properties(properties: list[str], dataset: JSONDatasetList) -> JSONDatasetList:
+
+def dataset_remove_properties(
+    properties: list[str], dataset: JSONDatasetList
+) -> JSONDatasetList:
     for element in dataset:
         for prop in properties:
             if prop not in element:
@@ -91,7 +112,10 @@ def dataset_remove_properties(properties: list[str], dataset: JSONDatasetList) -
 
     return dataset
 
-def find_by_key(dataset: JSONDatasetList, key: str, value: str) -> Optional[dict[str, Any]]:
+
+def find_by_key(
+    dataset: JSONDatasetList, key: str, value: str
+) -> Optional[dict[str, Any]]:
     for element in dataset:
         if element.get(key) == value:
             return element

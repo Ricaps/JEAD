@@ -1,7 +1,12 @@
 import torch
 from datasets import DatasetDict, Column, Dataset
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, DataCollatorWithPadding, TrainingArguments, \
-    Trainer
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+    DataCollatorWithPadding,
+    TrainingArguments,
+    Trainer,
+)
 import evaluate
 import numpy as np
 import logging
@@ -20,10 +25,14 @@ class CommentsTrainer:
 
     def train_model(self, dataset: DatasetDict, output_dir: str):
         self.__logger.info("Initializing tokenizer...")
-        tokenizer = AutoTokenizer.from_pretrained(CODEBERT_BASE, additional_special_tokens=self.get_special_tokens())
+        tokenizer = AutoTokenizer.from_pretrained(
+            CODEBERT_BASE, additional_special_tokens=self.get_special_tokens()
+        )
 
         self.__logger.info("Preprocessing dataset...")
-        tokenized_dataset = dataset.map(lambda element: self.__preprocess(tokenizer, element))
+        tokenized_dataset = dataset.map(
+            lambda element: self.__preprocess(tokenizer, element)
+        )
         data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
         training_arguments = self.__build_arguments(output_dir)
@@ -33,7 +42,7 @@ class CommentsTrainer:
             num_labels=len(self.classes),
             id2label=self.id2class,
             label2id=self.class2id,
-            problem_type="multi_label_classification"
+            problem_type="multi_label_classification",
         )
 
         model.resize_token_embeddings(len(tokenizer))
@@ -44,7 +53,7 @@ class CommentsTrainer:
             train_dataset=tokenized_dataset["train"],
             eval_dataset=tokenized_dataset["test"],
             data_collator=data_collator,
-            compute_metrics=self.__eval_fnc
+            compute_metrics=self.__eval_fnc,
         )
 
         self.__logger.info("Training...")
@@ -59,8 +68,7 @@ class CommentsTrainer:
         dataset = dataset.map(lambda element: self.__preprocess(tokenizer, element))
 
         model = AutoModelForSequenceClassification.from_pretrained(
-            model_path,
-            problem_type="multi_label_classification"
+            model_path, problem_type="multi_label_classification"
         )
 
         trainer = Trainer(
@@ -73,14 +81,14 @@ class CommentsTrainer:
 
     def __preprocess(self, tokenizer, element: Column):
         comment_type: str = element["commentType"]
-        text = f"[{comment_type.upper()}] {element["text"]}"
+        text = f"[{comment_type.upper()}] {element['text']}"
 
         labels = torch.zeros(len(self.classes), dtype=torch.float)
         element_labels = element["labels"]
 
         for label in element_labels:
             label_id = self.class2id[label]
-            labels[label_id] = 1.
+            labels[label_id] = 1.0
 
         tokenized = tokenizer(text, truncation=True)
         tokenized["labels"] = labels
@@ -97,7 +105,7 @@ class CommentsTrainer:
             per_device_train_batch_size=3,
             per_device_eval_batch_size=3,
             weight_decay=0.01,
-            load_best_model_at_end=True
+            load_best_model_at_end=True,
         )
 
         return args
@@ -112,7 +120,9 @@ class CommentsTrainer:
         predictions = CommentsTrainer.__get_sigmoid(predictions)
         binary_predictions = (predictions > 0.5).astype(int).reshape(-1)
 
-        return EVAL_METRICS.compute(predictions=binary_predictions, references=labels.astype(int).reshape(-1))
+        return EVAL_METRICS.compute(
+            predictions=binary_predictions, references=labels.astype(int).reshape(-1)
+        )
 
     @staticmethod
     def __get_class2id(classes: list[str]):

@@ -1,0 +1,43 @@
+name: python-workflow.yml
+on:
+  workflow_call:
+    inputs:
+      poetry_version:
+        type: string
+        required: true
+      python_version:
+        type: string
+        required: true
+      project_path:
+        type: string
+        required: true
+
+
+
+jobs:
+  training-project:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v3
+        with:
+          poetry-version: ${{ inputs.poetry_version }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+          cache: "poetry"
+      - name: Install dependencies
+        working-directory: ${{ inputs.project_path }}
+        run: |
+          poetry install --with dev
+      - name: Run tests using unittest
+        working-directory: ${{ inputs.project_path }}
+        run: poetry run python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Check formatting
+        working-directory: ${{ inputs.project_path }}
+        run: poetry run ruff format --check
+      - name: Running linter
+        working-directory: ${{ inputs.project_path }}
+        run: poetry run ruff check

@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Any, Callable
 from pipelines.shared.utils import load_dataset, input_until_integer, save_dataset
 
-class ManualLabeler:
 
+class ManualLabeler:
     def __init__(self, include_fnc: Callable[[dict[str, Any]], bool], prop_key: str):
         self.include_fnc = include_fnc
         self.prop_key = prop_key
