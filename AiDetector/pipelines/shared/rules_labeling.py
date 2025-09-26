@@ -1,4 +1,4 @@
-from shared import JSONDatasetList
+from pipelines.shared import JSONDatasetList
 import re
 from typing import AnyStr
 

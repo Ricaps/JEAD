@@ -1,7 +1,7 @@
 import unittest, os
 
-from pipelines.comments.static_labeling import label_code_snippets_comments, CODE_COMMENT_STATIC_ATTR
-from pipelines.shared import JSONDatasetList, save_dataset, load_dataset
+from comments.static_labeling import label_code_snippets_comments, CODE_COMMENT_STATIC_ATTR
+from shared import JSONDatasetList, save_dataset, load_dataset
 from pathlib import Path
 
 class StaticCodeLabelingTest(unittest.TestCase):

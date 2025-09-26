@@ -1,4 +1,4 @@
-from shared import JSONDatasetList, input_until_integer
+from pipelines.shared import JSONDatasetList, input_until_integer
 from typing import Any
 
 class DifferencesEvaluator:

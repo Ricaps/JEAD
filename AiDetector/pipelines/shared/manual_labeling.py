@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from typing import Any, Callable
-from shared.utils import load_dataset, input_until_integer, save_dataset
+from pipelines.shared.utils import load_dataset, input_until_integer, save_dataset
 
 class ManualLabeler:
 

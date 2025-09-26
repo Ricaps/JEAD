@@ -5,7 +5,6 @@ from ollama import ChatResponse, AsyncClient
 import logging
 from pydantic import BaseModel, ValidationError
 from openai import AsyncOpenAI
-from openai.types.responses import ParsedResponse
 import os
 
 

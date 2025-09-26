@@ -1,4 +1,7 @@
 import unittest
+import os
+
+os.chdir(".")
 
 def run_unittests(test_path=".", pattern="test_*.py", verbosity=2):
     """
@@ -23,4 +26,4 @@ if __name__ == "__main__":
         print("All tests passed!")
     else:
         print("Some tests failed.")
-        exit(len(result.failures))
+        exit(len(result.errors))

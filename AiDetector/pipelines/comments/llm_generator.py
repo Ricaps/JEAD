@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 from pydantic import BaseModel
 
-from shared import load_dataset, add_filename_suffix
-from shared.llm_connector import OpenAIConnector
+from pipelines.shared import load_dataset, add_filename_suffix
+from pipelines.shared.llm_connector import OpenAIConnector
 from typing import Callable, Any
 
 class ResponseModel(BaseModel):

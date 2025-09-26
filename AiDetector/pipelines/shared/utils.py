@@ -2,7 +2,7 @@ import json, logging
 from pathlib import Path
 from typing import Iterable, Any, Callable, TypeVar, Coroutine, Optional
 
-from shared.types import JSONDatasetList
+from pipelines.shared.types import JSONDatasetList
 
 __LOGGER = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$/AiDetector">
       <sourceFolder url="file://$MODULE_DIR$/AiDetector/pipelines" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/AiDetector/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/AiDetector/pipelines/tests" isTestSource="true" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.13 (JENA.V2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
