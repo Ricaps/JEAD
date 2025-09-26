@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         working-directory: ${{ env.TRAINING_PROJECT_PATH }}
         run: |
-          poetry install
+          poetry install --with dev
       - name: Run tests using unittest
         working-directory: ${{ env.TRAINING_PROJECT_PATH }}
         run: ${{ env.RUN_UNITTEST }}
