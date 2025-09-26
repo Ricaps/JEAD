@@ -5,25 +5,30 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  TRAINING_PROJECT_PATH: ./AiDetector/training
+  RUN_UNITTEST: poetry run python -m unittest discover -s tests -p 'test_*.py' -v
+  PYTHON_VERSION: 3.13
+  POETRY_VERSION: 2.2.1
+
 jobs:
-  build:
+  training-project:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run image
+      - name: Install poetry
         uses: abatilo/actions-poetry@v3
         with:
-          poetry-version: 2.2.1
+          poetry-version: ${{ env.POETRY_VERSION }}
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
-
       - name: Install dependencies
-        working-directory: ./AiDetector/training
+        working-directory: ${{ env.TRAINING_PROJECT_PATH }}
         run: |
           poetry install
       - name: Run tests using unittest
-        working-directory: ./AiDetector/training
-        run: poetry run python -m unittest discover -s tests -p 'test_*.py' -v
+        working-directory: ${{ env.TRAINING_PROJECT_PATH }}
+        run: ${{ env.RUN_UNITTEST }}
