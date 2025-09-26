@@ -34,7 +34,7 @@ jobs:
         run: ${{ env.RUN_UNITTEST }}
       - name: Check formatting
         working-directory: ${{ env.TRAINING_PROJECT_PATH }}
-        run: ruff format --check
+        run: poetry run ruff format --check
       - name: Running linter
         working-directory: ${{ env.TRAINING_PROJECT_PATH }}
-        run: ruff check
+        run: poetry run ruff check
