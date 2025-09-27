@@ -20,3 +20,4 @@ jobs:
       project_path: ./AiDetector/inference-server
       python_version: 3.13
       poetry_version: 2.2.1
+      post_setup_script: source scripts/generate-server.sh

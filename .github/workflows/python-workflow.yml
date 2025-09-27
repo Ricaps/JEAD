@@ -11,6 +11,9 @@ on:
       project_path:
         type: string
         required: true
+      post_setup_script:
+        type: string
+        required: false
 
 
 
@@ -32,6 +35,9 @@ jobs:
         working-directory: ${{ inputs.project_path }}
         run: |
           poetry install --with dev
+      - name: Post setup script
+        working-directory: ${{ inputs.project_path }}
+        run: ${{ inputs.post_setup_script }}
       - name: Run tests using unittest
         working-directory: ${{ inputs.project_path }}
         run: poetry run python -m unittest discover -s tests -p 'test_*.py' -v
