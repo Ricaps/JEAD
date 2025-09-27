@@ -3,16 +3,19 @@ import logging
 from grpc.aio import Server, server
 from grpc_reflection.v1alpha import reflection
 from inference_server.configuration.config import server_config
+from inference_server.business.inference_service import InferenceService
 from inference_server.proto import inference_pb2_grpc, inference_pb2
-from inference_server.service.inference_service import InferenceServiceImpl
+from inference_server.grpc_service.inference_port import InferenceServicerPort
 
 __LOGGER = logging.getLogger(__name__)
 
 
 def __add_services(grpc_server: Server):
-    inference_service = InferenceServiceImpl()
+    inference_service = InferenceService()
+
+    inference_grpc = InferenceServicerPort(inference_service)
     inference_pb2_grpc.add_InferenceServiceServicer_to_server(
-        inference_service, grpc_server
+        inference_grpc, grpc_server
     )
 
 
