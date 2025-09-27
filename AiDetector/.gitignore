@@ -1,2 +1,6 @@
 # GRPC sources
 *pb2*.py
+*pb2*.pyi
+
+
+.env
