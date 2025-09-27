@@ -36,6 +36,7 @@ jobs:
         run: |
           poetry install --with dev
       - name: Post setup script
+        if: inputs.post_setup_script
         working-directory: ${{ inputs.project_path }}
         run: ${{ inputs.post_setup_script }}
       - name: Run tests using unittest
