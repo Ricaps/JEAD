@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant Jena as JenaV3
+    participant IS as Inference Server
+
+    Note over IS, Jena: Initial communication
+    Jena ->> IS: Is server available? <<ServerReadyRequest>>
+    activate IS
+    IS ->> Jena: Yes / No <<ServerReadyResponse>>
+    deactivate IS
+    Jena ->> IS: Is model available? <<ModelReadyRequest>>
+    activate IS
+    IS ->> Jena: Yes / No <<ModelReadyResponse>>
+    deactivate IS
+
+    Note over IS, Jena: Inference
+    Jena ->> IS: <<InferenceRequest>>
+    IS ->> Jena: <<InferenceResponse>>
+
+    Note over IS, Jena: Inference stream
+    loop Inference stream
+        Jena --) IS: InferenceStream
+        IS --) Jena: InferenceStream
+    end
+
