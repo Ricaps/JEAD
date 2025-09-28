@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Optional, Any
+import logging
 
 from inference_server.ml_models.inference_model import InferenceModel
 from inference_server.model.inference_model import (
@@ -23,6 +24,7 @@ class CommentsModel(InferenceModel):
         self.tokenizer: Optional[Any] = None
         self.model: Optional[Any] = None
         self.pipeline: Optional[TextClassificationPipeline] = None
+        self.__logger = logging.getLogger(self.__class__.__name__)
 
     def execute(
         self, data: ModelInferenceRequestBatch
@@ -33,8 +35,10 @@ class CommentsModel(InferenceModel):
         results: list[ModelInferenceResult] = []
         for index, labels in enumerate(raw_results):
             result_id = data.contents[index].id
-            print(labels)
+
+            self.__logger.info("Inferred: id: '%s', labels: %s", result_id, labels)
             label_evaluation = map(lambda label: LabelEvaluation(**label), labels)
+
             results.append(
                 ModelInferenceResult(
                     id=result_id, label_evaluation=list(label_evaluation)
