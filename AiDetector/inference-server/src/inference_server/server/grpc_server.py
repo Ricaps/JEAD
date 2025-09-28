@@ -6,6 +6,7 @@ from grpc_reflection.v1alpha import reflection
 from inference_server.business.model_storage import ModelStorage
 from inference_server.configuration.config import server_config
 from inference_server.business.inference_service import InferenceService
+from inference_server.ml_models import model_type_registry
 from inference_server.proto import inference_pb2_grpc, inference_pb2
 from inference_server.grpc_service.inference_port import InferenceServicerPort
 from inference_server.server.exception_handler import ExceptionHandlerInterceptor
@@ -14,7 +15,9 @@ __LOGGER = logging.getLogger(__name__)
 
 
 def __add_services(grpc_server: Server):
-    model_storage = ModelStorage(server_config=server_config)
+    model_storage = ModelStorage(
+        server_config=server_config, model_type_registry=model_type_registry
+    )
     model_storage.load_models()
 
     inference_service = InferenceService(model_storage=model_storage)
