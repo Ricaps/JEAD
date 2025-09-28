@@ -2,16 +2,22 @@ from typing import Any
 import logging
 from grpc.aio import Server, server
 from grpc_reflection.v1alpha import reflection
+
+from inference_server.business.model_storage import ModelStorage
 from inference_server.configuration.config import server_config
 from inference_server.business.inference_service import InferenceService
 from inference_server.proto import inference_pb2_grpc, inference_pb2
 from inference_server.grpc_service.inference_port import InferenceServicerPort
+from inference_server.server.exception_handler import ExceptionHandlerInterceptor
 
 __LOGGER = logging.getLogger(__name__)
 
 
 def __add_services(grpc_server: Server):
-    inference_service = InferenceService()
+    model_storage = ModelStorage(server_config=server_config)
+    model_storage.load_models()
+
+    inference_service = InferenceService(model_storage=model_storage)
 
     inference_grpc = InferenceServicerPort(inference_service)
     inference_pb2_grpc.add_InferenceServiceServicer_to_server(
@@ -32,8 +38,12 @@ def __setup_reflection(grpc_server: Server):
     reflection.enable_server_reflection(service_names, grpc_server)
 
 
+def __get_interceptors():
+    return [ExceptionHandlerInterceptor()]
+
+
 def create_server() -> Server:
-    grpc_server = server()
+    grpc_server = server(interceptors=__get_interceptors())
     __add_services(grpc_server)
     __setup_reflection(grpc_server)
 

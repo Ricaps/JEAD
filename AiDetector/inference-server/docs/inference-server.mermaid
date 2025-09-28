@@ -4,13 +4,10 @@ config:
   defaultRenderer: elk
 ---
 classDiagram
-    class Model {
+    class ModelDefinition {
     }
-    <<interface>> Model
-    class Dictionary {
-    }
-    <<language>> Dictionary
-    class ModelStore {
+    <<interface>> ModelDefinition
+    class ModelStorage {
         +load_model() void
         +unload_model() void
         +is_loaded() bool
@@ -36,11 +33,10 @@ classDiagram
 
     direction RL
 
-    ModelStore --|> Dictionary
-    ModelStore o.. Model
-    ModelA --|> Model
-    ModelB --|> Model
+    ModelStorage o.. ModelDefinition
+    ModelA --|> ModelDefinition
+    ModelB --|> ModelDefinition
 
     RpcServiceImpl --|> RpcService
-    RpcServiceImpl --> ModelStore
+    RpcServiceImpl --> ModelStorage
 
