@@ -10,7 +10,10 @@ from inference_server.proto.inference_pb2 import (
     ServerReadyRequest,
     ServerReadyResponse,
     InferenceRequest,
-    InferenceResponse, ModelReadyResponse, ModelNameRequest, SuccessResponse,
+    InferenceResponse,
+    ModelReadyResponse,
+    ModelNameRequest,
+    SuccessResponse,
 )
 from inference_server.business.inference_service import InferenceService
 
@@ -28,7 +31,9 @@ class InferenceServicerPort(InferenceServiceServicer):
         return ServerReadyResponse(ready=True)
 
     def ModelReady(self, request: ModelNameRequest, context) -> ModelReadyResponse:
-        return ModelReadyResponse(ready=self._inference_service.is_model_ready(request.model_name))
+        return ModelReadyResponse(
+            ready=self._inference_service.is_model_ready(request.model_name)
+        )
 
     def LoadModel(self, request: ModelNameRequest, context) -> SuccessResponse:
         loaded = self._inference_service.load_model(request.model_name)

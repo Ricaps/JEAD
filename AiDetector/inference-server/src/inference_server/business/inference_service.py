@@ -26,9 +26,7 @@ class InferenceService:
         model = self.__model_storage.get_model(model_name)
 
         if model is None:
-            raise ModelNotExistsException(
-                f"Desired model {model_name} doesn't exist!"
-            )
+            raise ModelNotExistsException(f"Desired model {model_name} doesn't exist!")
 
         return model
 

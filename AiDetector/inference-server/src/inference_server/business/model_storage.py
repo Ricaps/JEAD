@@ -17,6 +17,7 @@ class ModelDefinition(InferenceModelExecutable):
         self.__model_path: Final[Path] = model_path
         self.__model_ref_type: Final[type[InferenceModel]] = model_ref_type
         self.__model_ref: Optional[InferenceModel] = None
+        self.__logger = logging.getLogger(self.__class__.__name__)
 
     def is_loaded(self) -> bool:
         return self.__model_ref is not None
@@ -24,6 +25,7 @@ class ModelDefinition(InferenceModelExecutable):
     def load_model(self):
         self.__model_ref = self.__model_ref_type(self.__model_path)
         self.__model_ref.on_load()
+        self.__logger.info("Model %s loaded", self.name)
 
     def unload_model(self):
         if self.__model_ref is None:
@@ -32,6 +34,7 @@ class ModelDefinition(InferenceModelExecutable):
         self.__model_ref.on_unload()
         self.__model_ref = None
         gc.collect()
+        self.__logger.info("Model %s unloaded", self.name)
 
     def execute(self, data: ModelInferenceRequestBatch):
         if self.__model_ref is None:
