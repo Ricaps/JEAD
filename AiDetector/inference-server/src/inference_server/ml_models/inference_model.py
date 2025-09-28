@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from pathlib import Path
+from typing import Optional, Final
 
 from inference_server.model.inference_model import (
     ModelInferenceResultBatch,
@@ -15,6 +16,9 @@ class InferenceModelExecutable(ABC):
 
 
 class InferenceModel(InferenceModelExecutable, ABC):
+    def __init__(self, model_root_path: Path):
+        self._model_root_path: Final[Path] = model_root_path
+
     @abstractmethod
     def on_load(self): ...
 

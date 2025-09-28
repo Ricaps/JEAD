@@ -11,9 +11,14 @@ class ModelInferenceRequestBatch(BaseModel):
     contents: list[ModelInferenceRequest]
 
 
+class LabelEvaluation(BaseModel):
+    label: str
+    score: float
+
+
 class ModelInferenceResult(BaseModel):
     id: str
-    label: str
+    label_evaluation: list[LabelEvaluation]
 
 
 class ModelInferenceResultBatch(BaseModel):

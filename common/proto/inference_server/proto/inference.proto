@@ -35,11 +35,17 @@ message InferenceRequest {
   repeated InferenceRequestContent contents = 2;
 }
 
+
 message InferenceResponse {
+
+  message LabelEvaluation {
+    string label = 1;
+    float score = 2;
+  }
 
   message InferenceResponseContent {
     string id = 1;
-    string label = 2;
+    repeated LabelEvaluation label_evaluation = 2;
   }
 
   repeated InferenceResponseContent contents = 1;

@@ -22,7 +22,7 @@ class ModelDefinition(InferenceModelExecutable):
         return self.__model_ref is not None
 
     def load_model(self):
-        self.__model_ref = self.__model_ref_type()
+        self.__model_ref = self.__model_ref_type(self.__model_path)
         self.__model_ref.on_load()
 
     def unload_model(self):
