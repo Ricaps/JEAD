@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import Optional, Final
+
+from aiopath import AsyncPath
 
 from inference_server.model.inference_model import (
     ModelInferenceResultBatch,
@@ -10,17 +11,17 @@ from inference_server.model.inference_model import (
 
 class InferenceModelExecutable(ABC):
     @abstractmethod
-    def execute(
+    async def execute(
         self, data: ModelInferenceRequestBatch
     ) -> Optional[ModelInferenceResultBatch]: ...
 
 
 class InferenceModel(InferenceModelExecutable, ABC):
-    def __init__(self, model_root_path: Path):
-        self._model_root_path: Final[Path] = model_root_path
+    def __init__(self, model_root_path: AsyncPath):
+        self._model_root_path: Final[AsyncPath] = model_root_path
 
     @abstractmethod
-    def on_load(self): ...
+    async def on_load(self): ...
 
     @abstractmethod
-    def on_unload(self): ...
+    async def on_unload(self): ...

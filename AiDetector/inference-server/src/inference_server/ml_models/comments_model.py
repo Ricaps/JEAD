@@ -1,7 +1,10 @@
-from pathlib import Path
+import asyncio
+
+from aiopath import AsyncPath
 from typing import Optional, Any
 import logging
 
+from inference_server.exception.model import ModelNotExistsException, ModelNotLoadedException
 from inference_server.ml_models.inference_model import InferenceModel
 from inference_server.model.inference_model import (
     ModelInferenceResultBatch,
@@ -19,18 +22,23 @@ from transformers import (
 class CommentsModel(InferenceModel):
     SUBFOLDER_NAME = "model"
 
-    def __init__(self, model_root_path: Path):
+    def __init__(self, model_root_path: AsyncPath):
         super().__init__(model_root_path)
         self.tokenizer: Optional[Any] = None
         self.model: Optional[Any] = None
         self.pipeline: Optional[TextClassificationPipeline] = None
+        self._access_lock = asyncio.Lock()
         self.__logger = logging.getLogger(self.__class__.__name__)
 
-    def execute(
+    async def execute(
         self, data: ModelInferenceRequestBatch
     ) -> Optional[ModelInferenceResultBatch]:
         mapped = map(lambda request: request.content, data.contents)
-        raw_results = self.pipeline(list(mapped))
+
+        async with self._access_lock:
+            if self.pipeline is None:
+                raise ModelNotLoadedException("comments-model")
+            raw_results = self.pipeline(list(mapped))
 
         results: list[ModelInferenceResult] = []
         for index, labels in enumerate(raw_results):
@@ -47,14 +55,17 @@ class CommentsModel(InferenceModel):
 
         return ModelInferenceResultBatch(contents=results)
 
-    def on_unload(self):
-        del self.tokenizer
-        del self.model
+    async def on_unload(self):
+        async with self._access_lock:
+            self.tokenizer = None
+            self.model = None
+            self.pipeline = None
 
-    def on_load(self):
+    async def on_load(self):
         path = self._model_root_path.joinpath(CommentsModel.SUBFOLDER_NAME)
-        self.tokenizer = AutoTokenizer.from_pretrained(path)
-        self.model = AutoModelForSequenceClassification.from_pretrained(path)
-        self.pipeline = TextClassificationPipeline(
-            model=self.model, tokenizer=self.tokenizer, top_k=None, device=-1
-        )
+        async with self._access_lock:
+            self.tokenizer = AutoTokenizer.from_pretrained(path)
+            self.model = AutoModelForSequenceClassification.from_pretrained(path)
+            self.pipeline = TextClassificationPipeline(
+                model=self.model, tokenizer=self.tokenizer, top_k=None, device=-1
+            )

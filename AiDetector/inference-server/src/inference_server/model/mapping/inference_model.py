@@ -1,4 +1,4 @@
-from typing import Type, TypeVar, Any
+from typing import Type, TypeVar, Any, Awaitable
 
 from google.protobuf.message import Message
 from google.protobuf.json_format import MessageToDict, ParseDict

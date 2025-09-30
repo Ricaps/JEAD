@@ -14,11 +14,11 @@ from inference_server.server.exception_handler import ExceptionHandlerIntercepto
 __LOGGER = logging.getLogger(__name__)
 
 
-def __add_services(grpc_server: Server):
+async def __add_services(grpc_server: Server):
     model_storage = ModelStorage(
         server_config=server_config, model_type_registry=model_type_registry
     )
-    model_storage.load_models()
+    await model_storage.load_models()
 
     inference_service = InferenceService(model_storage=model_storage)
 
@@ -45,9 +45,9 @@ def __get_interceptors():
     return [ExceptionHandlerInterceptor()]
 
 
-def create_server() -> Server:
+async def create_server() -> Server:
     grpc_server = server(interceptors=__get_interceptors())
-    __add_services(grpc_server)
+    await __add_services(grpc_server)
     __setup_reflection(grpc_server)
 
     return grpc_server
@@ -57,7 +57,7 @@ async def run_and_wait():
     """
     Runs async.io GRPC server and waits until the termination
     """
-    grpc_server = create_server()
+    grpc_server = await create_server()
 
     address = f"{server_config.address}:{str(server_config.port)}"
     __LOGGER.info("Starting GRPC server at %s", address)
