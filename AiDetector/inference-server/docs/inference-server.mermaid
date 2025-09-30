@@ -1,0 +1,42 @@
+---
+title: Inference Server Class Diagram
+config:
+  defaultRenderer: elk
+---
+classDiagram
+    class ModelDefinition {
+    }
+    <<interface>> ModelDefinition
+    class ModelStorage {
+        +load_model() void
+        +unload_model() void
+        +is_loaded() bool
+        +get_model(String key) Model
+    }
+
+    class RpcService {
+        +serverReady(ServerReadyRequest request) ServerReadyResponse
+        +modelReady(ModelReadyRequest request) ModelReadyResponse
+        +inference(InferenceReqyest request) InferenceResponse
+        +inferenceStream(InferenceStreamRequest request) InferenceStreamResponse
+    }
+    <<interface>> RpcService
+
+    class RpcServiceImpl {
+        -modelStore: ModelStore
+    }
+
+    class ModelA
+    <<example>> ModelA
+    class ModelB
+    <<example>> ModelB
+
+    direction RL
+
+    ModelStorage o.. ModelDefinition
+    ModelA --|> ModelDefinition
+    ModelB --|> ModelDefinition
+
+    RpcServiceImpl --|> RpcService
+    RpcServiceImpl --> ModelStorage
+

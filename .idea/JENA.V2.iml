@@ -4,6 +4,8 @@
     <content url="file://$MODULE_DIR$/AiDetector">
       <sourceFolder url="file://$MODULE_DIR$/AiDetector/training/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/AiDetector/training/src/pipelines/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/AiDetector/inference-server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/AiDetector/inference-server/tests" isTestSource="true" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.13 (JENA.V2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

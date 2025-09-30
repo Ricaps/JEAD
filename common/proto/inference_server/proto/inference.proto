@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package inference_server.proto;
+
+/**
+ * InferenceService endpoints
+ */
+service InferenceService {
+  rpc ServerReady(ServerReadyRequest) returns (ServerReadyResponse);
+  rpc ModelReady(ModelNameRequest) returns (ModelReadyResponse);
+  rpc LoadModel(ModelNameRequest) returns (SuccessResponse);
+  rpc UnloadModel(ModelNameRequest) returns (SuccessResponse);
+  rpc ModelInference(InferenceRequest) returns (InferenceResponse);
+}
+
+message ServerReadyRequest {}
+message ServerReadyResponse {
+  bool ready = 1;
+}
+
+message ModelReadyResponse {
+  bool ready = 1;
+}
+
+message ModelNameRequest {
+  string model_name = 1;
+}
+
+message SuccessResponse {
+  bool success = 1;
+}
+
+message InferenceRequest {
+
+  message InferenceRequestContent {
+    string id = 1;
+    string content = 2;
+  }
+
+  string model_name = 1;
+  repeated InferenceRequestContent contents = 2;
+}
+
+
+message InferenceResponse {
+
+  message LabelEvaluation {
+    string label = 1;
+    float score = 2;
+  }
+
+  message InferenceResponseContent {
+    string id = 1;
+    repeated LabelEvaluation label_evaluation = 2;
+  }
+
+  repeated InferenceResponseContent contents = 1;
+}

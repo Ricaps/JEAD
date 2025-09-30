@@ -4,6 +4,8 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/pipelines" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/inference-server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/training/src" isTestSource="false" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.13 virtualenv at ~/Projects/Master's Thesis/JENA/JENA.V2/.venv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
