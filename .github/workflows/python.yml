@@ -13,6 +13,7 @@ jobs:
       project_path: ./AiDetector/training
       python_version: 3.13
       poetry_version: 2.2.1
+      environment_name: Training Project
 
   inference-server:
     uses: ./.github/workflows/python-workflow.yml
@@ -21,4 +22,4 @@ jobs:
       python_version: 3.13
       poetry_version: 2.2.1
       post_setup_script: source scripts/generate-server.sh
-      env_variables: ADDRESS=0.0.0.0 PORT=8080 MODELS_ROOT=dummy_path
+      environment_name: Inference Service

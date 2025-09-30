@@ -14,14 +14,15 @@ on:
       post_setup_script:
         type: string
         required: false
-      env_variables:
+      environment_name:
         type: string
-        required: false
+        required: true
 
 
 
 jobs:
   python-workflow:
+    environment: ${{ inputs.environment_name }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,11 +30,6 @@ jobs:
         uses: abatilo/actions-poetry@v3
         with:
           poetry-version: ${{ inputs.poetry_version }}
-      - name: Setup env variables
-        if: ${{ inputs.env_variables }}
-        run: |
-          echo Setting following environment variables: ${{ inputs.env_variables }}
-          echo ${{ inputs.env_variables }} >> $GITHUB_ENV
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
