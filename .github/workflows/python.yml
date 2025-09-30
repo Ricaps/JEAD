@@ -8,7 +8,6 @@ on:
 env:
   ADDRESS: 0.0.0.0
   PORT: 8080
-  PROJECT_PATH: "./AiDetector/inference-server"
   MODELS_ROOT: dummy-path
 
 jobs:
@@ -22,7 +21,7 @@ jobs:
   inference-server:
     uses: ./.github/workflows/python-workflow.yml
     with:
-      project_path: ${{ env.PROJECT_PATH }}
+      project_path: ./AiDetector/inference-server
       python_version: 3.13
       poetry_version: 2.2.1
       post_setup_script: source scripts/generate-server.sh
