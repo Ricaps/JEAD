@@ -14,6 +14,9 @@ on:
       post_setup_script:
         type: string
         required: false
+      env_variables:
+        type: string
+        required: false
 
 
 
@@ -26,6 +29,11 @@ jobs:
         uses: abatilo/actions-poetry@v3
         with:
           poetry-version: ${{ inputs.poetry_version }}
+      - name: Setup env variables
+        if: ${{ inputs.env_variables }}
+        run: |
+          echo Setting following environment variables: ${{ inputs.env_variables }}
+          export ${{ inputs.env_variables }}
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
