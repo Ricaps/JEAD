@@ -57,7 +57,7 @@ async def run_and_wait():
     Runs async.io GRPC server and waits until the termination
     """
     server_config = ServerConfig()
-    grpc_server = await create_server(server_config)
+    grpc_server = await create_server()
     await __add_services(grpc_server, server_config)
 
     address = f"{server_config.address}:{str(server_config.port)}"
