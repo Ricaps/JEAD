@@ -1,4 +1,3 @@
-from unittest import TestCase
 from unittest.async_case import IsolatedAsyncioTestCase
 from unittest.mock import Mock, MagicMock, AsyncMock
 

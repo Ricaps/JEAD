@@ -12,6 +12,9 @@ class ModelNotExistsException(BaseServerException):
     def __init__(self, message: str):
         super().__init__(StatusCode.FAILED_PRECONDITION, message)
 
+
 class ModelNotLoadedException(BaseServerException):
     def __init__(self, model_name: str):
-        super().__init__(StatusCode.FAILED_PRECONDITION, f"Desired model is not loaded: {model_name}")
+        super().__init__(
+            StatusCode.FAILED_PRECONDITION, f"Desired model is not loaded: {model_name}"
+        )

@@ -27,10 +27,14 @@ class InferenceServicerPort(InferenceServiceServicer):
         super().__init__()
         self._inference_service: Final[InferenceService] = inference_service
 
-    async def ServerReady(self, request: ServerReadyRequest, context) -> ServerReadyResponse:
+    async def ServerReady(
+        self, request: ServerReadyRequest, context
+    ) -> ServerReadyResponse:
         return ServerReadyResponse(ready=True)
 
-    async def ModelReady(self, request: ModelNameRequest, context) -> ModelReadyResponse:
+    async def ModelReady(
+        self, request: ModelNameRequest, context
+    ) -> ModelReadyResponse:
         return ModelReadyResponse(
             ready=self._inference_service.is_model_ready(request.model_name)
         )

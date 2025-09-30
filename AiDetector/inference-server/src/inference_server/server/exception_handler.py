@@ -14,11 +14,11 @@ class ExceptionHandlerInterceptor(AsyncServerInterceptor):
         self.__logger = logging.getLogger(self.__class__.__name__)
 
     async def intercept(
-            self,
-            method: Callable,
-            request_or_iterator: Any,
-            context: grpc_aio.ServicerContext,
-            method_name: str,
+        self,
+        method: Callable,
+        request_or_iterator: Any,
+        context: grpc_aio.ServicerContext,
+        method_name: str,
     ) -> Any:
         response_or_iterator = method(request_or_iterator, context)
         try:
@@ -28,7 +28,6 @@ class ExceptionHandlerInterceptor(AsyncServerInterceptor):
             self._handle_exception(exception, context)
 
         return self._handle_iterator(response_or_iterator, context)
-
 
     async def _handle_iterator(self, iterator, context):
         try:

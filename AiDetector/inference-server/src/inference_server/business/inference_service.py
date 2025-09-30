@@ -1,10 +1,9 @@
-from typing import Final, Awaitable
+from typing import Final
 
 from inference_server.business.model_storage import ModelStorage, ModelDefinition
 from inference_server.exception.model import ModelNotExistsException
 from inference_server.model.inference_model import (
     ModelInferenceRequestBatch,
-    ModelInferenceResultBatch,
 )
 
 
@@ -12,9 +11,7 @@ class InferenceService:
     def __init__(self, model_storage: ModelStorage):
         self.__model_storage: Final[ModelStorage] = model_storage
 
-    async def execute_request(
-        self, request: ModelInferenceRequestBatch
-    ):
+    async def execute_request(self, request: ModelInferenceRequestBatch):
         model = self.__get_model_or_throw(request.model_name)
 
         if not model.is_loaded():

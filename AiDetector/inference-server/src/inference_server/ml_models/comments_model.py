@@ -4,7 +4,7 @@ from aiopath import AsyncPath
 from typing import Optional, Any
 import logging
 
-from inference_server.exception.model import ModelNotExistsException, ModelNotLoadedException
+from inference_server.exception.model import ModelNotLoadedException
 from inference_server.ml_models.inference_model import InferenceModel
 from inference_server.model.inference_model import (
     ModelInferenceResultBatch,
