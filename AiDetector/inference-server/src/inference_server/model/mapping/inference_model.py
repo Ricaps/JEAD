@@ -9,7 +9,6 @@ ModelType = TypeVar("ModelType", bound=BaseModel)
 
 def grpc_to_model(grpc_msg, model_class: Type[ModelType]) -> ModelType:
     grpc_dict = MessageToDict(grpc_msg, preserving_proto_field_name=True)
-    print(grpc_dict)
     return model_class(**grpc_dict)
 
 
