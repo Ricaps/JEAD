@@ -8,7 +8,7 @@ on:
 env:
   ADDRESS: 0.0.0.0
   PORT: 8080
-  PROJECT_PATH: ./AiDetector/inference-server
+  PROJECT_PATH: "./AiDetector/inference-server"
   MODELS_ROOT: dummy-path
 
 jobs:
