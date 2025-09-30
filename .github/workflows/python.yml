@@ -5,10 +5,6 @@ on:
   pull_request:
     branches: [ "master" ]
 
-env:
-  ADDRESS: 0.0.0.0
-  PORT: 8080
-  MODELS_ROOT: dummy-path
 
 jobs:
   training-project:
@@ -20,6 +16,10 @@ jobs:
 
   inference-server:
     uses: ./.github/workflows/python-workflow.yml
+    env:
+      ADDRESS: 0.0.0.0
+      PORT: 8080
+      MODELS_ROOT: dummy-path
     with:
       project_path: ./AiDetector/inference-server
       python_version: 3.13
