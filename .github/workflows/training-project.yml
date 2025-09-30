@@ -1,0 +1,44 @@
+name: Python AiDetector Tests
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+
+env:
+  ADDRESS: 0.0.0.0
+  PORT: 8080
+  MODELS_ROOT: dummy-path
+  PROJECT_PATH: ./AiDetector/training-project
+  POETRY_VERSION: 2.2.1
+  PYTHON_VERSION: 3.13
+
+jobs:
+  python-workflow:
+    environment: Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v3
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "poetry"
+      - name: Install dependencies
+        working-directory: ${{ env.PROJECT_PATH }}
+        run: |
+          poetry install --with dev
+      - name: Run tests using unittest
+        working-directory: ${{ env.PROJECT_PATH }}
+        run: poetry run python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Check formatting
+        working-directory: ${{ env.PROJECT_PATH }}
+        run: poetry run ruff format --check
+      - name: Running linter
+        working-directory: ${{ env.PROJECT_PATH }}
+        run: poetry run ruff check
