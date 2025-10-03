@@ -4,6 +4,7 @@ import com.github.javaparser.Range;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.comments.Comment;
 import com.github.javaparser.ast.comments.LineComment;
+import cz.muni.jena.util.NodeUtil;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -11,9 +12,11 @@ import java.util.Optional;
 
 class LineCommentsWrapper {
 
+    private final String fullyQualifiedName;
     private final List<LineComment> lineComments;
 
-    public LineCommentsWrapper(List<Comment> comments) {
+    public LineCommentsWrapper(String fullyQualifiedName, List<Comment> comments) {
+        this.fullyQualifiedName = fullyQualifiedName;
         lineComments = comments.stream()
                 .filter(Comment::isLineComment)
                 .map(Comment::asLineComment)
@@ -24,28 +27,30 @@ class LineCommentsWrapper {
     /**
      * Processes line comments.
      * If there are comments on consecutive lines, it squashes them
+     *
      * @return list of strings. Each element contains one comment.
      */
     public LinkedList<CommentDto> processLineComment() {
         int lastLine = -1;
         LinkedList<CommentDto> result = new LinkedList<>();
-        StringBuilder toBeSquashed = new StringBuilder();
+        ToBeSquashedComment toBeSquashed = null;
 
         for (LineComment lineComment : lineComments) {
-            Optional<Integer> optionalLineNumber = getStartLineNumber(lineComment);
+            Optional<Integer> optionalLineNumber = NodeUtil.getStartLineNumber(lineComment);
             if (canBeSquashed(lineComment, lastLine)) {
 
-                if (toBeSquashed.isEmpty()) {
-                    toBeSquashed.append(result.getLast().text()).append("\n");
+                if (toBeSquashed == null) {
+                    toBeSquashed = new ToBeSquashedComment(optionalLineNumber.orElse(null));
+                    toBeSquashed.comment.append(result.getLast().text()).append("\n");
                     result.removeLast();
                 }
-                toBeSquashed.append(CommentUtils.getTrimmedContent(lineComment)).append("\n");
+                toBeSquashed.comment.append(CommentUtils.getTrimmedContent(lineComment)).append("\n");
             } else {
-                 if (!toBeSquashed.isEmpty()) {
-                    result.add(CommentDto.ofLine(toBeSquashed.toString()));
+                if (toBeSquashed != null) {
+                    result.add(CommentDto.ofLine(toBeSquashed.comment.toString(), toBeSquashed.startLine, fullyQualifiedName));
+                    toBeSquashed.comment.setLength(0);
                 }
-                result.add(CommentDto.ofLine(CommentUtils.getTrimmedContent(lineComment)));
-                toBeSquashed.setLength(0);
+                result.add(CommentDto.ofLine(CommentUtils.getTrimmedContent(lineComment), optionalLineNumber.orElse(null), fullyQualifiedName));
             }
 
             if (optionalLineNumber.isPresent()) {
@@ -53,15 +58,15 @@ class LineCommentsWrapper {
             }
         }
 
-        if (!toBeSquashed.isEmpty()) {
-            result.add(CommentDto.ofLine(toBeSquashed.toString()));
+        if (toBeSquashed != null) {
+            result.add(CommentDto.ofLine(toBeSquashed.comment.toString(), toBeSquashed.startLine, fullyQualifiedName));
         }
 
         return result;
     }
 
     private boolean canBeSquashed(LineComment lineComment, int lastLine) {
-        Optional<Integer> optionalLineNumber = getStartLineNumber(lineComment);
+        Optional<Integer> optionalLineNumber = NodeUtil.getStartLineNumber(lineComment);
         Optional<LineComment> previousLineComment = getPreviousLineComment(lineComment);
 
         if (optionalLineNumber.isEmpty()) {
@@ -102,7 +107,7 @@ class LineCommentsWrapper {
         }
 
         Optional<Integer> optionalNodeLineNumber = getEndLineNumber(commentedNode.get());
-        Optional<Integer> optionalCommentLineNumber = getStartLineNumber(lineComment);
+        Optional<Integer> optionalCommentLineNumber = NodeUtil.getStartLineNumber(lineComment);
 
         if (optionalNodeLineNumber.isEmpty() || optionalCommentLineNumber.isEmpty()) {
             return false;
@@ -111,13 +116,14 @@ class LineCommentsWrapper {
         return optionalNodeLineNumber.get().equals(optionalCommentLineNumber.get());
     }
 
-    private Optional<Integer> getStartLineNumber(Node lineComment) {
-        Optional<Range> range = lineComment.getRange();
-        return range.map(value -> value.begin.line);
-    }
-
     private Optional<Integer> getEndLineNumber(Node lineComment) {
         Optional<Range> range = lineComment.getRange();
         return range.map(value -> value.end.line);
+    }
+
+    private record ToBeSquashedComment(Integer startLine, StringBuilder comment) {
+        ToBeSquashedComment(Integer startLine) {
+            this(startLine, new StringBuilder());
+        }
     }
 }

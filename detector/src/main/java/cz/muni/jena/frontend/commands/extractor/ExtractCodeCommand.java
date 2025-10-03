@@ -5,7 +5,11 @@ import cz.muni.jena.codeminer.extractor.CodeExtractor;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatterFactory;
 import cz.muni.jena.frontend.commands.InvalidOptionException;
+import cz.muni.jena.grpc.InferenceServiceGrpc;
+import cz.muni.jena.grpc.ServerReadyRequest;
+import cz.muni.jena.grpc.ServerReadyResponse;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
+import io.grpc.StatusException;
 import org.springframework.shell.command.CommandExecution;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
@@ -25,11 +29,20 @@ public class ExtractCodeCommand {
     private static final String OUTPUT_PATH_CMD_DESCRIPTION = "Path to the output file";
     private final OutputFormatterFactory outputFormatterFactory;
     private final List<CodeExtractor> codeExtractorList;
+    private final InferenceServiceGrpc.InferenceServiceBlockingV2Stub inferenceServiceStub;
 
     @Inject
-    public ExtractCodeCommand(OutputFormatterFactory outputFormatterFactory, List<CodeExtractor> codeExtractorList) {
+    public ExtractCodeCommand(OutputFormatterFactory outputFormatterFactory, List<CodeExtractor> codeExtractorList, InferenceServiceGrpc.InferenceServiceBlockingV2Stub inferenceServiceStub) {
         this.outputFormatterFactory = outputFormatterFactory;
         this.codeExtractorList = codeExtractorList;
+        this.inferenceServiceStub = inferenceServiceStub;
+    }
+
+    @Command(command = "testConnection")
+    public String testCommand() throws StatusException {
+         ServerReadyResponse response = inferenceServiceStub.serverReady(ServerReadyRequest.newBuilder().build());
+
+         return response.getReady() ? "Ready" : "Not ready";
     }
 
     @Command(command = "extractCode", description = EXTRACT_COMMAND_DESCRIPTION)

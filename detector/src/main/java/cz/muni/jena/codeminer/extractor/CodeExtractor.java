@@ -3,8 +3,11 @@ package cz.muni.jena.codeminer.extractor;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
 
-public interface CodeExtractor {
+import java.util.Collection;
+import java.util.stream.Stream;
 
-    void extract(ClassOrInterfaceDeclaration classOrInterface, OutputFormatter codeSerializer);
+public interface CodeExtractor<T> {
+
+    Stream<T> extract(ClassOrInterfaceDeclaration classOrInterface);
     String getIdentifier();
 }
