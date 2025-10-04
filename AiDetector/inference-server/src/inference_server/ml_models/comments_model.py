@@ -48,7 +48,6 @@ class CommentsModel(InferenceModel):
             self.__logger.info("Inferred: id: '%s', labels: %s", result_id, labels)
             label_evaluation = list(map(self._process_result, labels))
 
-            print(label_evaluation)
             results.append(
                 ModelInferenceResult(id=result_id, label_evaluation=label_evaluation)
             )
