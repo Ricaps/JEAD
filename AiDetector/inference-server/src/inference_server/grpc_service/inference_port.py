@@ -1,6 +1,7 @@
 from typing import Final
 
 from pydantic import BaseModel
+import time
 
 
 from inference_server.model.inference_model import ModelInferenceRequestBatch
@@ -50,7 +51,10 @@ class InferenceServicerPort(InferenceServiceServicer):
         return SuccessResponse(success=unloaded)
 
     async def ModelInference(self, request: InferenceRequest, context):
+        start_time = time.time()
         result = await self._inference_service.execute_request(
             grpc_to_model(request, ModelInferenceRequestBatch)
         )
+        end_time = time.time()
+        print(f"Evaluation took {end_time - start_time}")
         return model_to_grpc(result, InferenceResponse)

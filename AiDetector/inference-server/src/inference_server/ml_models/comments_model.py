@@ -38,22 +38,26 @@ class CommentsModel(InferenceModel):
         async with self._access_lock:
             if self.pipeline is None:
                 raise ModelNotLoadedException("comments-model")
-            raw_results = self.pipeline(list(mapped))
+            raw_results = self.pipeline(list(mapped), batch_size=1)
 
         results: list[ModelInferenceResult] = []
         for index, labels in enumerate(raw_results):
+            labels: list[dict[str, Any]] = labels  # Type cast
             result_id = data.contents[index].id
 
             self.__logger.info("Inferred: id: '%s', labels: %s", result_id, labels)
-            label_evaluation = map(lambda label: LabelEvaluation(**label), labels)
+            label_evaluation = list(map(self._process_result, labels))
 
+            print(label_evaluation)
             results.append(
-                ModelInferenceResult(
-                    id=result_id, label_evaluation=list(label_evaluation)
-                )
+                ModelInferenceResult(id=result_id, label_evaluation=label_evaluation)
             )
 
         return ModelInferenceResultBatch(contents=results)
+
+    @staticmethod
+    def _process_result(label: dict[str, Any]) -> LabelEvaluation:
+        return LabelEvaluation(**{**label, "score": round(label["score"], 5)})
 
     async def on_unload(self):
         async with self._access_lock:
@@ -67,5 +71,9 @@ class CommentsModel(InferenceModel):
             self.tokenizer = AutoTokenizer.from_pretrained(path)
             self.model = AutoModelForSequenceClassification.from_pretrained(path)
             self.pipeline = TextClassificationPipeline(
-                model=self.model, tokenizer=self.tokenizer, top_k=None, device=-1
+                model=self.model,
+                tokenizer=self.tokenizer,
+                top_k=None,
+                device=-1,
+                truncation=True,
             )

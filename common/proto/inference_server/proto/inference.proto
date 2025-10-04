@@ -49,7 +49,7 @@ message InferenceResponse {
 
   message LabelEvaluation {
     string label = 1;
-    float score = 2;
+    double score = 2;
   }
 
   message InferenceResponseContent {
