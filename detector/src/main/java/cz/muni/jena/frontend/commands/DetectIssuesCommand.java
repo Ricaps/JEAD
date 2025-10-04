@@ -4,6 +4,7 @@ import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.*;
 import cz.muni.jena.issue.detectors.compilation_unit.DetectorCombiner;
 import cz.muni.jena.issue.detectors.compilation_unit.IssueDetector;
+import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningIssueDetector;
 import cz.muni.jena.issue.detectors.compilation_unit.SpecificIssueDetector;
 import cz.muni.jena.issue.detectors.project.ProjectIssueDetector;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
@@ -11,6 +12,7 @@ import cz.muni.jena.parser.IssueDetectorCallback;
 import cz.muni.jena.parser.ThreadExecutionLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.shell.command.annotation.Command;
@@ -34,12 +36,14 @@ public class DetectIssuesCommand
     private static final String LABEL_DESCRIPTION = "Jena will assign label to all anti-patterns, classes and methods found. " +
             "Their label is important for other commands. For more information see their descriptions.";
     private static final String DETECT_ISSUE_DESCRIPTION = "Detect issues command detects issues in project in absolute path p and at the same time it collect extra information about the project such as classes and methods.";
+    private static final String USE_MACHINE_LEARNING = "Use machine learning to improve detection";
     private final List<SpecificIssueDetector> compilationUnitIssueDetectors;
     private final List<ProjectIssueDetector> projectIssueDetectors;
     private final IssueDao issueDao;
     private final IssueMethodDao issueMethodDao;
     private final IssueClassDao issueClassDao;
     private final Logger logger = LoggerFactory.getLogger(DetectIssuesCommand.class);
+    private final MachineLearningIssueDetector machineLearningDetector;
 
     @Inject
     public DetectIssuesCommand(
@@ -47,7 +51,8 @@ public class DetectIssuesCommand
             List<ProjectIssueDetector> projectIssueDetectors,
             IssueDao issueDao,
             IssueMethodDao issueMethodDao,
-            IssueClassDao issueClassDao
+            IssueClassDao issueClassDao,
+            MachineLearningIssueDetector machineLearningDetector
     )
     {
         this.compilationUnitIssueDetectors = compilationUnitIssueDetectors;
@@ -55,6 +60,7 @@ public class DetectIssuesCommand
         this.issueDao = issueDao;
         this.issueMethodDao = issueMethodDao;
         this.issueClassDao = issueClassDao;
+        this.machineLearningDetector = machineLearningDetector;
     }
 
     @Command(command = "detectIssues", description = DETECT_ISSUE_DESCRIPTION)
@@ -64,7 +70,8 @@ public class DetectIssuesCommand
             @Option(longNames = "issueCategory", shortNames = 'i', description = CATEGORIES_FILTER_DESCRIPTION) IssueCategory issueCategory,
             @Option(longNames = "showThreadsRuntime", shortNames = 'd', defaultValue = "false", description = SHOW_THREADS_DESCRIPTION)
                     boolean showThreadsRuntime,
-            @Option(longNames = "projectLabel", shortNames = 'l', defaultValue = "0", description = LABEL_DESCRIPTION) String projectLabel
+            @Option(longNames = "projectLabel", shortNames = 'l', defaultValue = "0", description = LABEL_DESCRIPTION) String projectLabel,
+            @Option(longNames = "machineLearning", shortNames = 'm', defaultValue = "true", description = USE_MACHINE_LEARNING) boolean useMachineLearning
     )
     {
         Configuration configuration = Optional.ofNullable(configPath)
@@ -73,11 +80,20 @@ public class DetectIssuesCommand
         Set<IssueCategory> issueDetectorFilter = Optional.ofNullable(issueCategory)
                 .map(Set::of)
                 .orElse(Arrays.stream(IssueCategory.values()).collect(Collectors.toSet()));
-        IssueDetector combinedIssueDetector = new DetectorCombiner(
-                compilationUnitIssueDetectors.stream()
-                        .filter(issueDetector -> issueDetectorFilter.contains(issueDetector.getIssueCategory()))
-                        .toList()
-        );
+
+        List<SpecificIssueDetector> staticIssueDetectors = compilationUnitIssueDetectors.stream()
+                .filter(issueDetector -> issueDetectorFilter.contains(issueDetector.getIssueCategory()))
+                .toList();
+        List<IssueDetector> detectors = new ArrayList<>(staticIssueDetectors);
+
+        if (useMachineLearning) {
+            machineLearningDetector.setDetectorPredicate(
+                    mlDetectorConfig -> issueDetectorFilter.contains(mlDetectorConfig.issueType().getCategory())
+                    );
+            detectors.add(machineLearningDetector);
+        }
+
+        IssueDetector combinedIssueDetector = new DetectorCombiner(detectors);
         List<Issue> issues = Collections.synchronizedList(new ArrayList<>());
         IssueDetectorCallback callback = new IssueDetectorCallback(
                 combinedIssueDetector,

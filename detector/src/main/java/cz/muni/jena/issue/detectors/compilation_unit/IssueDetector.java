@@ -12,12 +12,4 @@ public interface IssueDetector
 {
     @NonNull
     Stream<Issue> findIssues(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Configuration configuration);
-
-    @NonNull
-    default List<Issue> findIssues(List<ClassOrInterfaceDeclaration> compilationUnits, Configuration configuration)
-    {
-        return compilationUnits.stream()
-                .flatMap(classOrInterfaceDeclaration -> findIssues(classOrInterfaceDeclaration, configuration))
-                .toList();
-    }
 }
