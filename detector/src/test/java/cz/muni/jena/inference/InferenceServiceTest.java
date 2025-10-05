@@ -6,10 +6,12 @@ import cz.muni.jena.exception.InferenceFailedException;
 import cz.muni.jena.grpc.InferenceResponse;
 import cz.muni.jena.grpc.InferenceServiceGrpc;
 import cz.muni.jena.inference.model.InferenceItem;
+import cz.muni.jena.inference.model.mapping.InferenceMapper;
 import io.grpc.Status;
 import io.grpc.StatusException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -59,7 +61,8 @@ class InferenceServiceTest {
     @BeforeEach
     void beforeEach() {
         stub = mock(InferenceServiceGrpc.InferenceServiceBlockingV2Stub.class);
-        inferenceService = new InferenceService(stub);
+        InferenceMapper inferenceMapper = Mappers.getMapper(InferenceMapper.class);
+        inferenceService = new InferenceService(stub, inferenceMapper);
     }
 
     @Test

@@ -17,6 +17,7 @@
         <grpc.version>1.74.0</grpc.version>
         <spring.grpc.version>0.11.0</spring.grpc.version>
         <protobuf-java.version>4.31.1</protobuf-java.version>
+        <org.mapstruct.version>1.6.3</org.mapstruct.version>
     </properties>
 
 
@@ -132,6 +133,11 @@
             <artifactId>grpc-services</artifactId>
             <version>${grpc.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${org.mapstruct.version}</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -153,6 +159,23 @@
                 <configuration>
                     <forkMode>once</forkMode>
                     <forkCount>0</forkCount>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <release>${maven.compiler.target}</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${org.mapstruct.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>

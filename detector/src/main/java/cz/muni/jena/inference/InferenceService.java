@@ -8,7 +8,7 @@ import cz.muni.jena.grpc.InferenceServiceGrpc;
 import cz.muni.jena.grpc.ServerReadyRequest;
 import cz.muni.jena.grpc.ServerReadyResponse;
 import cz.muni.jena.inference.model.InferenceItem;
-import cz.muni.jena.inference.model.Label;
+import cz.muni.jena.inference.model.mapping.InferenceMapper;
 import io.grpc.StatusException;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.PostConstruct;
@@ -18,7 +18,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -31,9 +30,11 @@ public class InferenceService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InferenceService.class);
     private final InferenceServiceGrpc.InferenceServiceBlockingV2Stub inferenceServiceStub;
+    private final InferenceMapper inferenceMapper;
 
-    public InferenceService(InferenceServiceGrpc.InferenceServiceBlockingV2Stub inferenceServiceStub) {
+    public InferenceService(InferenceServiceGrpc.InferenceServiceBlockingV2Stub inferenceServiceStub, InferenceMapper inferenceMapper) {
         this.inferenceServiceStub = inferenceServiceStub;
+        this.inferenceMapper = inferenceMapper;
     }
 
     public <T extends EvaluatedNode> Stream<InferenceItem<T>> doInference(Collection<InferenceItem<T>> inferenceItemCollection, @Nonnull String modelName) {
@@ -42,46 +43,14 @@ public class InferenceService {
             return Stream.of();
         }
 
-        List<InferenceRequest.InferenceRequestContent> contents = inferenceItemCollection
-                .stream()
-                .map(inferenceItem -> InferenceRequest.InferenceRequestContent
-                        .newBuilder()
-                        .setId(inferenceItem.id().toString())
-                        .setContent(inferenceItem.getContent())
-                        .build()
-                ).toList();
+        Collection<InferenceRequest.InferenceRequestContent> contents = inferenceMapper.mapItemToRequest(inferenceItemCollection);
 
         LOGGER.info("Sending request with len {}", inferenceItemCollection.size());
-        InferenceRequest inferenceRequest = InferenceRequest.newBuilder().addAllContents(contents).setModelName(modelName).build();
+        InferenceRequest inferenceRequest = inferenceMapper.mapContentsToRequest(contents, modelName);
 
         InferenceResponse response = runRequest(inferenceRequest);
         Map<UUID, InferenceItem<T>> inferenceItemMap = inferenceItemCollection.stream().collect(Collectors.toMap(InferenceItem::id, e -> e));
-        return response.getContentsList().stream().map(contentList -> this.mapResponseToItem(inferenceItemMap, contentList));
-    }
-
-    private <T extends EvaluatedNode> InferenceItem<T> mapResponseToItem(Map<UUID, InferenceItem<T>> inferenceItemMap, InferenceResponse.InferenceResponseContent responseContent) throws InferenceFailedException {
-        UUID itemID = parseItemID(responseContent.getId());
-        InferenceItem<T> referenceItem = inferenceItemMap.get(itemID);
-        List<Label> labels = responseContent.getLabelEvaluationList().stream().map(this::mapLabelEvaluation).toList();
-
-        if (referenceItem == null) {
-            throw new InferenceFailedException("Cannot find reference inference item with ID %s".formatted(responseContent.getId()));
-        }
-        return new InferenceItem<T>(itemID, referenceItem.evaluableItem(), labels);
-
-    }
-
-    private UUID parseItemID(String itemID) {
-        try {
-            return UUID.fromString(itemID);
-        } catch (IllegalArgumentException ex) {
-            throw new InferenceFailedException("Failed to parse ID of the response item", ex);
-        }
-
-    }
-
-    private Label mapLabelEvaluation(InferenceResponse.LabelEvaluation labelEvaluation) {
-        return new Label(labelEvaluation.getLabel(), labelEvaluation.getScore());
+        return response.getContentsList().stream().map(contentList -> this.inferenceMapper.mapResponseToItem(inferenceItemMap, contentList));
     }
 
     private InferenceResponse runRequest(InferenceRequest inferenceRequest) {
