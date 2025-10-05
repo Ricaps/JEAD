@@ -27,7 +27,6 @@ import java.util.stream.Stream;
 @ConditionalOnProperty("inference.enabled")
 public class InferenceService {
 
-    private static final int INIT_TIMEOUT = 60;
     private static final Logger LOGGER = LoggerFactory.getLogger(InferenceService.class);
     private final InferenceServiceGrpc.InferenceServiceBlockingV2Stub inferenceServiceStub;
 

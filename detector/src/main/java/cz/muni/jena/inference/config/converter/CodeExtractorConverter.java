@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Map;
 
 @Component
 @ConfigurationPropertiesBinding
