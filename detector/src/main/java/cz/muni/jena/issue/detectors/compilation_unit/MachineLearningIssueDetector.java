@@ -6,5 +6,5 @@ import java.util.function.Predicate;
 
 public interface MachineLearningIssueDetector extends IssueDetector {
 
-    void setDetectorPredicate(Predicate<MLDetectorConfig> detectorPredicate);
+    void setEvaluationPredicate(Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate);
 }

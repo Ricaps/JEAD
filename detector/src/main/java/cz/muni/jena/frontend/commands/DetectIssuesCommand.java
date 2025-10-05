@@ -12,7 +12,6 @@ import cz.muni.jena.parser.IssueDetectorCallback;
 import cz.muni.jena.parser.ThreadExecutionLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.shell.command.annotation.Command;
@@ -87,8 +86,8 @@ public class DetectIssuesCommand
         List<IssueDetector> detectors = new ArrayList<>(staticIssueDetectors);
 
         if (useMachineLearning) {
-            machineLearningDetector.setDetectorPredicate(
-                    mlDetectorConfig -> issueDetectorFilter.contains(mlDetectorConfig.issueType().getCategory())
+            machineLearningDetector.setEvaluationPredicate(
+                    evaluationConfig -> issueDetectorFilter.contains(evaluationConfig.issueType().getCategory())
                     );
             detectors.add(machineLearningDetector);
         }

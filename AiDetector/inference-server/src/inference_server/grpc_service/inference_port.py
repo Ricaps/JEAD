@@ -56,5 +56,5 @@ class InferenceServicerPort(InferenceServiceServicer):
             grpc_to_model(request, ModelInferenceRequestBatch)
         )
         end_time = time.time()
-        print(f"Evaluation took {end_time - start_time}")
+        print(f"Evaluation took {end_time - start_time}, size: {len(request.contents)}")
         return model_to_grpc(result, InferenceResponse)

@@ -10,7 +10,6 @@ import cz.muni.jena.inference.config.InferenceConfiguration;
 import cz.muni.jena.inference.config.MLDetectorConfig;
 import cz.muni.jena.inference.model.InferenceItem;
 import cz.muni.jena.issue.Issue;
-import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningIssueDetector;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
@@ -21,6 +20,8 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -33,7 +34,7 @@ public class MachineLearningDetectorCombiner implements MachineLearningIssueDete
     private static final Logger LOGGER = LoggerFactory.getLogger(MachineLearningDetectorCombiner.class);
     private final InferenceConfiguration inferenceConfiguration;
     private final InferenceService inferenceService;
-    private Predicate<MLDetectorConfig> detectorPredicate;
+    private Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate;
 
     @Inject
     public MachineLearningDetectorCombiner(InferenceConfiguration inferenceConfiguration, InferenceService inferenceService) {
@@ -51,11 +52,11 @@ public class MachineLearningDetectorCombiner implements MachineLearningIssueDete
                 .stream()
                 .flatMap((entry) -> {
                     List<MLDetectorConfig> filteredDetectorConfigs = entry.getValue().stream().filter((extractor) -> {
-                        if (detectorPredicate == null) {
+                        if (evaluationPredicate == null) {
                             return true;
                         }
 
-                        return detectorPredicate.test(extractor);
+                        return extractor.evaluations().stream().anyMatch(evaluation -> evaluationPredicate.test(evaluation));
                     }).toList();
 
                     return processExtractor(classOrInterfaceDeclaration, entry.getKey(), filteredDetectorConfigs);
@@ -87,23 +88,37 @@ public class MachineLearningDetectorCombiner implements MachineLearningIssueDete
 
         try {
             return inferenceService.doInference(inferenceItemStream, mlDetectorConfig.modelName())
-                    .filter(inferenceItem -> matchesAnyLabel(inferenceItem, mlDetectorConfig.label()))
-                    .map(inferenceItem -> mapItemToIssue(inferenceItem, mlDetectorConfig.issueType()));
+                    .map(inferenceItem -> mapItemToIssue(inferenceItem, mlDetectorConfig))
+                    .filter(Objects::nonNull);
         } catch (InferenceFailedException ex) {
             throw new InferenceFailedException("Failed to evaluate detector %s ".formatted(mlDetectorConfig.detectorName()), ex);
         }
     }
 
-    private boolean matchesAnyLabel(InferenceItem<EvaluatedNode> inferenceItem, MLDetectorConfig.LabelEvaluationConfig labelConfig) {
-        return inferenceItem.labels().stream().anyMatch(label -> label.matches(labelConfig.labelName(), labelConfig.threshold()));
+    private Issue mapItemToIssue(InferenceItem<EvaluatedNode> inferenceItem, MLDetectorConfig mlDetectorConfig) {
+        Optional<MLDetectorConfig.LabelEvaluationConfig> matchingEvaluation = getMatchingEvaluation(inferenceItem, mlDetectorConfig);
+
+        return matchingEvaluation
+                .map(evaluation -> new Issue(evaluation.issueType(), inferenceItem.getStartLine(), inferenceItem.getFullyQualifiedName()))
+                .orElse(null);
     }
 
-    private Issue mapItemToIssue(InferenceItem<EvaluatedNode> inferenceItem, IssueType issueType) {
-        return new Issue(issueType, inferenceItem.getStartLine(), inferenceItem.getFullyQualifiedName());
+    private Optional<MLDetectorConfig.LabelEvaluationConfig> getMatchingEvaluation(InferenceItem<EvaluatedNode> inferenceItem, MLDetectorConfig mlDetectorConfig) {
+        return mlDetectorConfig.evaluations().stream()
+                .filter(evaluation -> {
+                    if (evaluationPredicate == null) {
+                        return true;
+                    }
+
+                    return evaluationPredicate.test(evaluation);
+                })
+                .filter(evaluation ->
+                        inferenceItem.labels().stream().anyMatch(label -> label.matches(evaluation.labelName(), evaluation.threshold()))
+                ).findAny();
     }
 
     @Override
-    public void setDetectorPredicate(Predicate<MLDetectorConfig> detectorPredicate) {
-        this.detectorPredicate = detectorPredicate;
+    public void setEvaluationPredicate(Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate) {
+        this.evaluationPredicate = evaluationPredicate;
     }
 }

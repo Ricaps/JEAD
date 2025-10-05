@@ -30,7 +30,7 @@ public class CommentsCodeExtractor extends BaseCodeExtractor<CommentDto> {
 
         List<CommentDto> outputComments = processComments(comments, classOrInterface);
 
-        LOGGER.info("Extracted {} comments from {}", comments.size(), classOrInterface.getNameAsString());
+        LOGGER.info("Extracted {} comments from {}", outputComments.size(), classOrInterface.getNameAsString());
 
         return outputComments.stream();
     }

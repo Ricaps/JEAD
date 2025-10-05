@@ -22,7 +22,7 @@ public class EmptyMachineLearningDetector implements MachineLearningIssueDetecto
     }
 
     @Override
-    public void setDetectorPredicate(Predicate<MLDetectorConfig> detectorPredicate) {
+    public void setEvaluationPredicate(Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate) {
 
     }
 }

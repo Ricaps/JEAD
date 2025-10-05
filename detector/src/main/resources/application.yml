@@ -25,16 +25,10 @@ inference:
   - detector-name: technical-debt
     extractor: comments
     model-name: comments-model
-    issue-type: SELF_ADMITTED_TECHNICAL_DEBT
-    label:
-      label-name: "technical_debt"
-      threshold: 0.90
-
-  - detector-name: code-comments
-    extractor: comments
-    model-name: comments-model
-    issue-type: COMMENTED_OUT_CODE
-    label:
-      label-name: "code_comments"
-      threshold: 0.90
-
+    evaluations:
+      - label-name: "technical_debt"
+        threshold: 0.8
+        issue-type: SELF_ADMITTED_TECHNICAL_DEBT
+      - label-name: "code_comment"
+        threshold: 0.8
+        issue-type: COMMENTED_OUT_CODE
