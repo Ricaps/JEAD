@@ -38,7 +38,7 @@ class CommentsModel(InferenceModel):
         async with self._access_lock:
             if self.pipeline is None:
                 raise ModelNotLoadedException("comments-model")
-            raw_results = self.pipeline(list(mapped), batch_size=1)
+            raw_results = self.pipeline(list(mapped), batch_size=20)
 
         results: list[ModelInferenceResult] = []
         for index, labels in enumerate(raw_results):
