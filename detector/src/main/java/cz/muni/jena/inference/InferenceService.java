@@ -46,7 +46,7 @@ public class InferenceService {
                         .build()
                 ).toList();
 
-
+        LOGGER.info("Sending request with len {}", inferenceItemCollection.size());
         InferenceRequest inferenceRequest = InferenceRequest.newBuilder().addAllContents(contents).setModelName(modelName).build();
 
         InferenceResponse response = runRequest(inferenceRequest);
