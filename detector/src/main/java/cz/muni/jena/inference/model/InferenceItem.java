@@ -11,6 +11,10 @@ public record InferenceItem<T extends EvaluatedNode>(
         List<Label> labels
 ) implements EvaluatedNode {
 
+    public InferenceItem(T evaluableItem) {
+        this(UUID.randomUUID(), evaluableItem, List.of());
+    }
+
     @Override
     public String getFullyQualifiedName() {
         return evaluableItem.getFullyQualifiedName();

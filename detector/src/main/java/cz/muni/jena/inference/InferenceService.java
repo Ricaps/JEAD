@@ -10,6 +10,7 @@ import cz.muni.jena.grpc.ServerReadyResponse;
 import cz.muni.jena.inference.model.InferenceItem;
 import cz.muni.jena.inference.model.Label;
 import io.grpc.StatusException;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,7 +36,11 @@ public class InferenceService {
         this.inferenceServiceStub = inferenceServiceStub;
     }
 
-    public Stream<InferenceItem<EvaluatedNode>> doInference(Collection<? extends InferenceItem<EvaluatedNode>> inferenceItemCollection, String modelName) {
+    public <T extends EvaluatedNode> Stream<InferenceItem<T>> doInference(Collection<InferenceItem<T>> inferenceItemCollection, @Nonnull String modelName) {
+        Objects.requireNonNull(modelName, "Model name cannot be null!");
+        if (inferenceItemCollection.isEmpty()) {
+            return Stream.of();
+        }
 
         List<InferenceRequest.InferenceRequestContent> contents = inferenceItemCollection
                 .stream()
@@ -49,19 +55,19 @@ public class InferenceService {
         InferenceRequest inferenceRequest = InferenceRequest.newBuilder().addAllContents(contents).setModelName(modelName).build();
 
         InferenceResponse response = runRequest(inferenceRequest);
-        Map<UUID, ? extends InferenceItem<EvaluatedNode>> inferenceItemMap = inferenceItemCollection.stream().collect(Collectors.toMap(InferenceItem::id, e -> e));
+        Map<UUID, InferenceItem<T>> inferenceItemMap = inferenceItemCollection.stream().collect(Collectors.toMap(InferenceItem::id, e -> e));
         return response.getContentsList().stream().map(contentList -> this.mapResponseToItem(inferenceItemMap, contentList));
     }
 
-    private InferenceItem<EvaluatedNode> mapResponseToItem(Map<UUID, ? extends InferenceItem<EvaluatedNode>> inferenceItemMap, InferenceResponse.InferenceResponseContent responseContent) throws InferenceFailedException {
+    private <T extends EvaluatedNode> InferenceItem<T> mapResponseToItem(Map<UUID, InferenceItem<T>> inferenceItemMap, InferenceResponse.InferenceResponseContent responseContent) throws InferenceFailedException {
         UUID itemID = parseItemID(responseContent.getId());
-        InferenceItem<?> referenceItem = inferenceItemMap.get(itemID);
+        InferenceItem<T> referenceItem = inferenceItemMap.get(itemID);
         List<Label> labels = responseContent.getLabelEvaluationList().stream().map(this::mapLabelEvaluation).toList();
 
         if (referenceItem == null) {
             throw new InferenceFailedException("Cannot find reference inference item with ID %s".formatted(responseContent.getId()));
         }
-        return new InferenceItem<>(itemID, referenceItem.evaluableItem(), labels);
+        return new InferenceItem<T>(itemID, referenceItem.evaluableItem(), labels);
 
     }
 
@@ -82,7 +88,7 @@ public class InferenceService {
         try {
             return inferenceServiceStub.modelInference(inferenceRequest);
         } catch (StatusException e) {
-            throw new InferenceFailedException("Evaluation of inference request failed", e);
+            throw new InferenceFailedException("Evaluation of inference request failed with status %s".formatted(e.getStatus()), e);
         }
     }
 

@@ -1,0 +1,114 @@
+package cz.muni.jena.inference;
+
+import cz.muni.jena.codeminer.extractor.comments.CommentDto;
+import cz.muni.jena.codeminer.extractor.comments.CommentType;
+import cz.muni.jena.exception.InferenceFailedException;
+import cz.muni.jena.grpc.InferenceResponse;
+import cz.muni.jena.grpc.InferenceServiceGrpc;
+import cz.muni.jena.inference.model.InferenceItem;
+import io.grpc.Status;
+import io.grpc.StatusException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
+import java.util.List;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+class InferenceServiceTest {
+
+    public static final List<InferenceItem<CommentDto>> INPUTS = List.of(
+            new InferenceItem<>(new CommentDto(CommentType.JAVADOC, "test", 0, "test")),
+            new InferenceItem<>(new CommentDto(CommentType.LINE, "test-2", 10, "test-2"))
+    );
+    @Mock
+    private InferenceServiceGrpc.InferenceServiceBlockingV2Stub stub;
+
+    @InjectMocks
+    private InferenceService inferenceService;
+
+    private static void checkResult(InferenceItem<CommentDto> result1, InferenceItem<CommentDto> inferenceItem, InferenceResponse.InferenceResponseContent expectedResponseContent1, List<InferenceResponse.LabelEvaluation> labelEvaluations) {
+        assertThat(result1.id()).isEqualTo(UUID.fromString(expectedResponseContent1.getId()));
+        assertThat(result1.evaluableItem()).isEqualTo(inferenceItem.evaluableItem());
+        assertThat(result1.labels()).hasSize(2);
+        assertThat(result1.labels().get(0))
+                .hasFieldOrPropertyWithValue("labelName", labelEvaluations.get(0).getLabel())
+                .hasFieldOrPropertyWithValue("value", labelEvaluations.get(0).getScore());
+
+        assertThat(result1.labels().get(1))
+                .hasFieldOrPropertyWithValue("labelName", labelEvaluations.get(1).getLabel())
+                .hasFieldOrPropertyWithValue("value", labelEvaluations.get(1).getScore());
+    }
+
+    private static InferenceResponse.LabelEvaluation buildLabel(String value, double value1) {
+        return InferenceResponse.LabelEvaluation.newBuilder()
+                .setLabel(value)
+                .setScore(value1)
+                .build();
+    }
+
+    @BeforeEach
+    void beforeEach() {
+        stub = mock(InferenceServiceGrpc.InferenceServiceBlockingV2Stub.class);
+        inferenceService = new InferenceService(stub);
+    }
+
+    @Test
+    void doInference_modelNameNull_throwsException() {
+        assertThatThrownBy(() -> inferenceService.doInference(List.of(), null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void doInference_emptyInput_emptyOutput() throws StatusException {
+        List<?> result = inferenceService.doInference(List.of(), "model-name").toList();
+
+        assertThat(result).isEmpty();
+        verify(stub, times(0)).modelInference(any());
+    }
+
+    @Test
+    void doInference_correctInput_correctOutput() throws StatusException {
+        InferenceResponse.LabelEvaluation labelEvaluation1 = buildLabel("label-1", 0.99);
+
+        InferenceResponse.LabelEvaluation labelEvaluation2 = buildLabel("label-2", 0.01);
+
+        InferenceResponse.InferenceResponseContent expectedResponseContent1 = InferenceResponse.InferenceResponseContent.newBuilder()
+                .setId(INPUTS.get(0).id().toString())
+                .addAllLabelEvaluation(List.of(labelEvaluation1, labelEvaluation2))
+                .build();
+
+        InferenceResponse.InferenceResponseContent expectedResponseContent2 = InferenceResponse.InferenceResponseContent.newBuilder()
+                .setId(INPUTS.get(1).id().toString())
+                .addAllLabelEvaluation(List.of(labelEvaluation1, labelEvaluation2))
+                .build();
+
+        InferenceResponse expectedResponse = InferenceResponse.newBuilder().addAllContents(List.of(expectedResponseContent1, expectedResponseContent2)).build();
+
+        when(stub.modelInference(any())).thenReturn(expectedResponse);
+        List<InferenceItem<CommentDto>> result = inferenceService.doInference(INPUTS, "model-name").toList();
+        verify(stub, times(1)).modelInference(any());
+
+        checkResult(result.get(0), INPUTS.get(0), expectedResponseContent1, List.of(labelEvaluation1, labelEvaluation2));
+        checkResult(result.get(1), INPUTS.get(1), expectedResponseContent2, List.of(labelEvaluation1, labelEvaluation2));
+    }
+
+    @Test
+    void doInference_throwsStatusException_translatedToInferenceException() throws StatusException {
+        when(stub.modelInference(any())).thenThrow(new StatusException(Status.CANCELLED));
+
+        assertThatThrownBy(() -> inferenceService.doInference(INPUTS, "model-name"))
+                .isInstanceOf(InferenceFailedException.class)
+                .hasMessage("Evaluation of inference request failed with status %s".formatted(Status.CANCELLED));
+    }
+
+}
