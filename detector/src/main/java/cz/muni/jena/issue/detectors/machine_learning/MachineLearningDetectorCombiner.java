@@ -5,7 +5,6 @@ import cz.muni.jena.codeminer.EvaluatedNode;
 import cz.muni.jena.codeminer.extractor.CodeExtractor;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.exception.InferenceFailedException;
-import cz.muni.jena.inference.InferenceService;
 import cz.muni.jena.inference.config.InferenceConfiguration;
 import cz.muni.jena.inference.config.MLDetectorConfig;
 import cz.muni.jena.inference.model.InferenceItem;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Component;
 import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -33,13 +31,13 @@ public class MachineLearningDetectorCombiner implements MachineLearningIssueDete
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MachineLearningDetectorCombiner.class);
     private final InferenceConfiguration inferenceConfiguration;
-    private final InferenceService inferenceService;
     private Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate;
+    private final InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder;
 
     @Inject
-    public MachineLearningDetectorCombiner(InferenceConfiguration inferenceConfiguration, InferenceService inferenceService) {
+    public MachineLearningDetectorCombiner(InferenceConfiguration inferenceConfiguration, InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder) {
         this.inferenceConfiguration = inferenceConfiguration;
-        this.inferenceService = inferenceService;
+        this.inferenceQueueHolder = inferenceQueueHolder;
     }
 
     @Override
@@ -64,9 +62,8 @@ public class MachineLearningDetectorCombiner implements MachineLearningIssueDete
     }
 
     private Stream<Issue> processExtractor(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, CodeExtractor<?> extractor, List<MLDetectorConfig> detectorConfigs) {
-        Collection<InferenceItem<EvaluatedNode>> inferenceItems = extractor
+        Collection<? extends EvaluatedNode> inferenceItems = extractor
                 .extract(classOrInterfaceDeclaration)
-                .map(InferenceItem<EvaluatedNode>::new)
                 .toList();
 
         if (inferenceItems.isEmpty()) {
@@ -84,18 +81,24 @@ public class MachineLearningDetectorCombiner implements MachineLearningIssueDete
         return Stream.of();
     }
 
-    private Stream<Issue> processDetector(Collection<InferenceItem<EvaluatedNode>> inferenceItemStream, MLDetectorConfig mlDetectorConfig) {
+    private Stream<Issue> processDetector(Collection<? extends EvaluatedNode> evaluatedNodesStream, MLDetectorConfig mlDetectorConfig) {
+        Stream<InferenceItem<EvaluatedNode>> inferenceItemStream = evaluatedNodesStream
+                .stream()
+                .map(evaluatedNode -> new InferenceItem<>(evaluatedNode, (inferenceItem) -> this.mapItemToIssue(inferenceItem, mlDetectorConfig)));
 
-        try {
-            return inferenceService.doInference(inferenceItemStream, mlDetectorConfig.modelName())
-                    .map(inferenceItem -> mapItemToIssue(inferenceItem, mlDetectorConfig))
-                    .filter(Objects::nonNull);
-        } catch (InferenceFailedException ex) {
-            throw new InferenceFailedException("Failed to evaluate detector %s ".formatted(mlDetectorConfig.detectorName()), ex);
-        }
+        inferenceQueueHolder.addToQueue(mlDetectorConfig.modelName(), inferenceItemStream);
+//        try {
+//            return inferenceService.doInference(inferenceItemStream, mlDetectorConfig.modelName())
+//                    .map(inferenceItem -> mapItemToIssue(inferenceItem, mlDetectorConfig))
+//                    .filter(Objects::nonNull);
+//        } catch (InferenceFailedException ex) {
+//            throw new InferenceFailedException("Failed to evaluate detector %s ".formatted(mlDetectorConfig.detectorName()), ex);
+//        }
+
+        return Stream.of(); // TODO:
     }
 
-    private Issue mapItemToIssue(InferenceItem<EvaluatedNode> inferenceItem, MLDetectorConfig mlDetectorConfig) {
+    private <T extends EvaluatedNode> Issue mapItemToIssue(InferenceItem<T> inferenceItem, MLDetectorConfig mlDetectorConfig) {
         Optional<MLDetectorConfig.LabelEvaluationConfig> matchingEvaluation = getMatchingEvaluation(inferenceItem, mlDetectorConfig);
 
         return matchingEvaluation
@@ -103,7 +106,7 @@ public class MachineLearningDetectorCombiner implements MachineLearningIssueDete
                 .orElse(null);
     }
 
-    private Optional<MLDetectorConfig.LabelEvaluationConfig> getMatchingEvaluation(InferenceItem<EvaluatedNode> inferenceItem, MLDetectorConfig mlDetectorConfig) {
+    private <T extends EvaluatedNode> Optional<MLDetectorConfig.LabelEvaluationConfig> getMatchingEvaluation(InferenceItem<T> inferenceItem, MLDetectorConfig mlDetectorConfig) {
         return mlDetectorConfig.evaluations().stream()
                 .filter(evaluation -> {
                     if (evaluationPredicate == null) {

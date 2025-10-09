@@ -29,8 +29,8 @@ import static org.mockito.Mockito.when;
 class InferenceServiceTest {
 
     public static final List<InferenceItem<CommentDto>> INPUTS = List.of(
-            new InferenceItem<>(new CommentDto(CommentType.JAVADOC, "test", 0, "test")),
-            new InferenceItem<>(new CommentDto(CommentType.LINE, "test-2", 10, "test-2"))
+            new InferenceItem<>(new CommentDto(CommentType.JAVADOC, "test", 0, "test"), null),
+            new InferenceItem<>(new CommentDto(CommentType.LINE, "test-2", 10, "test-2"), null)
     );
     @Mock
     private InferenceServiceGrpc.InferenceServiceBlockingV2Stub stub;

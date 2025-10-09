@@ -8,11 +8,12 @@ import java.util.UUID;
 public record InferenceItem<T extends EvaluatedNode>(
         UUID id,
         T evaluableItem,
-        List<Label> labels
+        List<Label> labels,
+        InferenceIssueMapping<T> issueMappingFunction
 ) implements EvaluatedNode {
 
-    public InferenceItem(T evaluableItem) {
-        this(UUID.randomUUID(), evaluableItem, List.of());
+    public InferenceItem(T evaluableItem, InferenceIssueMapping<T> issueMappingFunction) {
+        this(UUID.randomUUID(), evaluableItem, List.of(), issueMappingFunction);
     }
 
     @Override
@@ -28,6 +29,5 @@ public record InferenceItem<T extends EvaluatedNode>(
     @Override
     public String getContent() {
         return evaluableItem.getContent();
-
     }
 }

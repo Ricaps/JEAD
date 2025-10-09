@@ -13,7 +13,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Component
-@ConditionalOnProperty(value = "inference.enabled", havingValue = "false")
+@ConditionalOnProperty(value = "inference.enabled", havingValue = "false", matchIfMissing = true)
 public class EmptyMachineLearningDetector implements MachineLearningIssueDetector {
 
     @Override

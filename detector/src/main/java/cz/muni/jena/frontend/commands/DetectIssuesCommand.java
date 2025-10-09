@@ -1,11 +1,17 @@
 package cz.muni.jena.frontend.commands;
 
+import cz.muni.jena.codeminer.EvaluatedNode;
 import cz.muni.jena.configuration.Configuration;
-import cz.muni.jena.issue.*;
+import cz.muni.jena.issue.Issue;
+import cz.muni.jena.issue.IssueCategory;
+import cz.muni.jena.issue.IssueClassDao;
+import cz.muni.jena.issue.IssueDao;
+import cz.muni.jena.issue.IssueMethodDao;
 import cz.muni.jena.issue.detectors.compilation_unit.DetectorCombiner;
 import cz.muni.jena.issue.detectors.compilation_unit.IssueDetector;
 import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningIssueDetector;
 import cz.muni.jena.issue.detectors.compilation_unit.SpecificIssueDetector;
+import cz.muni.jena.issue.detectors.machine_learning.InferenceQueueHolder;
 import cz.muni.jena.issue.detectors.project.ProjectIssueDetector;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
 import cz.muni.jena.parser.IssueDetectorCallback;
@@ -20,7 +26,13 @@ import org.springframework.shell.table.ArrayTableModel;
 import org.springframework.shell.table.TableBuilder;
 
 import javax.inject.Inject;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,6 +55,7 @@ public class DetectIssuesCommand
     private final IssueClassDao issueClassDao;
     private final Logger logger = LoggerFactory.getLogger(DetectIssuesCommand.class);
     private final MachineLearningIssueDetector machineLearningDetector;
+    private final InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder;
 
     @Inject
     public DetectIssuesCommand(
@@ -51,8 +64,8 @@ public class DetectIssuesCommand
             IssueDao issueDao,
             IssueMethodDao issueMethodDao,
             IssueClassDao issueClassDao,
-            MachineLearningIssueDetector machineLearningDetector
-    )
+            MachineLearningIssueDetector machineLearningDetector,
+            InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder)
     {
         this.compilationUnitIssueDetectors = compilationUnitIssueDetectors;
         this.projectIssueDetectors = projectIssueDetectors;
@@ -60,6 +73,7 @@ public class DetectIssuesCommand
         this.issueMethodDao = issueMethodDao;
         this.issueClassDao = issueClassDao;
         this.machineLearningDetector = machineLearningDetector;
+        this.inferenceQueueHolder = inferenceQueueHolder;
     }
 
     @Command(command = "detectIssues", description = DETECT_ISSUE_DESCRIPTION)
@@ -90,6 +104,7 @@ public class DetectIssuesCommand
                     evaluationConfig -> issueDetectorFilter.contains(evaluationConfig.issueType().getCategory())
                     );
             detectors.add(machineLearningDetector);
+            inferenceQueueHolder.startQueues(); // TODO
         }
 
         IssueDetector combinedIssueDetector = new DetectorCombiner(detectors);
@@ -103,6 +118,8 @@ public class DetectIssuesCommand
                 projectLabel
         );
         new AsyncCompilationUnitParser(path).processCompilationUnits(callback);
+        List<Issue> mlIssues = inferenceQueueHolder.terminateQueuesAndWait().toList();
+        issues.addAll(mlIssues);
         issues.addAll(
                 projectIssueDetectors.stream()
                         .filter(issueDetector -> issueDetectorFilter.contains(issueDetector.getIssueCategory()))

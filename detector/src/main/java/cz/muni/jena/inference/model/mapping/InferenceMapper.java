@@ -7,6 +7,7 @@ import cz.muni.jena.grpc.InferenceResponse;
 import cz.muni.jena.inference.InferenceUtil;
 import cz.muni.jena.inference.model.InferenceItem;
 import cz.muni.jena.inference.model.Label;
+import org.mapstruct.CollectionMappingStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -15,12 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED)
 public interface InferenceMapper {
 
     InferenceRequest.InferenceRequestContent mapItemToRequest(InferenceItem<?> inferenceItem);
     Collection<InferenceRequest.InferenceRequestContent> mapItemToRequest(Collection<? extends InferenceItem<?>> inferenceItem);
-    InferenceRequest mapContentsToRequest(Collection<InferenceRequest.InferenceRequestContent> contents, String modelName);
+    InferenceRequest mapContentsToRequest(Collection<InferenceRequest.InferenceRequestContent> contentsList, String modelName);
 
     @Mapping(source = "label", target = "labelName")
     @Mapping(source = "score", target = "value")
@@ -35,7 +36,7 @@ public interface InferenceMapper {
         if (referenceItem == null) {
             throw new InferenceFailedException("Cannot find reference inference item with ID %s".formatted(responseContent.getId()));
         }
-        return new InferenceItem<>(itemID, referenceItem.evaluableItem(), labels);
+        return new InferenceItem<>(itemID, referenceItem.evaluableItem(), labels, referenceItem.issueMappingFunction());
 
     }
 }
