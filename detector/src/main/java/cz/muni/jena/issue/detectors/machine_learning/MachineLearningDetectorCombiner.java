@@ -71,31 +71,24 @@ public class MachineLearningDetectorCombiner implements MachineLearningIssueDete
         }
 
         try {
-            return detectorConfigs.stream()
-                    .flatMap(detector -> processDetector(inferenceItems, detector));
+            detectorConfigs
+                    .forEach(detector -> processDetector(inferenceItems, detector));
         } catch (InferenceFailedException ex) {
             LOGGER.error("Inference for class {}. Reason: {}", classOrInterfaceDeclaration.getFullyQualifiedName(), ex.getMessage());
             LOGGER.trace("Stacktrace: ", ex);
         }
 
+        // No issues are returned directly, since the processing is asynchronous
         return Stream.of();
     }
 
-    private Stream<Issue> processDetector(Collection<? extends EvaluatedNode> evaluatedNodesStream, MLDetectorConfig mlDetectorConfig) {
+    private void processDetector(Collection<? extends EvaluatedNode> evaluatedNodesStream, MLDetectorConfig mlDetectorConfig) {
         Stream<InferenceItem<EvaluatedNode>> inferenceItemStream = evaluatedNodesStream
                 .stream()
                 .map(evaluatedNode -> new InferenceItem<>(evaluatedNode, (inferenceItem) -> this.mapItemToIssue(inferenceItem, mlDetectorConfig)));
 
-        inferenceQueueHolder.addToQueue(mlDetectorConfig.modelName(), inferenceItemStream);
-//        try {
-//            return inferenceService.doInference(inferenceItemStream, mlDetectorConfig.modelName())
-//                    .map(inferenceItem -> mapItemToIssue(inferenceItem, mlDetectorConfig))
-//                    .filter(Objects::nonNull);
-//        } catch (InferenceFailedException ex) {
-//            throw new InferenceFailedException("Failed to evaluate detector %s ".formatted(mlDetectorConfig.detectorName()), ex);
-//        }
+        inferenceQueueHolder.addToQueue(mlDetectorConfig.model().modelName(), inferenceItemStream);
 
-        return Stream.of(); // TODO:
     }
 
     private <T extends EvaluatedNode> Issue mapItemToIssue(InferenceItem<T> inferenceItem, MLDetectorConfig mlDetectorConfig) {

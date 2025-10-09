@@ -13,5 +13,6 @@ import java.util.List;
 public record InferenceConfiguration(
         @DefaultValue("false") boolean enabled,
         @DefaultValue("20") @Positive int queueEndTimeout,
-        List<MLDetectorConfig> detectors
+        List<MLDetectorConfig> detectors,
+        List<ModelConfiguration> models
 ) {}

@@ -3,7 +3,7 @@ package cz.muni.jena.issue.detectors.machine_learning;
 import cz.muni.jena.codeminer.EvaluatedNode;
 import cz.muni.jena.inference.InferenceService;
 import cz.muni.jena.inference.config.InferenceConfiguration;
-import cz.muni.jena.inference.config.MLDetectorConfig;
+import cz.muni.jena.inference.config.ModelConfiguration;
 import cz.muni.jena.inference.model.InferenceItem;
 import cz.muni.jena.issue.Issue;
 import org.slf4j.Logger;
@@ -12,9 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
@@ -33,9 +31,9 @@ public class InferenceQueueHolderImpl implements InferenceQueueHolder<EvaluatedN
 
     @Override
     public void startQueues() {
-        for (String modelName : getModels()) {
-            InferenceQueue<EvaluatedNode> inferenceQueue = new InferenceQueue<>(modelName, inferenceService);
-            inferenceQueues.put(modelName, inferenceQueue);
+        for (ModelConfiguration model : inferenceConfiguration.models()) {
+            InferenceQueue<EvaluatedNode> inferenceQueue = new InferenceQueue<>(model, inferenceService);
+            inferenceQueues.put(model.modelName(), inferenceQueue);
             inferenceQueue.start();
         }
     }
@@ -65,9 +63,5 @@ public class InferenceQueueHolderImpl implements InferenceQueueHolder<EvaluatedN
             InferenceQueueHolderImpl.LOGGER.error("Failed to terminate inference queue for model {}. Results might be incomplete!", inferenceQueue.getModelName(), e);
             return Stream.of();
         }
-    }
-
-    private Set<String> getModels() {
-        return inferenceConfiguration.detectors().stream().map(MLDetectorConfig::modelName).collect(Collectors.toSet());
     }
 }

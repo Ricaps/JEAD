@@ -14,7 +14,7 @@ import java.util.List;
 public record MLDetectorConfig(
         @Size(min = 3, max = 20) String detectorName,
         @Nonnull CodeExtractor<?> extractor,
-        @Size(min = 3, max = 20) String modelName,
+        @Nonnull ModelConfiguration model,
         @Nonnull @Size(min = 1) List<LabelEvaluationConfig> evaluations
 ) {
 

@@ -21,10 +21,15 @@ spring:
 
 inference:
   enabled: true
+  models:
+    - &comments-model
+      model-name: comments-model
+      batch-size: 5
+      batch-period: 100
   detectors:
   - detector-name: technical-debt
     extractor: comments
-    model-name: comments-model
+    model: *comments-model
     evaluations:
       - label-name: "technical_debt"
         threshold: 0.8
@@ -32,3 +37,4 @@ inference:
       - label-name: "code_comment"
         threshold: 0.8
         issue-type: COMMENTED_OUT_CODE
+
