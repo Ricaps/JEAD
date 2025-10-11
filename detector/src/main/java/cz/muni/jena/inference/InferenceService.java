@@ -73,7 +73,7 @@ public class InferenceService {
         LOGGER.info("Connection to inference server succeeded!");
     }
 
-    private boolean isServerReady() {
+    public boolean isServerReady() {
         try {
             ServerReadyResponse response = inferenceServiceStub.serverReady(ServerReadyRequest.newBuilder().build());
             return response.getReady();

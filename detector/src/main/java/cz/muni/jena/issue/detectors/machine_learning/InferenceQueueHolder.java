@@ -6,11 +6,8 @@ import cz.muni.jena.issue.Issue;
 
 import java.util.stream.Stream;
 
-public interface InferenceQueueHolder<T extends EvaluatedNode> {
-
-    void startQueues();
+public interface InferenceQueueHolder<T extends EvaluatedNode> extends InferenceQueueControl {
 
     void addToQueue(String modelName, Stream<InferenceItem<T>> inferenceItemStream);
 
-    Stream<Issue> terminateQueuesAndWait();
 }

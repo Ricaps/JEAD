@@ -1,7 +1,7 @@
 package cz.muni.jena.frontend.commands;
 
-import cz.muni.jena.codeminer.EvaluatedNode;
 import cz.muni.jena.configuration.Configuration;
+import cz.muni.jena.inference.InferenceFacade;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueCategory;
 import cz.muni.jena.issue.IssueClassDao;
@@ -11,7 +11,6 @@ import cz.muni.jena.issue.detectors.compilation_unit.DetectorCombiner;
 import cz.muni.jena.issue.detectors.compilation_unit.IssueDetector;
 import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningIssueDetector;
 import cz.muni.jena.issue.detectors.compilation_unit.SpecificIssueDetector;
-import cz.muni.jena.issue.detectors.machine_learning.InferenceQueueHolder;
 import cz.muni.jena.issue.detectors.project.ProjectIssueDetector;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
 import cz.muni.jena.parser.IssueDetectorCallback;
@@ -48,14 +47,14 @@ public class DetectIssuesCommand
             "Their label is important for other commands. For more information see their descriptions.";
     private static final String DETECT_ISSUE_DESCRIPTION = "Detect issues command detects issues in project in absolute path p and at the same time it collect extra information about the project such as classes and methods.";
     private static final String USE_MACHINE_LEARNING = "Use machine learning to improve detection";
+    private static final Logger LOGGER = LoggerFactory.getLogger(DetectIssuesCommand.class);
     private final List<SpecificIssueDetector> compilationUnitIssueDetectors;
     private final List<ProjectIssueDetector> projectIssueDetectors;
     private final IssueDao issueDao;
     private final IssueMethodDao issueMethodDao;
     private final IssueClassDao issueClassDao;
-    private final Logger logger = LoggerFactory.getLogger(DetectIssuesCommand.class);
     private final MachineLearningIssueDetector machineLearningDetector;
-    private final InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder;
+    private final InferenceFacade inferenceFacade;
 
     @Inject
     public DetectIssuesCommand(
@@ -65,7 +64,8 @@ public class DetectIssuesCommand
             IssueMethodDao issueMethodDao,
             IssueClassDao issueClassDao,
             MachineLearningIssueDetector machineLearningDetector,
-            InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder)
+            InferenceFacade inferenceFacade
+    )
     {
         this.compilationUnitIssueDetectors = compilationUnitIssueDetectors;
         this.projectIssueDetectors = projectIssueDetectors;
@@ -73,7 +73,7 @@ public class DetectIssuesCommand
         this.issueMethodDao = issueMethodDao;
         this.issueClassDao = issueClassDao;
         this.machineLearningDetector = machineLearningDetector;
-        this.inferenceQueueHolder = inferenceQueueHolder;
+        this.inferenceFacade = inferenceFacade;
     }
 
     @Command(command = "detectIssues", description = DETECT_ISSUE_DESCRIPTION)
@@ -99,13 +99,7 @@ public class DetectIssuesCommand
                 .toList();
         List<IssueDetector> detectors = new ArrayList<>(staticIssueDetectors);
 
-        if (useMachineLearning) {
-            machineLearningDetector.setEvaluationPredicate(
-                    evaluationConfig -> issueDetectorFilter.contains(evaluationConfig.issueType().getCategory())
-                    );
-            detectors.add(machineLearningDetector);
-            inferenceQueueHolder.startQueues(); // TODO
-        }
+        startMachineLearningEvaluation(useMachineLearning, issueDetectorFilter, detectors);
 
         IssueDetector combinedIssueDetector = new DetectorCombiner(detectors);
         List<Issue> issues = Collections.synchronizedList(new ArrayList<>());
@@ -118,7 +112,8 @@ public class DetectIssuesCommand
                 projectLabel
         );
         new AsyncCompilationUnitParser(path).processCompilationUnits(callback);
-        List<Issue> mlIssues = inferenceQueueHolder.terminateQueuesAndWait().toList();
+
+        List<Issue> mlIssues = endMachineLearningEvaluation(useMachineLearning);
         issues.addAll(mlIssues);
         issues.addAll(
                 projectIssueDetectors.stream()
@@ -133,6 +128,28 @@ public class DetectIssuesCommand
                 + (showThreadsRuntime ? prepareThreadExecutionLogs(callback.getThreadExecutionLogs()) : "");
     }
 
+    private void startMachineLearningEvaluation(boolean useMachineLearning, Set<IssueCategory> issueDetectorFilter, List<IssueDetector> detectors) {
+        if (!useMachineLearning) {
+            return;
+        }
+        if (!inferenceFacade.canUseMachineLearning()) {
+            LOGGER.warn("Inference server is not available. Machine learning evaluation won't be not used!");
+            return;
+        }
+        machineLearningDetector.setEvaluationPredicate(
+                evaluationConfig -> issueDetectorFilter.contains(evaluationConfig.issueType().getCategory())
+        );
+        detectors.add(machineLearningDetector);
+        inferenceFacade.startQueues();
+    }
+
+    private List<Issue> endMachineLearningEvaluation(boolean useMachineLearning) {
+        if (!useMachineLearning || !inferenceFacade.canUseMachineLearning()) {
+            return List.of();
+        }
+        return inferenceFacade.terminateQueuesAndWait().toList();
+    }
+
     private void saveIssue(Issue issue)
     {
         try
@@ -145,7 +162,7 @@ public class DetectIssuesCommand
             issueDao.save(issue);
         } catch (Exception e)
         {
-            logger.atWarn().log("We failed to save following issue: " + issue);
+            LOGGER.atWarn().log("We failed to save following issue: " + issue);
         }
     }
 
