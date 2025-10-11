@@ -4,7 +4,7 @@ import cz.muni.jena.codeminer.EvaluatedNode;
 import cz.muni.jena.inference.InferenceService;
 import cz.muni.jena.inference.config.ModelConfiguration;
 import cz.muni.jena.inference.model.InferenceItem;
-import cz.muni.jena.issue.Issue;
+import cz.muni.jena.issue.IssueWithLazyMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +24,7 @@ public class InferenceQueue<T extends EvaluatedNode> {
     private static final int RETRY_TIMEOUT = 100;
     private final Logger LOGGER = LoggerFactory.getLogger(InferenceQueue.class);
     private final BlockingQueue<InferenceItem<T>> sendQueue;
-    private final List<Issue> results = Collections.synchronizedList(new ArrayList<>());
+    private final List<IssueWithLazyMeta> results = Collections.synchronizedList(new ArrayList<>());
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     private final InferenceService inferenceService;
     private final ModelConfiguration modelConfiguration;
@@ -45,14 +45,14 @@ public class InferenceQueue<T extends EvaluatedNode> {
         sendQueue.drainTo(batch, modelConfiguration.batchSize());
 
         Stream<InferenceItem<T>> inferenceResult = inferenceService.doInference(batch, modelConfiguration.modelName());
-        List<Issue> issues = inferenceResult
+        List<IssueWithLazyMeta> issues = inferenceResult
                 .map(inferenceItem -> inferenceItem.issueMappingFunction().mapToIssue(inferenceItem))
                 .filter(Objects::nonNull)
                 .toList();
         results.addAll(issues);
     }
 
-    public Stream<Issue> awaitTerminationAndGet(int awaitTimeout) throws InterruptedException {
+    public Stream<IssueWithLazyMeta> awaitTerminationAndGet(int awaitTimeout) throws InterruptedException {
         while (!sendQueue.isEmpty()) {
             LOGGER.info("Waiting for all items to be processed, model name {}", modelConfiguration.modelName());
             flush();

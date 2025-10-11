@@ -9,6 +9,7 @@ import cz.muni.jena.inference.config.InferenceConfiguration;
 import cz.muni.jena.inference.config.MLDetectorConfig;
 import cz.muni.jena.inference.model.InferenceItem;
 import cz.muni.jena.issue.Issue;
+import cz.muni.jena.issue.IssueWithLazyMeta;
 import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,27 +70,28 @@ public class MachineLearningDetectorCombiner implements MachineLearningDetector 
 
         try {
             detectorConfigs
-                    .forEach(detector -> processDetector(inferenceItems, detector));
+                    .forEach(detector -> processDetector(classOrInterfaceDeclaration, inferenceItems, detector));
         } catch (InferenceFailedException ex) {
             LOGGER.error("Inference for class {}. Reason: {}", classOrInterfaceDeclaration.getFullyQualifiedName(), ex.getMessage());
             LOGGER.trace("Stacktrace: ", ex);
         }
     }
 
-    private void processDetector(Collection<? extends EvaluatedNode> evaluatedNodesStream, MLDetectorConfig mlDetectorConfig) {
+    private void processDetector(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Collection<? extends EvaluatedNode> evaluatedNodesStream, MLDetectorConfig mlDetectorConfig) {
         Stream<InferenceItem<EvaluatedNode>> inferenceItemStream = evaluatedNodesStream
                 .stream()
-                .map(evaluatedNode -> new InferenceItem<>(evaluatedNode, (inferenceItem) -> this.mapItemToIssue(inferenceItem, mlDetectorConfig)));
+                .map(evaluatedNode -> new InferenceItem<>(evaluatedNode, (inferenceItem) -> this.mapItemToIssue(classOrInterfaceDeclaration, inferenceItem, mlDetectorConfig)));
 
         inferenceQueueHolder.addToQueue(mlDetectorConfig.model().modelName(), inferenceItemStream);
 
     }
 
-    private <T extends EvaluatedNode> Issue mapItemToIssue(InferenceItem<T> inferenceItem, MLDetectorConfig mlDetectorConfig) {
+    private <T extends EvaluatedNode> IssueWithLazyMeta mapItemToIssue(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, InferenceItem<T> inferenceItem, MLDetectorConfig mlDetectorConfig) {
         Optional<MLDetectorConfig.LabelEvaluationConfig> matchingEvaluation = getMatchingEvaluation(inferenceItem, mlDetectorConfig);
 
         return matchingEvaluation
                 .map(evaluation -> new Issue(evaluation.issueType(), inferenceItem.getStartLine(), inferenceItem.getFullyQualifiedName()))
+                .map(issue -> new IssueWithLazyMeta(issue, classOrInterfaceDeclaration))
                 .orElse(null);
     }
 

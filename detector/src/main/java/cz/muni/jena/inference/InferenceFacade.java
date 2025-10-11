@@ -1,7 +1,7 @@
 package cz.muni.jena.inference;
 
 import cz.muni.jena.codeminer.EvaluatedNode;
-import cz.muni.jena.issue.Issue;
+import cz.muni.jena.issue.IssueWithLazyMeta;
 import cz.muni.jena.issue.detectors.machine_learning.InferenceQueueControl;
 import cz.muni.jena.issue.detectors.machine_learning.InferenceQueueHolder;
 import org.slf4j.Logger;
@@ -45,7 +45,7 @@ public class InferenceFacade implements InferenceQueueControl {
     }
 
     @Override
-    public Stream<Issue> terminateQueuesAndWait() {
+    public Stream<IssueWithLazyMeta> terminateQueuesAndWait() {
         if (!canUseMachineLearning()) {
             LOGGER.warn("Inference server is not available. Machine learning detection was not used!");
             return Stream.of();

@@ -5,7 +5,7 @@ import cz.muni.jena.inference.InferenceService;
 import cz.muni.jena.inference.config.InferenceConfiguration;
 import cz.muni.jena.inference.config.ModelConfiguration;
 import cz.muni.jena.inference.model.InferenceItem;
-import cz.muni.jena.issue.Issue;
+import cz.muni.jena.issue.IssueWithLazyMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -50,13 +50,13 @@ public class InferenceQueueHolderImpl implements InferenceQueueHolder<EvaluatedN
     }
 
     @Override
-    public Stream<Issue> terminateQueuesAndWait() {
+    public Stream<IssueWithLazyMeta> terminateQueuesAndWait() {
         return inferenceQueues.values()
                 .stream()
                 .flatMap(this::terminateQueueAndGet);
     }
 
-    private Stream<Issue> terminateQueueAndGet(InferenceQueue<?> inferenceQueue) {
+    private Stream<IssueWithLazyMeta> terminateQueueAndGet(InferenceQueue<?> inferenceQueue) {
         try {
             return inferenceQueue.awaitTerminationAndGet(inferenceConfiguration.queueEndTimeout());
         } catch (InterruptedException e) {

@@ -5,9 +5,9 @@ import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.inference.InferenceFacade;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueCategory;
-import cz.muni.jena.issue.IssueClassDao;
 import cz.muni.jena.issue.IssueDao;
-import cz.muni.jena.issue.IssueMethodDao;
+import cz.muni.jena.issue.IssueMetadataService;
+import cz.muni.jena.issue.IssueWithLazyMeta;
 import cz.muni.jena.issue.detectors.compilation_unit.DetectorCombiner;
 import cz.muni.jena.issue.detectors.compilation_unit.IssueDetector;
 import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningDetector;
@@ -53,8 +53,7 @@ public class DetectIssuesCommand {
     private final List<SpecificIssueDetector> compilationUnitIssueDetectors;
     private final List<ProjectIssueDetector> projectIssueDetectors;
     private final IssueDao issueDao;
-    private final IssueMethodDao issueMethodDao;
-    private final IssueClassDao issueClassDao;
+    private final IssueMetadataService issueMetadataService;
     private final MachineLearningDetector machineLearningDetector;
     private final InferenceFacade inferenceFacade;
 
@@ -62,17 +61,15 @@ public class DetectIssuesCommand {
     public DetectIssuesCommand(
             List<SpecificIssueDetector> compilationUnitIssueDetectors,
             List<ProjectIssueDetector> projectIssueDetectors,
-            IssueDao issueDao,
-            IssueMethodDao issueMethodDao,
-            IssueClassDao issueClassDao,
+            IssueDao issueDao, IssueMetadataService issueMetadataService,
+
             MachineLearningDetector machineLearningDetector,
             InferenceFacade inferenceFacade
     ) {
         this.compilationUnitIssueDetectors = compilationUnitIssueDetectors;
         this.projectIssueDetectors = projectIssueDetectors;
         this.issueDao = issueDao;
-        this.issueMethodDao = issueMethodDao;
-        this.issueClassDao = issueClassDao;
+        this.issueMetadataService = issueMetadataService;
         this.machineLearningDetector = machineLearningDetector;
         this.inferenceFacade = inferenceFacade;
     }
@@ -105,9 +102,8 @@ public class DetectIssuesCommand {
                 combinedIssueDetector,
                 configuration,
                 issues,
-                issueMethodDao,
-                issueClassDao,
-                projectLabel
+                projectLabel,
+                issueMetadataService
         );
 
         List<SourceRoot.Callback> callbackList = new ArrayList<>();
@@ -118,7 +114,7 @@ public class DetectIssuesCommand {
         CallbackCombiner callbackCombiner = new CallbackCombiner(callbackList);
         new AsyncCompilationUnitParser(path).processCompilationUnits(callbackCombiner);
 
-        List<Issue> mlIssues = endMachineLearningEvaluation(useMachineLearning);
+        List<Issue> mlIssues = endMachineLearningEvaluation(useMachineLearning, projectLabel);
         issues.addAll(mlIssues);
         issues.addAll(
                 projectIssueDetectors.stream()
@@ -149,11 +145,14 @@ public class DetectIssuesCommand {
         return Optional.of(new MachineLearningDetectorCallback(machineLearningDetector, configuration));
     }
 
-    private List<Issue> endMachineLearningEvaluation(boolean useMachineLearning) {
+    private List<Issue> endMachineLearningEvaluation(boolean useMachineLearning, String projectLabel) {
         if (!useMachineLearning || !inferenceFacade.canUseMachineLearning()) {
             return List.of();
         }
-        return inferenceFacade.terminateQueuesAndWait().toList();
+        List<IssueWithLazyMeta> foundIssues = inferenceFacade.terminateQueuesAndWait().toList();
+        issueMetadataService.setMetaDataToIssues(foundIssues, projectLabel);
+
+        return foundIssues.stream().map(IssueWithLazyMeta::issue).toList();
     }
 
     private void saveIssue(Issue issue) {
@@ -165,7 +164,7 @@ public class DetectIssuesCommand {
             savedIssue.ifPresent(persistedIssue -> issue.setId(persistedIssue.getId()));
             issueDao.save(issue);
         } catch (Exception e) {
-            LOGGER.atWarn().log("We failed to save following issue: " + issue);
+            LOGGER.atWarn().log("We failed to save following issue: " + issue, e);
         }
     }
 

@@ -1,6 +1,6 @@
 package cz.muni.jena.issue.detectors.machine_learning;
 
-import cz.muni.jena.issue.Issue;
+import cz.muni.jena.issue.IssueWithLazyMeta;
 
 import java.util.stream.Stream;
 
@@ -17,5 +17,5 @@ public interface InferenceQueueControl {
      * Waits until all extracted snippets are processed.
      * @return stream of found issues
      */
-    Stream<Issue> terminateQueuesAndWait();
+    Stream<IssueWithLazyMeta> terminateQueuesAndWait();
 }
