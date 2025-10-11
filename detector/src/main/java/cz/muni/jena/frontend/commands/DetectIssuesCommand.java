@@ -1,5 +1,6 @@
 package cz.muni.jena.frontend.commands;
 
+import com.github.javaparser.utils.SourceRoot;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.inference.InferenceFacade;
 import cz.muni.jena.issue.Issue;
@@ -9,11 +10,13 @@ import cz.muni.jena.issue.IssueDao;
 import cz.muni.jena.issue.IssueMethodDao;
 import cz.muni.jena.issue.detectors.compilation_unit.DetectorCombiner;
 import cz.muni.jena.issue.detectors.compilation_unit.IssueDetector;
-import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningIssueDetector;
+import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningDetector;
 import cz.muni.jena.issue.detectors.compilation_unit.SpecificIssueDetector;
 import cz.muni.jena.issue.detectors.project.ProjectIssueDetector;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
+import cz.muni.jena.parser.CallbackCombiner;
 import cz.muni.jena.parser.IssueDetectorCallback;
+import cz.muni.jena.parser.MachineLearningDetectorCallback;
 import cz.muni.jena.parser.ThreadExecutionLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +39,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Command
-public class DetectIssuesCommand
-{
+public class DetectIssuesCommand {
     private static final String CONFIG_DESCRIPTION = "Absolute path from which the configuration should be read.";
     private static final String PATH_DESCRIPTION = "Absolute path to project you wish to analyze";
     private static final String CATEGORIES_FILTER_DESCRIPTION = "You can use this filter to detect only some type of issues. " +
@@ -53,7 +55,7 @@ public class DetectIssuesCommand
     private final IssueDao issueDao;
     private final IssueMethodDao issueMethodDao;
     private final IssueClassDao issueClassDao;
-    private final MachineLearningIssueDetector machineLearningDetector;
+    private final MachineLearningDetector machineLearningDetector;
     private final InferenceFacade inferenceFacade;
 
     @Inject
@@ -63,10 +65,9 @@ public class DetectIssuesCommand
             IssueDao issueDao,
             IssueMethodDao issueMethodDao,
             IssueClassDao issueClassDao,
-            MachineLearningIssueDetector machineLearningDetector,
+            MachineLearningDetector machineLearningDetector,
             InferenceFacade inferenceFacade
-    )
-    {
+    ) {
         this.compilationUnitIssueDetectors = compilationUnitIssueDetectors;
         this.projectIssueDetectors = projectIssueDetectors;
         this.issueDao = issueDao;
@@ -82,11 +83,10 @@ public class DetectIssuesCommand
             @Option(longNames = "projectPath", shortNames = 'p', required = true, description = PATH_DESCRIPTION) String path,
             @Option(longNames = "issueCategory", shortNames = 'i', description = CATEGORIES_FILTER_DESCRIPTION) IssueCategory issueCategory,
             @Option(longNames = "showThreadsRuntime", shortNames = 'd', defaultValue = "false", description = SHOW_THREADS_DESCRIPTION)
-                    boolean showThreadsRuntime,
+            boolean showThreadsRuntime,
             @Option(longNames = "projectLabel", shortNames = 'l', defaultValue = "0", description = LABEL_DESCRIPTION) String projectLabel,
             @Option(longNames = "machineLearning", shortNames = 'm', defaultValue = "true", description = USE_MACHINE_LEARNING) boolean useMachineLearning
-    )
-    {
+    ) {
         Configuration configuration = Optional.ofNullable(configPath)
                 .map(this::loadConfiguration)
                 .orElse(Configuration.readConfiguration());
@@ -99,8 +99,6 @@ public class DetectIssuesCommand
                 .toList();
         List<IssueDetector> detectors = new ArrayList<>(staticIssueDetectors);
 
-        startMachineLearningEvaluation(useMachineLearning, issueDetectorFilter, detectors);
-
         IssueDetector combinedIssueDetector = new DetectorCombiner(detectors);
         List<Issue> issues = Collections.synchronizedList(new ArrayList<>());
         IssueDetectorCallback callback = new IssueDetectorCallback(
@@ -111,7 +109,14 @@ public class DetectIssuesCommand
                 issueClassDao,
                 projectLabel
         );
-        new AsyncCompilationUnitParser(path).processCompilationUnits(callback);
+
+        List<SourceRoot.Callback> callbackList = new ArrayList<>();
+        callbackList.add(callback);
+        startMachineLearningEvaluation(useMachineLearning, issueDetectorFilter, configuration)
+                .ifPresent(callbackList::add);
+
+        CallbackCombiner callbackCombiner = new CallbackCombiner(callbackList);
+        new AsyncCompilationUnitParser(path).processCompilationUnits(callbackCombiner);
 
         List<Issue> mlIssues = endMachineLearningEvaluation(useMachineLearning);
         issues.addAll(mlIssues);
@@ -128,19 +133,20 @@ public class DetectIssuesCommand
                 + (showThreadsRuntime ? prepareThreadExecutionLogs(callback.getThreadExecutionLogs()) : "");
     }
 
-    private void startMachineLearningEvaluation(boolean useMachineLearning, Set<IssueCategory> issueDetectorFilter, List<IssueDetector> detectors) {
+    private Optional<MachineLearningDetectorCallback> startMachineLearningEvaluation(boolean useMachineLearning, Set<IssueCategory> issueDetectorFilter, Configuration configuration) {
         if (!useMachineLearning) {
-            return;
+            return Optional.empty();
         }
         if (!inferenceFacade.canUseMachineLearning()) {
             LOGGER.warn("Inference server is not available. Machine learning evaluation won't be not used!");
-            return;
+            return Optional.empty();
         }
         machineLearningDetector.setEvaluationPredicate(
                 evaluationConfig -> issueDetectorFilter.contains(evaluationConfig.issueType().getCategory())
         );
-        detectors.add(machineLearningDetector);
         inferenceFacade.startQueues();
+
+        return Optional.of(new MachineLearningDetectorCallback(machineLearningDetector, configuration));
     }
 
     private List<Issue> endMachineLearningEvaluation(boolean useMachineLearning) {
@@ -150,32 +156,27 @@ public class DetectIssuesCommand
         return inferenceFacade.terminateQueuesAndWait().toList();
     }
 
-    private void saveIssue(Issue issue)
-    {
-        try
-        {
+    private void saveIssue(Issue issue) {
+        try {
             Optional<Issue> savedIssue = issueDao.findOne(Example.of(
                     issue,
                     ExampleMatcher.matchingAll()
             ));
             savedIssue.ifPresent(persistedIssue -> issue.setId(persistedIssue.getId()));
             issueDao.save(issue);
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             LOGGER.atWarn().log("We failed to save following issue: " + issue);
         }
     }
 
-    private String prepareIssuesAsString(List<Issue> issues)
-    {
+    private String prepareIssuesAsString(List<Issue> issues) {
         String[][] rows = new String[issues.size() + 1][];
         rows[0] = new String[]{"Issue type ", "Line number ", "Class fully qualified name ", "Method name "};
         int i = 1;
         List<String[]> rowsWithoutHeader = issues.stream().sorted(Comparator.comparing(Issue::getIssueType))
                 .map(Issue::toTableRow)
                 .toList();
-        for (String[] row: rowsWithoutHeader)
-        {
+        for (String[] row : rowsWithoutHeader) {
             rows[i] = row;
             i += 1;
         }
@@ -183,23 +184,20 @@ public class DetectIssuesCommand
                 new TableBuilder(new ArrayTableModel(rows)).build().render(150);
     }
 
-    private String prepareThreadExecutionLogs(List<ThreadExecutionLog> threadExecutionLogs)
-    {
+    private String prepareThreadExecutionLogs(List<ThreadExecutionLog> threadExecutionLogs) {
         return "Sorted log of threads running for more then 100 ms:" +
                 mapToStringAndJoin(threadExecutionLogs.stream()
-                                           .filter(threadExecutionLog -> threadExecutionLog.classesOrInterfacesAnalysed() > 0)
-                                           .filter(threadExecutionLog -> threadExecutionLog.runningTimeInMilliseconds() > 100)
-                                           .sorted(Comparator.comparing(ThreadExecutionLog::runningTimeInMilliseconds)));
+                        .filter(threadExecutionLog -> threadExecutionLog.classesOrInterfacesAnalysed() > 0)
+                        .filter(threadExecutionLog -> threadExecutionLog.runningTimeInMilliseconds() > 100)
+                        .sorted(Comparator.comparing(ThreadExecutionLog::runningTimeInMilliseconds)));
     }
 
-    private String mapToStringAndJoin(Stream<?> objects)
-    {
+    private String mapToStringAndJoin(Stream<?> objects) {
         return objects.map(Object::toString)
                 .collect(Collectors.joining("," + System.lineSeparator()));
     }
 
-    public Configuration loadConfiguration(String configPath)
-    {
+    public Configuration loadConfiguration(String configPath) {
         return Configuration.readConfiguration(configPath)
                 .orElseThrow(
                         () -> new IllegalArgumentException("There was a problem with loading of custom configuration.")

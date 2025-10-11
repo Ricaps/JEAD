@@ -9,8 +9,7 @@ import cz.muni.jena.inference.config.InferenceConfiguration;
 import cz.muni.jena.inference.config.MLDetectorConfig;
 import cz.muni.jena.inference.model.InferenceItem;
 import cz.muni.jena.issue.Issue;
-import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningIssueDetector;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -27,7 +26,7 @@ import static java.util.stream.Collectors.groupingBy;
 
 @Component
 @ConditionalOnProperty(value = "inference.enabled", havingValue = "true")
-public class MachineLearningDetectorCombiner implements MachineLearningIssueDetector {
+public class MachineLearningDetectorCombiner implements MachineLearningDetector {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MachineLearningDetectorCombiner.class);
     private final InferenceConfiguration inferenceConfiguration;
@@ -41,15 +40,13 @@ public class MachineLearningDetectorCombiner implements MachineLearningIssueDete
     }
 
     @Override
-    public @NonNull Stream<Issue> findIssues(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Configuration configuration) {
+    public void runDetector(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Configuration configuration) {
 
-        return inferenceConfiguration.detectors()
+        inferenceConfiguration.detectors()
                 .stream()
                 .collect(groupingBy(MLDetectorConfig::extractor))
-                .entrySet()
-                .stream()
-                .flatMap((entry) -> {
-                    List<MLDetectorConfig> filteredDetectorConfigs = entry.getValue().stream().filter((extractor) -> {
+                .forEach((key, value) -> {
+                    List<MLDetectorConfig> filteredDetectorConfigs = value.stream().filter((extractor) -> {
                         if (evaluationPredicate == null) {
                             return true;
                         }
@@ -57,17 +54,17 @@ public class MachineLearningDetectorCombiner implements MachineLearningIssueDete
                         return extractor.evaluations().stream().anyMatch(evaluation -> evaluationPredicate.test(evaluation));
                     }).toList();
 
-                    return processExtractor(classOrInterfaceDeclaration, entry.getKey(), filteredDetectorConfigs);
+                    processExtractor(classOrInterfaceDeclaration, key, filteredDetectorConfigs);
                 });
     }
 
-    private Stream<Issue> processExtractor(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, CodeExtractor<?> extractor, List<MLDetectorConfig> detectorConfigs) {
+    private void processExtractor(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, CodeExtractor<?> extractor, List<MLDetectorConfig> detectorConfigs) {
         Collection<? extends EvaluatedNode> inferenceItems = extractor
                 .extract(classOrInterfaceDeclaration)
                 .toList();
 
         if (inferenceItems.isEmpty()) {
-            return Stream.of();
+            return;
         }
 
         try {
@@ -77,9 +74,6 @@ public class MachineLearningDetectorCombiner implements MachineLearningIssueDete
             LOGGER.error("Inference for class {}. Reason: {}", classOrInterfaceDeclaration.getFullyQualifiedName(), ex.getMessage());
             LOGGER.trace("Stacktrace: ", ex);
         }
-
-        // No issues are returned directly, since the processing is asynchronous
-        return Stream.of();
     }
 
     private void processDetector(Collection<? extends EvaluatedNode> evaluatedNodesStream, MLDetectorConfig mlDetectorConfig) {
