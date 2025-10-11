@@ -1,3 +1,4 @@
+import logging
 from typing import Final
 
 from pydantic import BaseModel
@@ -27,6 +28,7 @@ class InferenceServicerPort(InferenceServiceServicer):
     def __init__(self, inference_service: InferenceService):
         super().__init__()
         self._inference_service: Final[InferenceService] = inference_service
+        self._logger = logging.getLogger(self.__class__.__name__)
 
     async def ServerReady(
         self, request: ServerReadyRequest, context
@@ -56,5 +58,7 @@ class InferenceServicerPort(InferenceServiceServicer):
             grpc_to_model(request, ModelInferenceRequestBatch)
         )
         end_time = time.time()
-        print(f"Evaluation took {end_time - start_time}, size: {len(request.contents)}")
+        self._logger.info(
+            f"Evaluation took {end_time - start_time}, size: {len(request.contents)}"
+        )
         return model_to_grpc(result, InferenceResponse)
