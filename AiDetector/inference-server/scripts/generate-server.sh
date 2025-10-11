@@ -1,7 +1,7 @@
 #!/bin/bash
 
 GENERATED_SOURCES_PATH="src"
-PROTO_PATH_FOLDER="../../common/proto"
+PROTO_PATH_FOLDER="${1:-../../common/proto}"
 INFERENCE_PROTO_NAME="inference.proto"
 INFERENCE_PROTO="${PROTO_PATH_FOLDER}/inference_server/proto/${INFERENCE_PROTO_NAME}"
 
