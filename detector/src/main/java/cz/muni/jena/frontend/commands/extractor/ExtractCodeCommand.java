@@ -5,11 +5,7 @@ import cz.muni.jena.codeminer.extractor.CodeExtractor;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatterFactory;
 import cz.muni.jena.frontend.commands.InvalidOptionException;
-import cz.muni.jena.grpc.InferenceServiceGrpc;
-import cz.muni.jena.grpc.ServerReadyRequest;
-import cz.muni.jena.grpc.ServerReadyResponse;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
-import io.grpc.StatusException;
 import org.springframework.shell.command.CommandExecution;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
@@ -28,21 +24,12 @@ public class ExtractCodeCommand {
     public static final String EXTRACTOR_CMD_DESCRIPTION = "Extractor defines what code snippets should be extracted from the project";
     private static final String OUTPUT_PATH_CMD_DESCRIPTION = "Path to the output file";
     private final OutputFormatterFactory outputFormatterFactory;
-    private final List<CodeExtractor> codeExtractorList;
-    private final InferenceServiceGrpc.InferenceServiceBlockingV2Stub inferenceServiceStub;
+    private final List<CodeExtractor<?>> codeExtractorList;
 
     @Inject
-    public ExtractCodeCommand(OutputFormatterFactory outputFormatterFactory, List<CodeExtractor> codeExtractorList, InferenceServiceGrpc.InferenceServiceBlockingV2Stub inferenceServiceStub) {
+    public ExtractCodeCommand(OutputFormatterFactory outputFormatterFactory, List<CodeExtractor<?>> codeExtractorList) {
         this.outputFormatterFactory = outputFormatterFactory;
         this.codeExtractorList = codeExtractorList;
-        this.inferenceServiceStub = inferenceServiceStub;
-    }
-
-    @Command(command = "testConnection")
-    public String testCommand() throws StatusException {
-         ServerReadyResponse response = inferenceServiceStub.serverReady(ServerReadyRequest.newBuilder().build());
-
-         return response.getReady() ? "Ready" : "Not ready";
     }
 
     @Command(command = "extractCode", description = EXTRACT_COMMAND_DESCRIPTION)
@@ -58,7 +45,7 @@ public class ExtractCodeCommand {
                 .orElseThrow(() -> new InvalidOptionException("Invalid output formatter."))) {
             outputFormatter.setOutputPath(outputPath);
 
-            CodeExtractor codeExtractor = codeExtractorList.stream()
+            CodeExtractor<?> codeExtractor = codeExtractorList.stream()
                     .filter(extractor -> extractor.getIdentifier().equals(extractorName))
                     .findFirst()
                     .orElseThrow(() -> new InvalidOptionException("Invalid code extractor. Possible values are: %s".formatted(getExtractorNames(codeExtractorList))));
