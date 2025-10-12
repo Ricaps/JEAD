@@ -41,6 +41,13 @@ public class InferenceQueue<T extends EvaluatedNode> {
     }
 
     private void flush() {
+        flush(false);
+    }
+
+    private void flush(boolean runWithIncompleteBatch) {
+        if (!runWithIncompleteBatch && sendQueue.size() < modelConfiguration.batchSize()) {
+            return;
+        }
         List<InferenceItem<T>> batch = new ArrayList<>();
         sendQueue.drainTo(batch, modelConfiguration.batchSize());
 
@@ -53,13 +60,14 @@ public class InferenceQueue<T extends EvaluatedNode> {
     }
 
     public Stream<IssueWithLazyMeta> awaitTerminationAndGet(int awaitTimeout) throws InterruptedException {
+        executorService.shutdown();
+
         while (!sendQueue.isEmpty()) {
             LOGGER.info("Waiting for all items to be processed, model name {}", modelConfiguration.modelName());
-            flush();
+            flush(true);
             Thread.sleep(RETRY_TIMEOUT);
         }
 
-        executorService.shutdown();
         boolean terminated = executorService.awaitTermination(awaitTimeout, TimeUnit.SECONDS);
         if (!terminated) {
             LOGGER.error("Inference queue thread was terminated before it could finish all evaluations! Model name: {}", modelConfiguration.modelName());
