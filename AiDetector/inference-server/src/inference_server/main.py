@@ -1,4 +1,6 @@
 import asyncio
+import logging
+
 from inference_server.server import grpc_server
 from inference_server.configuration.logging import configure_logging
 
@@ -14,5 +16,5 @@ if __name__ == "__main__":
     # Get list of all available execution providers
     providers = ort.get_available_providers()
 
-    print("Available providers:", providers)
+    logging.getLogger("providers").info("Available providers:", providers)
     asyncio.run(setup_and_run())
