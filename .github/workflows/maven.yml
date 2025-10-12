@@ -37,6 +37,9 @@ jobs:
       working-directory: ./TestGradleProject
       run: ./gradlew build --no-daemon && ./gradlew copyDeps
 
+    - name: Set up Docker Compose
+      uses: docker/setup-compose-action@v1
+
     - name: Run unit tests
       working-directory: ./detector
       run: mvn --batch-mode verify

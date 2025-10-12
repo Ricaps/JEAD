@@ -26,6 +26,7 @@ import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
 import org.springframework.shell.table.ArrayTableModel;
 import org.springframework.shell.table.TableBuilder;
+import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Command
+@Service
 public class DetectIssuesCommand {
     private static final String CONFIG_DESCRIPTION = "Absolute path from which the configuration should be read.";
     private static final String PATH_DESCRIPTION = "Absolute path to project you wish to analyze";

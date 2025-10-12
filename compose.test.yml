@@ -1,0 +1,13 @@
+services:
+  inference-server-cpu:
+    extends:
+      file: AiDetector/inference-server/compose.cpu.yaml
+      service: inference-server-cpu
+  db:
+    extends:
+      service: db
+      file: detector/compose.yml
+
+volumes:
+  dbVolume:
+    driver: local
