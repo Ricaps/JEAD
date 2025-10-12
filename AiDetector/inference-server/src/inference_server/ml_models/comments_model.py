@@ -5,7 +5,7 @@ from aiopath import AsyncPath
 from typing import Optional, Any, Callable
 import logging
 
-from onnxruntime import InferenceSession, get_available_providers
+from onnxruntime import InferenceSession, get_available_providers, preload_dlls
 
 from inference_server.ml_models.inference_model import InferenceModel
 from inference_server.model.inference_model import (
@@ -74,6 +74,7 @@ class CommentsModel(InferenceModel):
 
     async def on_load(self):
         self.__logger.info(f"Available providers: {get_available_providers()}")
+        preload_dlls()
         path = self._model_root_path.joinpath(CommentsModel.SUBFOLDER_NAME)
         async with self._access_lock:
             self.tokenizer = AutoTokenizer.from_pretrained(path)
