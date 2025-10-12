@@ -9,4 +9,10 @@ async def setup_and_run():
 
 
 if __name__ == "__main__":
+    import onnxruntime as ort
+
+    # Get list of all available execution providers
+    providers = ort.get_available_providers()
+
+    print("Available providers:", providers)
     asyncio.run(setup_and_run())
