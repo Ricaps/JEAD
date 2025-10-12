@@ -3,7 +3,7 @@ name = "jena-v3-aidetector-training"
 version = "0.1.0"
 description = ""
 authors = [
-    { name = "Martin Prochazka", email = "pro.nitram@gmail.com" }
+    { name = "Martin Prochazka", email = "567781@mail.muni.cz" }
 ]
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
