@@ -1,7 +1,10 @@
 services:
   inference-server:
-    container_name: inference-server
-    build: .
+    container_name: inference-server-gpu
+    build:
+      context: .
+      args:
+        CPU_OR_GPU: gpu
     ports:
       - "8080:8080"
     environment:
