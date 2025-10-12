@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "spring.shell.script.enabled=false"
         }
 )
-public class DetectIssuesCommandTest {
+public class DetectIssuesCommandIT {
 
     @Container
     @SuppressWarnings("unused")
