@@ -2,7 +2,7 @@ spring:
   datasource:
     username: root
     password: detector
-    url: jdbc:postgresql://localhost:54323/antipatternDetector
+    url: jdbc:postgresql://localhost:5001/antipatternDetector
   jpa:
     show-sql: false
     generate-ddl: true
@@ -17,7 +17,7 @@ spring:
     client:
       channels:
         inference-server:
-          address: localhost:8081
+          address: localhost:5002
 
 inference:
   enabled: true
