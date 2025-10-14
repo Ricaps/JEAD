@@ -1,12 +1,20 @@
 services:
   inference-server-cpu:
+    environment:
+      PORT: 54321
     extends:
       file: AiDetector/inference-server/compose.cpu.yaml
       service: inference-server-cpu
+    ports:
+      - "54321:54321"
   db:
+    environment:
+      PGPORT: 54323
     extends:
       service: db
-      file: detector/compose.yml
+      file: detector/compose.base.yml
+    ports:
+      - "54323:54323"
 
 volumes:
   dbVolume:

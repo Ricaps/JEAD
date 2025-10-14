@@ -34,18 +34,27 @@ public class JavadocCommentsWrapper {
                             Integer startLine = NodeUtil.getStartLineNumber(javadocComment).orElse(null);
                             return Stream.concat(
                                     Stream.of(CommentDto.ofJavadoc(CommentUtils.getTrimmedContent(resolvedJavadoc.getDescription().toText()), startLine, fullyQualifiedName)),
-                                    resolveBlockTags(resolvedJavadoc).map(content -> CommentDto.ofJavadoc(content, startLine, fullyQualifiedName)));
+                                    resolveBlockTags(javadocComment));
                         }
                 )
                 .toList();
     }
 
-    private Stream<String> resolveBlockTags(Javadoc javadoc) {
+    private Stream<CommentDto> resolveBlockTags(JavadocComment javadocComment) {
+        Javadoc javadoc = javadocComment.parse();
+        String[] javadocTextSplit = javadoc.toText().split("\n");
+        int javadocStartLine = NodeUtil.getStartLineNumber(javadocComment).orElse(0);
+
         return javadoc.getBlockTags()
                 .stream()
                 .filter(javadocBlockTag -> !filteredTypes.contains(javadocBlockTag.getType()))
                 .map(JavadocBlockTag::toText)
-                .map(CommentUtils::getTrimmedContent);
+                .map(CommentUtils::getTrimmedContent)
+                .map(tagText -> {
+                    Integer tagStartLine = CommentUtils.getRelativeJavadocLineNumber(javadocTextSplit, tagText).orElse(javadocStartLine);
+
+                    return CommentDto.ofJavadoc(tagText, javadocStartLine + tagStartLine, this.fullyQualifiedName);
+                });
     }
 
 }

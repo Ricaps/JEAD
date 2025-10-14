@@ -63,8 +63,8 @@ public class DetectIssuesCommand {
     public DetectIssuesCommand(
             List<SpecificIssueDetector> compilationUnitIssueDetectors,
             List<ProjectIssueDetector> projectIssueDetectors,
-            IssueDao issueDao, IssueMetadataService issueMetadataService,
-
+            IssueDao issueDao,
+            IssueMetadataService issueMetadataService,
             MachineLearningDetector machineLearningDetector,
             InferenceFacade inferenceFacade
     ) {
@@ -81,8 +81,7 @@ public class DetectIssuesCommand {
             @Option(longNames = "config", shortNames = 'c', description = CONFIG_DESCRIPTION) String configPath,
             @Option(longNames = "projectPath", shortNames = 'p', required = true, description = PATH_DESCRIPTION) String path,
             @Option(longNames = "issueCategory", shortNames = 'i', description = CATEGORIES_FILTER_DESCRIPTION) IssueCategory issueCategory,
-            @Option(longNames = "showThreadsRuntime", shortNames = 'd', defaultValue = "false", description = SHOW_THREADS_DESCRIPTION)
-            boolean showThreadsRuntime,
+            @Option(longNames = "showThreadsRuntime", shortNames = 'd', defaultValue = "false", description = SHOW_THREADS_DESCRIPTION) boolean showThreadsRuntime,
             @Option(longNames = "projectLabel", shortNames = 'l', defaultValue = "0", description = LABEL_DESCRIPTION) String projectLabel,
             @Option(longNames = "machineLearning", shortNames = 'm', defaultValue = "true", description = USE_MACHINE_LEARNING) boolean useMachineLearning
     ) {

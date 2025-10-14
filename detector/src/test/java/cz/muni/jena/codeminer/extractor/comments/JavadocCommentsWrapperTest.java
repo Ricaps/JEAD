@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -87,7 +88,11 @@ class JavadocCommentsWrapperTest {
                     .findFirst();
 
             softAssertions.assertThat(testedTag).isNotEmpty();
-            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(testedTag.orElseThrow().toText(), dummyMethodStartLine, FULLY_QUALIFIED_NAME));
+            Optional<Integer> relativeJavadocLineNumber = CommentUtils.getRelativeJavadocLineNumber(dummyMethodJavadoc, testedTag.orElseThrow().toText());
+            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(testedTag.orElseThrow().toText(), dummyMethodStartLine + relativeJavadocLineNumber.orElseThrow(), FULLY_QUALIFIED_NAME));
+
+            var particularTagComment = comments.stream().filter(comment -> comment.getContent().contains(testedTag.get().toText())).findFirst().orElseThrow();
+            softAssertions.assertThat(particularTagComment.getStartLine()).isEqualTo(dummyMethodStartLine + relativeJavadocLineNumber.orElseThrow());
         });
 
         softAssertions.assertAll();

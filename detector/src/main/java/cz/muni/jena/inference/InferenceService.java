@@ -50,7 +50,11 @@ public class InferenceService {
 
         InferenceResponse response = runRequest(inferenceRequest);
         Map<UUID, InferenceItem<T>> inferenceItemMap = inferenceItemCollection.stream().collect(Collectors.toMap(InferenceItem::id, e -> e));
-        return response.getContentsList().stream().map(contentList -> this.inferenceMapper.mapResponseToItem(inferenceItemMap, contentList));
+        Stream<InferenceItem<T>> nodes =  response.getContentsList().stream().map(contentList -> this.inferenceMapper.mapResponseToItem(inferenceItemMap, contentList));
+
+        var debug = nodes.toList();
+
+        return debug.stream();
     }
 
     private InferenceResponse runRequest(InferenceRequest inferenceRequest) {

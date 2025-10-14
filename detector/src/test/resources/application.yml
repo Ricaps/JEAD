@@ -2,7 +2,7 @@ spring:
   datasource:
     username: root
     password: detector
-    url: jdbc:postgresql://localhost:5431/antipatternDetector
+    url: jdbc:postgresql://localhost:54323/antipatternDetector
   jpa:
     show-sql: false
     generate-ddl: true
@@ -17,13 +17,13 @@ spring:
     client:
       channels:
         inference-server:
-          address: localhost:8090
+          address: localhost:8081
 
 inference:
   enabled: true
   models:
     - &comments-model
-      model-name: comments-model
+      model-name: test-model
       batch-size: 30
       batch-period: 100
   detectors:
@@ -31,10 +31,10 @@ inference:
     extractor: comments
     model: *comments-model
     evaluations:
-      - label-name: "technical_debt"
+      - label-name: "test_label_1"
         threshold: 0.8
         issue-type: SELF_ADMITTED_TECHNICAL_DEBT
-      - label-name: "code_comment"
+      - label-name: "test_label_2"
         threshold: 0.8
         issue-type: COMMENTED_OUT_CODE
 
