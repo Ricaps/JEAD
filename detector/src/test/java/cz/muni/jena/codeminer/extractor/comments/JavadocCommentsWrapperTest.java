@@ -24,12 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class JavadocCommentsWrapperTest {
 
+    public static final String FULLY_QUALIFIED_NAME = "Some qualified name";
     private static final Path CLASS_PATH = Path.of("src/test/java/cz/muni/jena/test_data/JavadocCommentsTestClass.java");
     private static final Set<JavadocBlockTag.Type> filteredTags = Set.of(JavadocBlockTag.Type.AUTHOR, JavadocBlockTag.Type.UNKNOWN);
     private static final String DUMMY_METHOD = "dummyMethod";
     private static final String FORMAT_METHOD = "formatMethodComment";
     private static final Pattern SPACES_PATTERN = Pattern.compile(CommentUtils.SPACES_PATTERN);
-    public static final String FULLY_QUALIFIED_NAME = "Some qualified name";
     private JavadocCommentsWrapper dummyMethodCommentsWrapper;
     private JavadocCommentsWrapper formatMethodCommentsWrapper;
     private Javadoc dummyMethodJavadoc;
@@ -88,11 +88,10 @@ class JavadocCommentsWrapperTest {
                     .findFirst();
 
             softAssertions.assertThat(testedTag).isNotEmpty();
-            Optional<Integer> relativeJavadocLineNumber = CommentUtils.getRelativeJavadocLineNumber(dummyMethodJavadoc, testedTag.orElseThrow().toText());
-            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(testedTag.orElseThrow().toText(), dummyMethodStartLine + relativeJavadocLineNumber.orElseThrow(), FULLY_QUALIFIED_NAME));
+            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(testedTag.orElseThrow().toText(), getTagStartLine(testedTag.orElseThrow()), FULLY_QUALIFIED_NAME));
 
             var particularTagComment = comments.stream().filter(comment -> comment.getContent().contains(testedTag.get().toText())).findFirst().orElseThrow();
-            softAssertions.assertThat(particularTagComment.getStartLine()).isEqualTo(dummyMethodStartLine + relativeJavadocLineNumber.orElseThrow());
+            softAssertions.assertThat(particularTagComment.getStartLine()).isEqualTo(getTagStartLine(testedTag.orElseThrow()));
         });
 
         softAssertions.assertAll();
@@ -107,8 +106,11 @@ class JavadocCommentsWrapperTest {
         forEachIncludedTag(tagType -> {
             String tagName = new JavadocBlockTag(tagType, "").getTagName();
             String expectedValue = "@%s %s value".formatted(tagName, tagName);
+            var testedTag = dummyMethodJavadoc.getBlockTags().stream()
+                    .filter(tag -> tag.getType().equals(tagType))
+                    .findFirst();
 
-            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(expectedValue, dummyMethodStartLine, FULLY_QUALIFIED_NAME));
+            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(expectedValue, getTagStartLine(testedTag.orElseThrow()), FULLY_QUALIFIED_NAME));
         });
 
         softAssertions.assertAll();
@@ -140,4 +142,10 @@ class JavadocCommentsWrapperTest {
                 .toList();
     }
 
+
+    private int getTagStartLine(JavadocBlockTag testedTag) {
+        Optional<Integer> relativeJavadocLineNumber = CommentUtils.getRelativeJavadocLineNumber(dummyMethodJavadoc, testedTag.toText());
+
+        return dummyMethodStartLine + relativeJavadocLineNumber.orElseThrow();
+    }
 }
