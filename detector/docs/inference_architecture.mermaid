@@ -1,0 +1,136 @@
+---
+title: Inference Client Class Diagram
+config:
+  defaultRenderer: elk
+---
+classDiagram
+
+    direction RL
+
+    class InferenceQueueHolder {
+        addToQueue(String modelName, Stream inferenceStream) void
+        startQueues() void
+        terminateQueuesAndWait() Stream<Issue>
+    }
+    <<interface>> InferenceQueueHolder
+
+    class InferenceQueueHolderImpl {
+        List~InferenceQueue~ inferenceQueues
+    }
+
+    class CodeExtractor {
+        Stream<T> extract(ClassOrInterfaceDeclaration classOrIf)
+        String getIdentifier()
+    }
+    <<interface>> CodeExtractor
+
+    class CommentsCodeExtractor {
+
+    }
+
+
+    class MachineLearningDetectorCombiner {
+
+    }
+
+    class MLDetectorConfig {
+        CodeExtractor codeExtractor
+    }
+    <<configuration_record>>MLDetectorConfig
+
+    class ModelConfiguration
+    <<configuration_record>>ModelConfiguration
+
+    class InferenceConfiguration {
+        List~MLDetectorConfig~ detectors
+        List~ModelConfiguration~ models
+    }
+    <<configuration_record>>InferenceConfiguration
+
+    class MachineLearningDetectorCallback {
+        MachineLearningDetector detectorCombiner
+
+        process(..., List~Issue~ issues)
+    }
+
+    class InferenceQueue {
+        - ScheduledExecutorService executorService
+        start() void
+        addToQueue(Stream~InferenceItem~) void
+        awaitTerminationAndGet() Stream~Issue~
+        - flush() void
+    }
+
+
+    class InferenceServiceStub {
+        LoadModel(...)
+        UnloadModel(...)
+        ModelInference(...)
+        ServerReady(...)
+    }
+    <<grpc_client>> InferenceServiceStub
+
+    class InferenceService {
+        doInference(...) Response
+        isServerReady() boolean
+    }
+
+    class InferenceFacade {
+        startQueues() void
+        terminateQueuesAndWait() Stream~Issue~
+    }
+
+    class MachineLearningDetector {
+        runDetector(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Configuration configuration) void
+        void setEvaluationPredicate(Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate) void
+    }
+    <<interface>> MachineLearningDetector
+
+    class DetectIssuesCommand {
+
+    }
+
+
+    CommentsCodeExtractor ..|> CodeExtractor
+    MachineLearningDetectorCombiner ..|> MachineLearningDetector
+    MachineLearningDetectorCombiner --> InferenceConfiguration
+    InferenceQueueHolder --> MachineLearningDetectorCombiner: adds to queue
+    InferenceConfiguration --> ModelConfiguration
+    InferenceConfiguration --> MLDetectorConfig
+
+    InferenceQueueHolderImpl ..|> InferenceQueueHolder
+    InferenceQueueHolderImpl *-- InferenceQueue
+    InferenceQueue --> ModelConfiguration
+    InferenceService --> InferenceQueue
+    MLDetectorConfig --> CodeExtractor
+
+    InferenceService --> InferenceServiceStub
+
+    MachineLearningDetectorCallback --> MachineLearningDetector
+
+    InferenceFacade --> InferenceQueueHolder
+    InferenceFacade --> InferenceService
+
+    DetectIssuesCommand --> InferenceFacade
+    DetectIssuesCommand --> MachineLearningDetectorCallback
+
+    note for InferenceQueueHolderImpl "Loads configuration for each model
+    Creates queue for each model"
+
+    note for MachineLearningDetectorCombiner "Loads the inference configuration
+    Filters the configuration according to used models (evaluationPredicate)
+    For each class or interface declaration:
+    &nbsp;&nbsp;&nbsp;- runs code extractor
+    &nbsp;&nbsp;&nbsp;- appends extracted code nodes into the inference queue
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;through InferenceQueueHolder
+    "
+
+    note for DetectIssuesCommand "Starts queues
+    <code>inferenceFacade.startQueues()</code>
+
+    Runs evaluation
+    <code>machineLearningDetectorCallback.process(...)</code>
+
+    Terminates the evaluation and waits for results
+    <code>inferenceFacade.terminateQueuesAndWait()</code>
+    "
