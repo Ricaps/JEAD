@@ -4,39 +4,91 @@ config:
   defaultRenderer: elk
 ---
 classDiagram
+
+    direction BT
     class ModelDefinition {
+        - model_reference: InferenceModel
+        is_loaded(): bool
+        load_model(): void
+        unload_model(): void
+        execute(data): Result
     }
     <<interface>> ModelDefinition
+
+    class InferenceModel {
+        on_load(): void
+        on_unload(): void
+        execute(data): Result
+
+    }
+    <<interface>> InferenceModel
+
     class ModelStorage {
-        +load_model() void
-        +unload_model() void
-        +is_loaded() bool
-        +get_model(String key) Model
+        +load_models() void
+        +get_model(String model_name) ModelDefinition
     }
 
-    class RpcService {
+    class FileSystem {
+        model_root: Folder
+    }
+    <<operating_system>> FileSystem
+
+    class InferenceServiceServicer {
         +serverReady(ServerReadyRequest request) ServerReadyResponse
         +modelReady(ModelReadyRequest request) ModelReadyResponse
         +inference(InferenceReqyest request) InferenceResponse
         +inferenceStream(InferenceStreamRequest request) InferenceStreamResponse
     }
-    <<interface>> RpcService
+    <<interface>> InferenceServiceServicer
 
-    class RpcServiceImpl {
-        -modelStore: ModelStore
+    class InferenceService {
+        - model_storage: ModelStorage
+        execute_request(request: RequestData): Result
+        load_model(model_name: str): bool
+        unload_model(model_name: str): bool
+        is_model_ready(model_name: str): bool
     }
 
-    class ModelA
-    <<example>> ModelA
-    class ModelB
-    <<example>> ModelB
+    class InferenceServicePort {
+        - inferenceService: InferenceService
+    }
 
-    direction RL
+    class CommentsModel {
+        on_load(): void
+        on_unload(): void
+        execute(data): Result
+    }
+    class TestModel {
+        on_load(): void
+        on_unload(): void
+        execute(data): Result
+    }
+
 
     ModelStorage o.. ModelDefinition
-    ModelA --|> ModelDefinition
-    ModelB --|> ModelDefinition
+    CommentsModel ..|> InferenceModel
+    TestModel ..|> InferenceModel
 
-    RpcServiceImpl --|> RpcService
-    RpcServiceImpl --> ModelStorage
+    InferenceServicePort --|> InferenceServiceServicer
+    InferenceServicePort --> InferenceService
+    InferenceService --> ModelStorage
+    ModelStorage --> FileSystem: loads models \n from filesystem
+    ModelDefinition --> "1" InferenceModel
+
+    note for FileSystem "Uses file structure like:
+        models_root
+        &nbsp;&nbsp;&nbsp;comments_model
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;model
+        &nbsp;&nbsp;&nbsp;test_model
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;model
+
+        Folder name must correspond to the model name
+    "
+
+    note for ModelStorage "Uses 'model_type_registry' to registry available models:
+    Example:
+    model_type_registry = {'comments-model': CommentsModel, 'test-model': TestModel}
+    "
+
+
 

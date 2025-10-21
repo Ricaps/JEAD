@@ -5,19 +5,10 @@ import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.Issue;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 public interface IssueDetector
 {
     @NonNull
     Stream<Issue> findIssues(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Configuration configuration);
-
-    @NonNull
-    default List<Issue> findIssues(List<ClassOrInterfaceDeclaration> compilationUnits, Configuration configuration)
-    {
-        return compilationUnits.stream()
-                .flatMap(classOrInterfaceDeclaration -> findIssues(classOrInterfaceDeclaration, configuration))
-                .toList();
-    }
 }

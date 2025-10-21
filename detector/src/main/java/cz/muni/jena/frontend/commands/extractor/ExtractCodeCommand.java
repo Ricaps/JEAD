@@ -24,10 +24,10 @@ public class ExtractCodeCommand {
     public static final String EXTRACTOR_CMD_DESCRIPTION = "Extractor defines what code snippets should be extracted from the project";
     private static final String OUTPUT_PATH_CMD_DESCRIPTION = "Path to the output file";
     private final OutputFormatterFactory outputFormatterFactory;
-    private final List<CodeExtractor> codeExtractorList;
+    private final List<CodeExtractor<?>> codeExtractorList;
 
     @Inject
-    public ExtractCodeCommand(OutputFormatterFactory outputFormatterFactory, List<CodeExtractor> codeExtractorList) {
+    public ExtractCodeCommand(OutputFormatterFactory outputFormatterFactory, List<CodeExtractor<?>> codeExtractorList) {
         this.outputFormatterFactory = outputFormatterFactory;
         this.codeExtractorList = codeExtractorList;
     }
@@ -45,7 +45,7 @@ public class ExtractCodeCommand {
                 .orElseThrow(() -> new InvalidOptionException("Invalid output formatter."))) {
             outputFormatter.setOutputPath(outputPath);
 
-            CodeExtractor codeExtractor = codeExtractorList.stream()
+            CodeExtractor<?> codeExtractor = codeExtractorList.stream()
                     .filter(extractor -> extractor.getIdentifier().equals(extractorName))
                     .findFirst()
                     .orElseThrow(() -> new InvalidOptionException("Invalid code extractor. Possible values are: %s".formatted(getExtractorNames(codeExtractorList))));

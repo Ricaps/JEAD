@@ -6,7 +6,8 @@ public enum IssueCategory
     SECURITY("SEC"),
     PERSISTENCE("PER"),
     MOCKING("MOC"),
-    SERVICE_LAYER("SER");
+    SERVICE_LAYER("SER"),
+    TECHNICAL_DEBT("TECH_DEBT");
 
     private final String shortCut;
 

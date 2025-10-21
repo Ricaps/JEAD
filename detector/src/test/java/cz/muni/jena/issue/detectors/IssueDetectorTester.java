@@ -5,8 +5,7 @@ import com.github.javaparser.utils.SourceRoot;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.configuration.di.DIConfiguration;
 import cz.muni.jena.issue.Issue;
-import cz.muni.jena.issue.IssueClassDao;
-import cz.muni.jena.issue.IssueMethodDao;
+import cz.muni.jena.issue.IssueMetadataService;
 import cz.muni.jena.issue.detectors.compilation_unit.IssueDetector;
 import cz.muni.jena.issue.detectors.compilation_unit.dependency.DIIssueDetector;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
@@ -62,9 +61,8 @@ public class IssueDetectorTester
                 issueDetector,
                 Configuration.readConfiguration(),
                 issues,
-                mock(IssueMethodDao.class),
-                mock(IssueClassDao.class),
-                "projectLabel"
+                "projectLabel",
+                mock(IssueMetadataService.class)
         );
         new AsyncCompilationUnitParser(project).processCompilationUnits(callback);
         assertThat(issues).contains(issuesExpected);

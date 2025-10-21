@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    username: root
+    password: detector
+    url: jdbc:postgresql://localhost:5001/antipatternDetector
+  jpa:
+    show-sql: false
+    generate-ddl: true
+    properties:
+      hibernate:
+        ddl-auto: create
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  grpc:
+    client:
+      channels:
+        inference-server:
+          address: localhost:5002
+
+inference:
+  enabled: true
+  models:
+    - &comments-model
+      model-name: test-model
+      batch-size: 30
+      batch-period: 100
+  detectors:
+  - detector-name: technical-debt
+    extractor: comments
+    model: *comments-model
+    evaluations:
+      - label-name: "test_label_1"
+        threshold: 0.8
+        issue-type: SELF_ADMITTED_TECHNICAL_DEBT
+      - label-name: "test_label_2"
+        threshold: 0.8
+        issue-type: COMMENTED_OUT_CODE
+

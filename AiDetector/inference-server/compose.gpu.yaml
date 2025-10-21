@@ -1,0 +1,23 @@
+services:
+  inference-server:
+    container_name: inference-server-gpu
+    build:
+      context: .
+      args:
+        CPU_OR_GPU: gpu
+    ports:
+      - "8080:8080"
+    environment:
+      ADDRESS: 0.0.0.0
+      PORT: 8080
+      MODELS_ROOT: /usr/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+    volumes:
+      - "${MODELS_ROOT}:/usr/models"

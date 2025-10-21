@@ -31,7 +31,7 @@ class LineCommentsWrapperTest {
 
         allContainedComments = compilationUnit.getAllContainedComments();
         allContainedComments.sort(CommentUtils.getLineSortComparator());
-        commentsWrapper = new LineCommentsWrapper(allContainedComments);
+        commentsWrapper = new LineCommentsWrapper("Random qualified name", allContainedComments);
     }
 
     @Test

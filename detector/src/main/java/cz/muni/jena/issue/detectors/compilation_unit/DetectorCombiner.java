@@ -10,9 +10,9 @@ import java.util.stream.Stream;
 
 public class DetectorCombiner implements IssueDetector
 {
-    private final List<SpecificIssueDetector> issueDetectors;
+    private final List<IssueDetector> issueDetectors;
 
-    public DetectorCombiner(List<SpecificIssueDetector> issueDetectors)
+    public DetectorCombiner(List<IssueDetector> issueDetectors)
     {
         this.issueDetectors = issueDetectors;
     }

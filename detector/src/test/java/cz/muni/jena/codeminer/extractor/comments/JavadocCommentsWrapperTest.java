@@ -6,6 +6,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.comments.Comment;
 import com.github.javaparser.javadoc.Javadoc;
 import com.github.javaparser.javadoc.JavadocBlockTag;
+import cz.muni.jena.util.NodeUtil;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -22,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class JavadocCommentsWrapperTest {
 
+    public static final String FULLY_QUALIFIED_NAME = "Some qualified name";
     private static final Path CLASS_PATH = Path.of("src/test/java/cz/muni/jena/test_data/JavadocCommentsTestClass.java");
     private static final Set<JavadocBlockTag.Type> filteredTags = Set.of(JavadocBlockTag.Type.AUTHOR, JavadocBlockTag.Type.UNKNOWN);
     private static final String DUMMY_METHOD = "dummyMethod";
@@ -30,15 +33,17 @@ class JavadocCommentsWrapperTest {
     private JavadocCommentsWrapper dummyMethodCommentsWrapper;
     private JavadocCommentsWrapper formatMethodCommentsWrapper;
     private Javadoc dummyMethodJavadoc;
+    private Integer dummyMethodStartLine;
 
     @BeforeEach
     void setup() throws IOException {
         CompilationUnit compilationUnit = StaticJavaParser.parse(CLASS_PATH);
         List<Comment> allContainedComments = compilationUnit.getAllContainedComments();
-        dummyMethodCommentsWrapper = new JavadocCommentsWrapper(getJavadocOfMethod(DUMMY_METHOD, allContainedComments));
-        formatMethodCommentsWrapper = new JavadocCommentsWrapper(getJavadocOfMethod(FORMAT_METHOD, allContainedComments));
+        dummyMethodCommentsWrapper = new JavadocCommentsWrapper(FULLY_QUALIFIED_NAME, getJavadocOfMethod(DUMMY_METHOD, allContainedComments));
+        formatMethodCommentsWrapper = new JavadocCommentsWrapper(FULLY_QUALIFIED_NAME, getJavadocOfMethod(FORMAT_METHOD, allContainedComments));
 
         dummyMethodJavadoc = allContainedComments.get(0).asJavadocComment().parse();
+        dummyMethodStartLine = NodeUtil.getStartLineNumber(allContainedComments.get(0).asJavadocComment()).orElseThrow();
     }
 
     @Test
@@ -67,7 +72,7 @@ class JavadocCommentsWrapperTest {
                 .orElseThrow()
                 .toText();
 
-        assertThat(comments).doesNotContain(CommentDto.ofJavadoc(authorTagValue));
+        assertThat(comments).doesNotContain(CommentDto.ofJavadoc(authorTagValue, dummyMethodStartLine, FULLY_QUALIFIED_NAME));
 
     }
 
@@ -83,7 +88,10 @@ class JavadocCommentsWrapperTest {
                     .findFirst();
 
             softAssertions.assertThat(testedTag).isNotEmpty();
-            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(testedTag.orElseThrow().toText()));
+            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(testedTag.orElseThrow().toText(), getTagStartLine(testedTag.orElseThrow()), FULLY_QUALIFIED_NAME));
+
+            var particularTagComment = comments.stream().filter(comment -> comment.getContent().contains(testedTag.get().toText())).findFirst().orElseThrow();
+            softAssertions.assertThat(particularTagComment.getStartLine()).isEqualTo(getTagStartLine(testedTag.orElseThrow()));
         });
 
         softAssertions.assertAll();
@@ -98,8 +106,11 @@ class JavadocCommentsWrapperTest {
         forEachIncludedTag(tagType -> {
             String tagName = new JavadocBlockTag(tagType, "").getTagName();
             String expectedValue = "@%s %s value".formatted(tagName, tagName);
+            var testedTag = dummyMethodJavadoc.getBlockTags().stream()
+                    .filter(tag -> tag.getType().equals(tagType))
+                    .findFirst();
 
-            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(expectedValue));
+            softAssertions.assertThat(comments).contains(CommentDto.ofJavadoc(expectedValue, getTagStartLine(testedTag.orElseThrow()), FULLY_QUALIFIED_NAME));
         });
 
         softAssertions.assertAll();
@@ -131,4 +142,10 @@ class JavadocCommentsWrapperTest {
                 .toList();
     }
 
+
+    private int getTagStartLine(JavadocBlockTag testedTag) {
+        Optional<Integer> relativeJavadocLineNumber = CommentUtils.getRelativeJavadocLineNumber(dummyMethodJavadoc, testedTag.toText());
+
+        return dummyMethodStartLine + relativeJavadocLineNumber.orElseThrow();
+    }
 }

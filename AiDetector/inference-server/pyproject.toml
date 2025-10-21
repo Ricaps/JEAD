@@ -17,6 +17,7 @@ dependencies = [
     "aiopath (>=0.7.7,<0.8.0)",
 ]
 
+
 [tool.poetry]
 packages = [{include = "inference_server", from = "src"}]
 
@@ -28,6 +29,15 @@ build-backend = "poetry.core.masonry.api"
 dev = [
     "ruff (==0.13.2)"
 ]
+cpu = [
+    "onnxruntime (>=1.23.1,<2.0.0)"
+]
+gpu = [
+    "onnxruntime-gpu[cuda,cudnn] (>=1.23.0,<2.0.0)"
+]
+
+[tool.poetry.group.gpu]
+optional = true
 
 [tool.ruff]
 extend-exclude = ["src/inference_server/proto"]

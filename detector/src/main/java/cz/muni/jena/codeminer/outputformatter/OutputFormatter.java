@@ -4,7 +4,7 @@ import java.util.Collection;
 
 public interface OutputFormatter extends AutoCloseable {
 
-    void add(Collection<Object> codeSnippets);
+    void add(Collection<?> codeSnippets);
 
     void setOutputPath(String path);
 }

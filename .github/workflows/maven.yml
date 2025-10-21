@@ -39,13 +39,26 @@ jobs:
 
     - name: Run unit tests
       working-directory: ./detector
-      run: mvn --batch-mode verify
+      run: mvn --batch-mode test
 
-    - name: Publish test results
+    - name: Set up Docker Compose
+      uses: docker/setup-compose-action@v1
+
+    - name: Run integration tests
+      working-directory: ./detector
+      run: mvn --batch-mode verify -DskipUnitTests
+
+    - name: Publish surefire results
       if: success() || failure()
       uses: scacap/action-surefire-report@v1
       with:
         report_paths: '**/target/surefire-reports/TEST-*.xml'
+
+    - name: Publish failsafe results
+      if: success() || failure()
+      uses: scacap/action-surefire-report@v1
+      with:
+        report_paths: '**/target/failsafe-reports/TEST-*.xml'
 
     - name: Update dependency graph
       uses: advanced-security/maven-dependency-submission-action@v3

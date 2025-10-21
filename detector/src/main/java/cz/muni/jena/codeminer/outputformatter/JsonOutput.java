@@ -23,7 +23,7 @@ public class JsonOutput extends BaseOutputFormatter {
     }
 
     @Override
-    public void add(@Nonnull Collection<Object> codeSnippets) {
+    public void add(@Nonnull Collection<?> codeSnippets) {
         if (codeSnippets.isEmpty()) {
             return;
         }

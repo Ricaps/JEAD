@@ -8,7 +8,7 @@ public class ExtractorUtils {
         super();
     }
 
-    public static String getExtractorNames(List<CodeExtractor> extractors) {
+    public static String getExtractorNames(List<CodeExtractor<?>> extractors) {
         return String.join(", ", extractors.stream().map(CodeExtractor::getIdentifier).toList());
     }
 }

@@ -8,13 +8,14 @@ import cz.muni.jena.codeminer.extractor.CodeExtractor;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
 
 import java.nio.file.Path;
+import java.util.List;
 
 public class CodeMinerCallback implements SourceRoot.Callback {
 
-    private final CodeExtractor codeExtractor;
+    private final CodeExtractor<?> codeExtractor;
     private final OutputFormatter codeSerializer;
 
-    public CodeMinerCallback(CodeExtractor codeExtractor, OutputFormatter codeSerializer) {
+    public CodeMinerCallback(CodeExtractor<?> codeExtractor, OutputFormatter codeSerializer) {
         this.codeExtractor = codeExtractor;
         this.codeSerializer = codeSerializer;
     }
@@ -28,8 +29,11 @@ public class CodeMinerCallback implements SourceRoot.Callback {
     }
 
     private void processCompilationUnit(CompilationUnit compilationUnit) {
-        for (ClassOrInterfaceDeclaration declaration : compilationUnit.findAll(ClassOrInterfaceDeclaration.class)) {
-            codeExtractor.extract(declaration, codeSerializer);
-        }
+        List<?> extractedCode = compilationUnit.findAll(ClassOrInterfaceDeclaration.class)
+                .stream()
+                .flatMap(codeExtractor::extract)
+                .toList();
+
+        codeSerializer.add(extractedCode);
     }
 }

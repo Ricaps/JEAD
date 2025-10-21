@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: detector
+      POSTGRES_USER: root
+      POSTGRES_DB: antipatternDetector
+    volumes:
+      - dbVolume:/var/lib/postgresql/data
+volumes:
+  dbVolume:
+    driver: local

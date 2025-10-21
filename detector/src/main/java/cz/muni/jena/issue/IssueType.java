@@ -29,7 +29,9 @@ public enum IssueType
     INSECURE_COMMUNICATION(IssueCategory.SECURITY, 6),
     TINY_SERVICE(IssueCategory.SERVICE_LAYER, 1),
     MULTI_SERVICE(IssueCategory.SERVICE_LAYER, 2),
-    N_PLUS1_QUERY_PROBLEM(IssueCategory.PERSISTENCE, 1);
+    N_PLUS1_QUERY_PROBLEM(IssueCategory.PERSISTENCE, 1),
+    SELF_ADMITTED_TECHNICAL_DEBT(IssueCategory.TECHNICAL_DEBT, 1),
+    COMMENTED_OUT_CODE(IssueCategory.TECHNICAL_DEBT, 2);
 
     private final IssueCategory category;
     private final Integer order;
