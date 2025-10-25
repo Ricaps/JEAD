@@ -11,22 +11,26 @@ import java.util.stream.Stream;
 
 public record ResolvableNode<T>(Resolvable<T> resolvable)
 {
-    public Stream<T> resolve()
+    public Optional<T> resolve()
     {
         synchronized (ResolvableNode.class)
         {
             try
             {
-                return Stream.of(resolvable.resolve());
+                return Optional.of(resolvable.resolve());
             } catch (RuntimeException e)
             {
-                return Stream.of();
+                return Optional.empty();
             }
         }
     }
 
     public static <T> Stream<T> resolve(Resolvable<T> resolvable)
     {
+        return new ResolvableNode<T>(resolvable).resolve().stream();
+    }
+
+    public static <T> Optional<T> resolveOptional(Resolvable<T> resolvable) {
         return new ResolvableNode<T>(resolvable).resolve();
     }
 

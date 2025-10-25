@@ -40,7 +40,6 @@ public class InappropriateServiceSizeDetector implements SpecificIssueDetector
         if (
                 classOrInterfaceDeclaration.getAnnotations()
                         .stream()
-                        .map(ResolvableNode::new)
                         .flatMap(ResolvableNode::resolve)
                         .map(ResolvedAnnotationDeclaration::getQualifiedName)
                         .noneMatch(serviceAnnotations::contains)
