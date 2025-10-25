@@ -4,6 +4,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.comments.BlockComment;
 import com.github.javaparser.ast.comments.Comment;
 import cz.muni.jena.codeminer.extractor.BaseCodeExtractor;
+import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.util.NodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,7 @@ public class CommentsCodeExtractor extends BaseCodeExtractor<CommentDto> {
     }
 
     @Override
-    public Stream<CommentDto> extract(ClassOrInterfaceDeclaration classOrInterface) {
+    public Stream<CommentDto> extract(ClassOrInterfaceDeclaration classOrInterface, Configuration configuration) {
         List<Comment> comments = classOrInterface.getAllContainedComments();
 
         List<CommentDto> outputComments = processComments(comments, classOrInterface);

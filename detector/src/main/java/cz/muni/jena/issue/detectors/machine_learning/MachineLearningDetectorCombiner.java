@@ -55,13 +55,13 @@ public class MachineLearningDetectorCombiner implements MachineLearningDetector 
                         return extractor.evaluations().stream().anyMatch(evaluation -> evaluationPredicate.test(evaluation));
                     }).toList();
 
-                    processExtractor(classOrInterfaceDeclaration, key, filteredDetectorConfigs);
+                    processExtractor(classOrInterfaceDeclaration, key, filteredDetectorConfigs, configuration);
                 });
     }
 
-    private void processExtractor(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, CodeExtractor<?> extractor, List<MLDetectorConfig> detectorConfigs) {
+    private void processExtractor(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, CodeExtractor<?> extractor, List<MLDetectorConfig> detectorConfigs, Configuration configuration) {
         Collection<? extends EvaluatedNode> inferenceItems = extractor
-                .extract(classOrInterfaceDeclaration)
+                .extract(classOrInterfaceDeclaration, configuration)
                 .toList();
 
         if (inferenceItems.isEmpty()) {

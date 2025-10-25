@@ -1,7 +1,7 @@
 package cz.muni.jena.codeminer.outputformatter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Nonnull;
+import com.fasterxml.jackson.databind.SequenceWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,45 +9,51 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
-public class JsonOutput extends BaseOutputFormatter {
+public class JsonLinesOutput extends BaseOutputFormatter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JsonOutput.class);
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonLinesOutput.class);
+    private static final int BUFFER_SIZE = 30;
     private final ObjectMapper objectMapper;
     private final List<Object> buffer = new ArrayList<>();
 
-    public JsonOutput(ObjectMapper objectMapper) {
+    public JsonLinesOutput(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
     @Override
-    public void add(@Nonnull Collection<?> codeSnippets) {
+    public void add(Collection<?> codeSnippets) {
         if (codeSnippets.isEmpty()) {
             return;
         }
 
         synchronized (buffer) {
             buffer.addAll(codeSnippets);
+
+            if (buffer.size() > BUFFER_SIZE) {
+                flush();
+            }
         }
     }
 
     @Override
     public void close() {
-        synchronized (buffer) {
+        flush();
+    }
 
+    private void flush() {
+        synchronized (buffer) {
             if (buffer.isEmpty()) {
                 return;
             }
 
-            try (OutputStream outputStream = getOutputStream()) {
-                objectMapper
-                        .writerWithDefaultPrettyPrinter()
-                        .writeValue(outputStream, buffer);
+            try (OutputStream outputStream = getOutputStream(true);
+                 SequenceWriter seqWriter = objectMapper.writer().withRootValueSeparator("\n").writeValues(outputStream);
+            ) {
+                seqWriter.writeAll(buffer);
             } catch (IOException e) {
-                LOGGER.error("Failed to write JSON output to file", e);
+                LOGGER.error("Failed to append to JSON lines output", e);
             } finally {
                 buffer.clear();
             }

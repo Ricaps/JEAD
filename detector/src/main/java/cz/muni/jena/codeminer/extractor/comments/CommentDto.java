@@ -1,6 +1,7 @@
 package cz.muni.jena.codeminer.extractor.comments;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import cz.muni.jena.codeminer.EvaluatedNode;
 
 
@@ -29,16 +30,19 @@ public record CommentDto(CommentType commentType, String text, @JsonIgnore Integ
     }
 
     @Override
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String getFullyQualifiedName() {
         return this.fullyQualifiedName;
     }
 
     @Override
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public Integer getStartLine() {
         return this.startLine;
     }
 
     @Override
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String getContent() {
         return String.format("%s: %s", commentType.toString(), text);
     }
