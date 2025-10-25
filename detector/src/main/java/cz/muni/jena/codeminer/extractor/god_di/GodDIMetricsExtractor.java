@@ -11,7 +11,6 @@ import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.configuration.di.Annotation;
 import cz.muni.jena.issue.language.elements.ResolvableNode;
 import cz.muni.jena.util.NodeUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;

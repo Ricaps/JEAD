@@ -49,7 +49,7 @@ public class JsonLinesOutput extends BaseOutputFormatter {
             }
 
             try (OutputStream outputStream = getOutputStream(true);
-                 SequenceWriter seqWriter = objectMapper.writer().withRootValueSeparator("\n").writeValues(outputStream);
+                 SequenceWriter seqWriter = objectMapper.writer().withRootValueSeparator("\n").writeValues(outputStream)
             ) {
                 seqWriter.writeAll(buffer);
             } catch (IOException e) {
