@@ -8,6 +8,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.ProjectRoot;
 import com.github.javaparser.utils.SourceRoot;
+import cz.muni.jena.Preconditions;
 import cz.muni.jena.parser.TypeSolverSupplier;
 
 import java.nio.file.Path;
@@ -15,13 +16,15 @@ import java.util.Optional;
 
 public class ParserTest {
 
-    public static final Path TEST_PACKAGE_PATH = Path.of("/home/martin/Projects/Master's Thesis/JENA/JENA.V2/detector");
+    public static final Path TEST_PACKAGE_PATH = Path.of(System.getProperty("user.dir"));
 
     private ParserTest() {
         super();
     }
 
     public static ClassOrInterfaceDeclaration getParsedClass(Class<?> clazz) {
+        Preconditions.verifyCorrectWorkingDirectory();
+
         ProjectRoot projectRoot = getProjectRoot();
 
         for (SourceRoot sourceRoot : projectRoot.getSourceRoots()) {
@@ -38,6 +41,7 @@ public class ParserTest {
         TypeSolverSupplier typeSolverSupplier = new TypeSolverSupplier(TEST_PACKAGE_PATH);
         ParserConfiguration parserConfig = new ParserConfiguration();
         CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
+
         typeSolverSupplier.get().forEach(combinedTypeSolver::add);
         JavaSymbolSolver symbolResolver = new JavaSymbolSolver(combinedTypeSolver);
         parserConfig.setSymbolResolver(symbolResolver);
