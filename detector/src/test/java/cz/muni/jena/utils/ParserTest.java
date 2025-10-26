@@ -28,6 +28,7 @@ public class ParserTest {
         ProjectRoot projectRoot = getProjectRoot();
 
         for (SourceRoot sourceRoot : projectRoot.getSourceRoots()) {
+            System.out.println("Root: " + sourceRoot.getRoot());
             CompilationUnit compilationUnit = sourceRoot.parse(clazz.getPackageName(), clazz.getSimpleName() + ".java");
             Optional<ClassOrInterfaceDeclaration> classOptional = compilationUnit.getClassByName(clazz.getSimpleName());
             if (classOptional.isPresent()) {
