@@ -37,7 +37,7 @@ public class LackOfCohesionOfMethodsMetric implements MetricComputer<Integer> {
                     }
 
                     callerMethod.findAll(MethodCallExpr.class).forEach(callExpression -> {
-                        Optional<String> calleeMethodSignature = ResolvableNode.resolveOptional(callerMethod).map(ResolvedMethodDeclaration::getSignature);;
+                        Optional<String> calleeMethodSignature = ResolvableNode.resolveOptional(callExpression).map(ResolvedMethodDeclaration::getSignature);
 
                         if (calleeMethodSignature.isPresent() && methodsGraph.containsKey(calleeMethodSignature.get())) {
                             methodsGraph.get(callerMethodSignature.get()).add(calleeMethodSignature.get());
@@ -74,19 +74,16 @@ public class LackOfCohesionOfMethodsMetric implements MetricComputer<Integer> {
             }
         });
 
-        method.findAll(NameExpr.class).forEach(field -> {
-            ResolvableNode.resolve(field).forEach(resolvedField -> {
-                if (!resolvedField.isField()) {
-                    return;
-                }
+        method.findAll(NameExpr.class).forEach(field -> ResolvableNode.resolve(field).forEach(resolvedField -> {
+            if (!resolvedField.isField()) {
+                return;
+            }
 
-                String fieldName = field.getNameAsString();
-                if (fields.contains(fieldName)) {
-                    fieldsAccessInMethod.add(fieldName);
-                }
-            });
-
-        });
+            String fieldName = field.getNameAsString();
+            if (fields.contains(fieldName)) {
+                fieldsAccessInMethod.add(fieldName);
+            }
+        }));
 
         ResolvableNode.resolveOptional(method).ifPresent(methodSignature -> methodToFields.put(methodSignature.getSignature(), fieldsAccessInMethod));
     }
@@ -95,9 +92,9 @@ public class LackOfCohesionOfMethodsMetric implements MetricComputer<Integer> {
     public Integer extractMetric(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Configuration configuration) {
         Set<String> fields = new HashSet<>();
 
-        classOrInterfaceDeclaration.getFields().forEach(field -> {
-            field.getVariables().forEach(variable -> fields.add(variable.getNameAsString()));
-        });
+        classOrInterfaceDeclaration.getFields().forEach(field ->
+                field.getVariables().forEach(variable -> fields.add(variable.getNameAsString()))
+        );
 
         ResolvableNode.resolve(classOrInterfaceDeclaration)
                 .flatMap(cls -> cls.getAllFields().stream())
