@@ -31,7 +31,6 @@ public class ParserTest {
         SourceRoot sourceRoot = projectRoot
                 .getSourceRoot(TEST_SOURCES_ROOT_PATH)
                 .orElseThrow(() -> new IllegalStateException("Failed to find sources root for %s".formatted(TEST_SOURCES_ROOT_PATH)));
-        System.out.println("Root: " + sourceRoot.getRoot());
         CompilationUnit compilationUnit = sourceRoot.parse(clazz.getPackageName(), clazz.getSimpleName() + ".java");
         Optional<ClassOrInterfaceDeclaration> classOptional = compilationUnit.getClassByName(clazz.getSimpleName());
         if (classOptional.isPresent()) {
@@ -41,7 +40,6 @@ public class ParserTest {
     }
 
     private static ProjectRoot getProjectRoot() {
-        System.out.println("Path: " + PROJECT_ROOT_PATH);
         TypeSolverSupplier typeSolverSupplier = new TypeSolverSupplier(PROJECT_ROOT_PATH);
         ParserConfiguration parserConfig = new ParserConfiguration();
         CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
