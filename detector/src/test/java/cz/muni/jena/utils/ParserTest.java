@@ -38,6 +38,7 @@ public class ParserTest {
     }
 
     private static ProjectRoot getProjectRoot() {
+        System.out.println("Path: " + TEST_PACKAGE_PATH);
         TypeSolverSupplier typeSolverSupplier = new TypeSolverSupplier(TEST_PACKAGE_PATH);
         ParserConfiguration parserConfig = new ParserConfiguration();
         CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
