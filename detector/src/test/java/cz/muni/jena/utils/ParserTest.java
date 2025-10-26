@@ -16,7 +16,8 @@ import java.util.Optional;
 
 public class ParserTest {
 
-    public static final Path TEST_PACKAGE_PATH = Path.of(System.getProperty("user.dir"));
+    public static final Path PROJECT_ROOT_PATH = Path.of(System.getProperty("user.dir"));
+    public static final Path TEST_SOURCES_ROOT_PATH = Path.of("src/test/java").toAbsolutePath();
 
     private ParserTest() {
         super();
@@ -27,26 +28,27 @@ public class ParserTest {
 
         ProjectRoot projectRoot = getProjectRoot();
 
-        for (SourceRoot sourceRoot : projectRoot.getSourceRoots()) {
-            System.out.println("Root: " + sourceRoot.getRoot());
-            CompilationUnit compilationUnit = sourceRoot.parse(clazz.getPackageName(), clazz.getSimpleName() + ".java");
-            Optional<ClassOrInterfaceDeclaration> classOptional = compilationUnit.getClassByName(clazz.getSimpleName());
-            if (classOptional.isPresent()) {
-                return classOptional.get();
-            }
+        SourceRoot sourceRoot = projectRoot
+                .getSourceRoot(TEST_SOURCES_ROOT_PATH)
+                .orElseThrow(() -> new IllegalStateException("Failed to find sources root for %s".formatted(TEST_SOURCES_ROOT_PATH)));
+        System.out.println("Root: " + sourceRoot.getRoot());
+        CompilationUnit compilationUnit = sourceRoot.parse(clazz.getPackageName(), clazz.getSimpleName() + ".java");
+        Optional<ClassOrInterfaceDeclaration> classOptional = compilationUnit.getClassByName(clazz.getSimpleName());
+        if (classOptional.isPresent()) {
+            return classOptional.get();
         }
         throw new IllegalStateException("Failed to find class %s".formatted(clazz.getSimpleName()));
     }
 
     private static ProjectRoot getProjectRoot() {
-        System.out.println("Path: " + TEST_PACKAGE_PATH);
-        TypeSolverSupplier typeSolverSupplier = new TypeSolverSupplier(TEST_PACKAGE_PATH);
+        System.out.println("Path: " + PROJECT_ROOT_PATH);
+        TypeSolverSupplier typeSolverSupplier = new TypeSolverSupplier(PROJECT_ROOT_PATH);
         ParserConfiguration parserConfig = new ParserConfiguration();
         CombinedTypeSolver combinedTypeSolver = new CombinedTypeSolver();
 
         typeSolverSupplier.get().forEach(combinedTypeSolver::add);
         JavaSymbolSolver symbolResolver = new JavaSymbolSolver(combinedTypeSolver);
         parserConfig.setSymbolResolver(symbolResolver);
-        return new SymbolSolverCollectionStrategy(parserConfig).collect(TEST_PACKAGE_PATH);
+        return new SymbolSolverCollectionStrategy(parserConfig).collect(PROJECT_ROOT_PATH);
     }
 }
