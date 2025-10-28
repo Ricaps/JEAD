@@ -24,6 +24,7 @@ class GodDIClassDetectorTest extends IssueDetectorTester
                 },
                 new GodDIClassDetector(), new DIConfiguration(
                         configuration.diConfiguration().injectionAnnotations(),
+                        configuration.diConfiguration().beanAnnotations(),
                         1,
                         configuration.diConfiguration().maxProducerMethodComplexity(),
                         configuration.diConfiguration().producerAnnotations(),

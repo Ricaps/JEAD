@@ -21,20 +21,21 @@ import static cz.muni.jena.Preconditions.verifyCorrectWorkingDirectory;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-class ConfigurationLoadingTest
-{
+class ConfigurationLoadingTest {
     private static final String TEST_CONFIGURATION_PATH = "./src/test/java/cz/muni/jena/configuration/testConfiguration";
 
     @Test
-    void jsonToAnnotationTest()
-    {
+    void jsonToAnnotationTest() {
         verifyCorrectWorkingDirectory();
         Optional<Configuration> configuration = Configuration.readConfiguration(TEST_CONFIGURATION_PATH);
         DIConfiguration diConfiguration = new DIConfiguration(
                 List.of(
                         new Annotation("b.cd", false),
                         new Annotation("1.2", true)
-                ),
+                ), List.of(
+                new Annotation("b.cd", false),
+                new Annotation("1.2", true)
+        ),
                 10,
                 6,
                 List.of(
