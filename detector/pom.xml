@@ -20,6 +20,7 @@
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <slf4j-api.version>2.0.17</slf4j-api.version>
         <testcontainers.version>1.21.3</testcontainers.version>
+        <maven-invoker.version>3.3.0</maven-invoker.version>
     </properties>
 
 
@@ -155,6 +156,11 @@
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j-api.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-invoker</artifactId>
+            <version>${maven-invoker.version}</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -213,7 +219,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
+                <version>${maven-invoker.version}</version>
                 <configuration>
                     <archive>
                         <manifest>
