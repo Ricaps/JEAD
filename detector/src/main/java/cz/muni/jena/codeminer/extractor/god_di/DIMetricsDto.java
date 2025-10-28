@@ -9,6 +9,7 @@ public record DIMetricsDto(
         Long cyclomaticComplexity,
         Long injectedFields,
         Integer lcom4,
+        Integer methodsCount,
         @JsonIgnore String code,
         @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) EvaluatedNodeProvider evaluatedNode
 ) implements EvaluatedNode {
