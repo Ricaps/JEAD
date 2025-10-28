@@ -9,6 +9,20 @@
                  "coupledToFramework" : true
                }
            ],
+          "beanAnnotations": [
+            {
+              "fullyQualifiedName" : "org.springframework.stereotype.Component",
+              "coupledToFramework" : true
+            },
+            {
+              "fullyQualifiedName" : "org.springframework.stereotype.Service",
+              "coupledToFramework" : true
+            },
+            {
+              "fullyQualifiedName" : "org.springframework.stereotype.Controller",
+              "coupledToFramework" : true
+            }
+          ],
           "maxNumberOfInjections":5,
           "maxProducerMethodComplexity":2,
           "producerAnnotations":[

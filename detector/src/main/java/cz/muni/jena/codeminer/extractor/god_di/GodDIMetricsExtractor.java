@@ -9,6 +9,7 @@ import cz.muni.jena.codeminer.extractor.BaseCodeExtractor;
 import cz.muni.jena.codeminer.extractor.god_di.metrics.MetricComputer;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.configuration.di.Annotation;
+import cz.muni.jena.configuration.di.DIConfiguration;
 import cz.muni.jena.issue.language.elements.ResolvableNode;
 import cz.muni.jena.util.NodeUtil;
 import org.springframework.stereotype.Component;
@@ -35,7 +36,7 @@ public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetricsDto> {
 
     @Override
     public Stream<DIMetricsDto> extract(ClassOrInterfaceDeclaration classOrInterface, Configuration configuration) {
-        if (!containsAnnotation(classOrInterface, configuration.diConfiguration().injectionAnnotations())) {
+        if (!containsAnnotation(classOrInterface, configuration.diConfiguration())) {
             return Stream.empty();
         }
 
@@ -61,8 +62,8 @@ public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetricsDto> {
         return classOrInterfaceDeclaration.toString();
     }
 
-    private boolean containsAnnotation(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, List<Annotation> annotationList) {
-        List<String> configuredAnnotations = annotationList.stream().map(Annotation::fullyQualifiedName).toList();
+    private boolean containsAnnotation(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, DIConfiguration diConfiguration) {
+        List<String> configuredAnnotations = Stream.concat(diConfiguration.injectionAnnotations().stream(), diConfiguration.beanAnnotations().stream()).map(Annotation::fullyQualifiedName).toList();
 
         return classOrInterfaceDeclaration.findAll(AnnotationExpr.class)
                 .stream()
