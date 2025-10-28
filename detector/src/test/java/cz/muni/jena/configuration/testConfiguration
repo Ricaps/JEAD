@@ -9,6 +9,15 @@
                   "coupledToFramework" : true
                }
             ],
+            "beanAnnotations":[
+               {
+                  "fullyQualifiedName":"cd.f"
+               },
+               {
+                  "fullyQualifiedName":"5.2",
+                  "coupledToFramework" : true
+               }
+            ],
             "maxNumberOfInjections":10,
             "maxProducerMethodComplexity":6,
             "producerAnnotations":[

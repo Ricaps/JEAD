@@ -25,9 +25,9 @@ import java.util.stream.Stream;
 public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetricsDto> {
 
     private static final String GOD_DI_METRIC_EXTRACTOR = "god-metrics";
+    private static final String INCLUDE_CODE_SETTINGS = "code";
     private final List<MetricComputer<?>> metricComputers;
     private final ObjectMapper objectMapper;
-    private final String INCLUDE_CODE_SETTINGS = "code";
 
     @Inject
     protected GodDIMetricsExtractor(List<MetricComputer<?>> metricComputers, ObjectMapper objectMapper) {

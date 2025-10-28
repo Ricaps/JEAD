@@ -33,9 +33,9 @@ class ConfigurationLoadingTest {
                         new Annotation("b.cd", false),
                         new Annotation("1.2", true)
                 ), List.of(
-                new Annotation("b.cd", false),
-                new Annotation("1.2", true)
-        ),
+                    new Annotation("cd.f", false),
+                    new Annotation("5.2", true)
+                ),
                 10,
                 6,
                 List.of(
