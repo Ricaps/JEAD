@@ -10,6 +10,7 @@ import cz.muni.jena.codeminer.extractor.god_di.metrics.MetricComputer;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.configuration.di.Annotation;
 import cz.muni.jena.configuration.di.DIConfiguration;
+import cz.muni.jena.frontend.commands.commands.CommandSettingsMap;
 import cz.muni.jena.issue.language.elements.ResolvableNode;
 import cz.muni.jena.util.NodeUtil;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,7 @@ public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetricsDto> {
     private static final String GOD_DI_METRIC_EXTRACTOR = "god-metrics";
     private final List<MetricComputer<?>> metricComputers;
     private final ObjectMapper objectMapper;
+    private final String INCLUDE_CODE_SETTINGS = "code";
 
     @Inject
     protected GodDIMetricsExtractor(List<MetricComputer<?>> metricComputers, ObjectMapper objectMapper) {
@@ -35,7 +37,7 @@ public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetricsDto> {
     }
 
     @Override
-    public Stream<DIMetricsDto> extract(ClassOrInterfaceDeclaration classOrInterface, Configuration configuration) {
+    public Stream<DIMetricsDto> extract(ClassOrInterfaceDeclaration classOrInterface, Configuration configuration, CommandSettingsMap commandSettingsMap) {
         if (!containsAnnotation(classOrInterface, configuration.diConfiguration())) {
             return Stream.empty();
         }
@@ -49,7 +51,10 @@ public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetricsDto> {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         objectValueMap.put("evaluatedNode", getEvaluatedNode(classOrInterface));
-        objectValueMap.put("code", getCode(classOrInterface));
+
+        if (commandSettingsMap.getAsBoolean(INCLUDE_CODE_SETTINGS).orElse(false)) {
+            objectValueMap.put("code", getCode(classOrInterface));
+        }
 
         return Stream.of(objectMapper.convertValue(objectValueMap, DIMetricsDto.class));
     }

@@ -1,6 +1,6 @@
 package cz.muni.jena.codeminer.extractor.god_di;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import cz.muni.jena.codeminer.EvaluatedNode;
 
@@ -10,7 +10,7 @@ public record DIMetricsDto(
         Long injectedFields,
         Integer lcom4,
         Integer methodsCount,
-        @JsonIgnore String code,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String code,
         @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) EvaluatedNodeProvider evaluatedNode
 ) implements EvaluatedNode {
 

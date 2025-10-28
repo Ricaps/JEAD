@@ -6,8 +6,10 @@ import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatterFactory;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.frontend.commands.InvalidOptionException;
+import cz.muni.jena.frontend.commands.commands.CommandSettingsMap;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
 import org.springframework.shell.command.CommandExecution;
+import org.springframework.shell.command.CommandRegistration;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
 
@@ -26,6 +28,7 @@ public class ExtractCodeCommand {
     private static final String EXTRACTOR_CMD_DESCRIPTION = "Extractor defines what code snippets should be extracted from the project";
     private static final String OUTPUT_PATH_CMD_DESCRIPTION = "Path to the output file";
     private static final String PATH_TO_THE_CONFIGURATION_FILE = "Path to the configuration file";
+    private static final String EXTRACTOR_SPECIFIC_SETTINGS_DESCRIPTION = "Enter settings specific to current extractor";
     private final OutputFormatterFactory outputFormatterFactory;
     private final List<CodeExtractor<?>> codeExtractorList;
 
@@ -41,8 +44,9 @@ public class ExtractCodeCommand {
             @Option(longNames = "projectPath", shortNames = 'p', required = true, description = PROJECT_PATH_CMD_DESCRIPTION) String projectPath,
             @Option(longNames = "format", shortNames = 'f', required = true, defaultValue = "json", description = FORMAT_CMD_DESCRIPTION) String format,
             @Option(longNames = "extractor", shortNames = 'e', required = true, description = EXTRACTOR_CMD_DESCRIPTION) String extractorName,
-            @Option(longNames = "outputPath", shortNames = 'o', required = true, description = OUTPUT_PATH_CMD_DESCRIPTION) String outputPath
-    ) {
+            @Option(longNames = "outputPath", shortNames = 'o', required = true, description = OUTPUT_PATH_CMD_DESCRIPTION) String outputPath,
+            @Option(longNames = "settings", shortNames='s', description = EXTRACTOR_SPECIFIC_SETTINGS_DESCRIPTION, arity = CommandRegistration.OptionArity.ONE_OR_MORE) CommandSettingsMap commandSettingsMap
+            ) {
 
         try (OutputFormatter outputFormatter = outputFormatterFactory
                 .getCodeSerializer(format)
@@ -58,7 +62,7 @@ public class ExtractCodeCommand {
                     .map(path -> Configuration.readConfiguration(path).orElseThrow(() -> new IllegalArgumentException("There was an issue with loading the configuration")))
                     .orElse(Configuration.readConfiguration());
 
-            CodeMinerCallback callback = new CodeMinerCallback(codeExtractor, outputFormatter, configuration);
+            CodeMinerCallback callback = new CodeMinerCallback(codeExtractor, outputFormatter, configuration, commandSettingsMap);
             AsyncCompilationUnitParser asyncCompilationUnitParser = new AsyncCompilationUnitParser(projectPath);
 
             asyncCompilationUnitParser.processCompilationUnits(callback);
