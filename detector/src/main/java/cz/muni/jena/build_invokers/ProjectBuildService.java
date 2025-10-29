@@ -1,7 +1,5 @@
 package cz.muni.jena.build_invokers;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -19,6 +17,11 @@ public class ProjectBuildService {
         this.buildInvokers = buildInvokers;
     }
 
+    /**
+     * Runs build of Java project at given path(s).
+     * <br>Picks the correct strategy for the needed build system (Maven, Gradle, ...) according to file suffix
+     * @param paths collection of paths pointing to the build description files (pom.xml, build.gradle, ...)
+     */
     public void runBuilds(Collection<String> paths) {
         var futures = paths.stream().flatMap(this::forEachInvoker).toArray(CompletableFuture[]::new);
 
