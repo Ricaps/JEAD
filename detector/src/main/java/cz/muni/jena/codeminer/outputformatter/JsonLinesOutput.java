@@ -52,6 +52,7 @@ public class JsonLinesOutput extends BaseOutputFormatter {
                  SequenceWriter seqWriter = objectMapper.writer().withRootValueSeparator("\n").writeValues(outputStream)
             ) {
                 seqWriter.writeAll(buffer);
+                outputStream.write("\n".getBytes());
             } catch (IOException e) {
                 LOGGER.error("Failed to append to JSON lines output", e);
             } finally {

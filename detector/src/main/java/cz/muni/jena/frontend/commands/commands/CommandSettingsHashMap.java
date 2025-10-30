@@ -3,17 +3,22 @@ package cz.muni.jena.frontend.commands.commands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 public class CommandSettingsHashMap extends HashMap<String, String> implements CommandSettingsMap {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CommandSettingsHashMap.class);
     private static final String SEPARATOR = "=";
+    public static final String EMPTY_SIGN = "<empty>";
 
-    public static CommandSettingsMap of(Collection<String> config) {
+    public static CommandSettingsMap of(List<String> config) {
         final CommandSettingsMap settingsMap = new CommandSettingsHashMap();
+
+        if (config.size() == 1 && config.get(0).equals(EMPTY_SIGN)) {
+            return settingsMap;
+        }
 
         config.forEach(input -> {
             String[] split = input.split(SEPARATOR);

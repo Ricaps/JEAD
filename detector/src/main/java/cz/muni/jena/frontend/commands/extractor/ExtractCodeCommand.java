@@ -6,6 +6,7 @@ import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatterFactory;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.frontend.commands.InvalidOptionException;
+import cz.muni.jena.frontend.commands.commands.CommandSettingsHashMap;
 import cz.muni.jena.frontend.commands.commands.CommandSettingsMap;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
 import org.springframework.shell.command.CommandExecution;
@@ -45,7 +46,7 @@ public class ExtractCodeCommand {
             @Option(longNames = "format", shortNames = 'f', required = true, defaultValue = "json", description = FORMAT_CMD_DESCRIPTION) String format,
             @Option(longNames = "extractor", shortNames = 'e', required = true, description = EXTRACTOR_CMD_DESCRIPTION) String extractorName,
             @Option(longNames = "outputPath", shortNames = 'o', required = true, description = OUTPUT_PATH_CMD_DESCRIPTION) String outputPath,
-            @Option(longNames = "settings", shortNames='s', description = EXTRACTOR_SPECIFIC_SETTINGS_DESCRIPTION, arity = CommandRegistration.OptionArity.ONE_OR_MORE) CommandSettingsMap commandSettingsMap
+            @Option(longNames = "settings", shortNames='s', description = EXTRACTOR_SPECIFIC_SETTINGS_DESCRIPTION, defaultValue = CommandSettingsHashMap.EMPTY_SIGN, arity = CommandRegistration.OptionArity.ONE_OR_MORE) CommandSettingsMap commandSettingsMap
             ) {
 
         try (OutputFormatter outputFormatter = outputFormatterFactory
