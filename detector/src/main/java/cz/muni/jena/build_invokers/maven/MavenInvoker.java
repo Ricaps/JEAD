@@ -20,7 +20,7 @@ public class MavenInvoker extends AbstractBuildInvoker {
     protected void run(@Nonnull Path path) {
         InvocationRequest invocationRequest = new DefaultInvocationRequest();
         invocationRequest.setPomFile(path.toFile());
-        invocationRequest.addArgs(List.of("install", "dependency:copy-dependencies"));
+        invocationRequest.addArgs(List.of("clean", "install", "dependency:copy-dependencies", "-DskipTests"));
         invocationRequest.setQuiet(true);
 
         Invoker invoker = new DefaultInvoker();
