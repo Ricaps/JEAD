@@ -85,7 +85,7 @@ public class PrepareProjectsCommand
         addPluginsToPomsMissingThem(logger, filesToVisit);
 
         if (buildProjects) {
-            projectBuildService.runBuilds(filesToVisit.getAllFiles());
+            projectBuildService.runBuilds(Path.of(directory));
         }
 
         return "The projects in directory: " + directory + "should now have the plugins and tasks needed.";

@@ -1,9 +1,9 @@
 package cz.muni.jena.build_invokers;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -11,26 +11,31 @@ import java.util.stream.Stream;
 @Service
 public class ProjectBuildService {
 
+    private final ProjectFinderService projectFinderService;
     private final List<BuildInvoker> buildInvokers;
 
-    public ProjectBuildService(List<BuildInvoker> buildInvokers) {
+    @Autowired
+    public ProjectBuildService(ProjectFinderService projectFinderService, List<BuildInvoker> buildInvokers) {
+        this.projectFinderService = projectFinderService;
         this.buildInvokers = buildInvokers;
     }
 
     /**
      * Runs build of Java project at given path(s).
      * <br>Picks the correct strategy for the needed build system (Maven, Gradle, ...) according to file suffix
-     * @param paths collection of paths pointing to the build description files (pom.xml, build.gradle, ...)
+     * @param basePath path from where the algorithm should look like for build description files / projects
      */
-    public void runBuilds(Collection<String> paths) {
-        var futures = paths.stream().flatMap(this::forEachInvoker).toArray(CompletableFuture[]::new);
+    public void runBuilds(Path basePath) {
+        var futures = projectFinderService.find(basePath)
+                .stream()
+                .flatMap(this::forEachInvoker)
+                .toArray(CompletableFuture[]::new);
 
         CompletableFuture<Void> future = CompletableFuture.allOf(futures);
         future.join();
     }
 
-    private Stream<CompletableFuture<Void>> forEachInvoker(String stringPath) {
-        Path path = Path.of(stringPath);
+    private Stream<CompletableFuture<Void>> forEachInvoker(Path path) {
 
         return buildInvokers.stream()
                 .filter(invoker -> invoker.canHandleBuild(path))

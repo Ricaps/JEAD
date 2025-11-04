@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Async;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
-abstract class AbstractBuildInvoker implements BuildInvoker {
+public abstract class AbstractBuildInvoker implements BuildInvoker {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractBuildInvoker.class);
 

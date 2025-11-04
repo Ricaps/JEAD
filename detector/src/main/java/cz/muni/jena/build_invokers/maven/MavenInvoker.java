@@ -1,5 +1,6 @@
-package cz.muni.jena.build_invokers;
+package cz.muni.jena.build_invokers.maven;
 
+import cz.muni.jena.build_invokers.AbstractBuildInvoker;
 import jakarta.annotation.Nonnull;
 import org.apache.maven.shared.invoker.*;
 import org.slf4j.Logger;
