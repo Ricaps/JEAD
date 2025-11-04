@@ -34,12 +34,18 @@ public class ProjectFinderService {
         return pathList;
     }
 
+    /**
+     * Finds all build-able pom files under the given path. <br>
+     * If the project contains subprojects, only top-level parents are found (doesn't make sense to build also children)
+     * @param basePath base path where to look for POMs
+     * @return found paths
+     */
     public List<Path> find(Path basePath) {
         Map<ProjectFinder, String> fileSuffixMap = getFileSuffixMap();
         Map<ProjectFinder, List<Path>> result = new HashMap<>();
 
         try {
-            Files.walkFileTree(basePath, Set.of(FOLLOW_LINKS), 2, new BuildFileVisitor(fileSuffixMap, result));
+            Files.walkFileTree(basePath, Set.of(FOLLOW_LINKS), 10, new BuildFileVisitor(fileSuffixMap, result));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

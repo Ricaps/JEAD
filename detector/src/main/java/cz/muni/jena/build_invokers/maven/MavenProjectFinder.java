@@ -60,7 +60,9 @@ public class MavenProjectFinder implements ProjectFinder {
                         return Optional.of(foundParent);
                     }
 
-                    return findParentModel(model.getParent(), allModels);
+                    // If the parent project belonging to current not found = current pom is top-level parent
+                    return findParentModel(model.getParent(), allModels)
+                            .or(() -> Optional.of(foundParent));
                 });
     }
 
