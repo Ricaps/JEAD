@@ -21,6 +21,7 @@
         <slf4j-api.version>2.0.17</slf4j-api.version>
         <testcontainers.version>1.21.3</testcontainers.version>
         <maven-invoker.version>3.3.0</maven-invoker.version>
+        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
     </properties>
 
 
@@ -219,7 +220,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>${maven-invoker.version}</version>
+                <version>${maven-jar-plugin.version}</version>
                 <configuration>
                     <archive>
                         <manifest>
