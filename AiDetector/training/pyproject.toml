@@ -19,7 +19,8 @@ dependencies = [
     "accelerate (==1.10.1)",
     "torch (==2.8.0)",
     "torchvision (==0.23.0)",
-    "optimum[onnxruntime] (>=2.0.0,<3.0.0)"
+    "optimum[onnxruntime] (>=2.0.0,<3.0.0)",
+    "plt (>=0.2.0,<0.3.0)"
 ]
 
 [dependency-groups]
