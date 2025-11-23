@@ -7,7 +7,7 @@ from inference_server.proto.inference_pb2 import (
     ModelReadyResponse,
     ModelNameRequest,
 )
-from util.grpc_test import AsyncGrpcTestCase
+from tests.util.grpc_test import AsyncGrpcTestCase
 
 
 class TestModelInferenceIntegration(AsyncGrpcTestCase):
