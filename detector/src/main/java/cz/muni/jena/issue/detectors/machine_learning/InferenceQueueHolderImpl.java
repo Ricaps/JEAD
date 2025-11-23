@@ -1,6 +1,6 @@
 package cz.muni.jena.issue.detectors.machine_learning;
 
-import cz.muni.jena.codeminer.EvaluatedNode;
+import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.inference.InferenceService;
 import cz.muni.jena.inference.config.InferenceConfiguration;
 import cz.muni.jena.inference.config.ModelConfiguration;
@@ -17,10 +17,10 @@ import java.util.stream.Stream;
 
 @Component
 @ConditionalOnProperty(value = "inference.enabled", havingValue = "true")
-public class InferenceQueueHolderImpl implements InferenceQueueHolder<EvaluatedNode> {
+public class InferenceQueueHolderImpl implements InferenceQueueHolder<EvaluationModel> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InferenceQueueHolderImpl.class);
-    private final Map<String, InferenceQueue<EvaluatedNode>> inferenceQueues = new ConcurrentHashMap<>();
+    private final Map<String, InferenceQueue<EvaluationModel>> inferenceQueues = new ConcurrentHashMap<>();
     private final InferenceConfiguration inferenceConfiguration;
     private final InferenceService inferenceService;
 
@@ -32,15 +32,15 @@ public class InferenceQueueHolderImpl implements InferenceQueueHolder<EvaluatedN
     @Override
     public void startQueues() {
         for (ModelConfiguration model : inferenceConfiguration.models()) {
-            InferenceQueue<EvaluatedNode> inferenceQueue = new InferenceQueue<>(model, inferenceService);
+            InferenceQueue<EvaluationModel> inferenceQueue = new InferenceQueue<>(model, inferenceService);
             inferenceQueues.put(model.modelName(), inferenceQueue);
             inferenceQueue.start();
         }
     }
 
     @Override
-    public void addToQueue(String modelName, Stream<InferenceItem<EvaluatedNode>> inferenceItemStream) {
-        InferenceQueue<EvaluatedNode> queue = inferenceQueues.get(modelName);
+    public void addToQueue(String modelName, Stream<InferenceItem<EvaluationModel>> inferenceItemStream) {
+        InferenceQueue<EvaluationModel> queue = inferenceQueues.get(modelName);
         if (queue == null) {
             LOGGER.warn("No queue defined for model {}", modelName);
             return;

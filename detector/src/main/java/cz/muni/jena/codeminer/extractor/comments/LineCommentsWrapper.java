@@ -2,8 +2,8 @@ package cz.muni.jena.codeminer.extractor.comments;
 
 import com.github.javaparser.Range;
 import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.comments.Comment;
 import com.github.javaparser.ast.comments.LineComment;
+import cz.muni.jena.codeminer.extractor.comments.model.Comment;
 import cz.muni.jena.util.NodeUtil;
 
 import java.util.LinkedList;
@@ -15,11 +15,11 @@ class LineCommentsWrapper {
     private final String fullyQualifiedName;
     private final List<LineComment> lineComments;
 
-    public LineCommentsWrapper(String fullyQualifiedName, List<Comment> comments) {
+    public LineCommentsWrapper(String fullyQualifiedName, List<com.github.javaparser.ast.comments.Comment> comments) {
         this.fullyQualifiedName = fullyQualifiedName;
         lineComments = comments.stream()
-                .filter(Comment::isLineComment)
-                .map(Comment::asLineComment)
+                .filter(com.github.javaparser.ast.comments.Comment::isLineComment)
+                .map(com.github.javaparser.ast.comments.Comment::asLineComment)
                 .sorted(CommentUtils.getLineSortComparator())
                 .toList();
     }
@@ -30,9 +30,9 @@ class LineCommentsWrapper {
      *
      * @return list of strings. Each element contains one comment.
      */
-    public LinkedList<CommentDto> processLineComment() {
+    public LinkedList<Comment> processLineComment() {
         int lastLine = -1;
-        LinkedList<CommentDto> result = new LinkedList<>();
+        LinkedList<Comment> result = new LinkedList<>();
         ToBeSquashedComment toBeSquashed = null;
 
         for (LineComment lineComment : lineComments) {
@@ -47,10 +47,10 @@ class LineCommentsWrapper {
                 toBeSquashed.comment.append(CommentUtils.getTrimmedContent(lineComment)).append("\n");
             } else {
                 if (toBeSquashed != null) {
-                    result.add(CommentDto.ofLine(toBeSquashed.comment.toString(), toBeSquashed.startLine, fullyQualifiedName));
+                    result.add(Comment.ofLine(toBeSquashed.comment.toString(), toBeSquashed.startLine, fullyQualifiedName));
                     toBeSquashed.comment.setLength(0);
                 }
-                result.add(CommentDto.ofLine(CommentUtils.getTrimmedContent(lineComment), optionalLineNumber.orElse(null), fullyQualifiedName));
+                result.add(Comment.ofLine(CommentUtils.getTrimmedContent(lineComment), optionalLineNumber.orElse(null), fullyQualifiedName));
             }
 
             if (optionalLineNumber.isPresent()) {
@@ -59,7 +59,7 @@ class LineCommentsWrapper {
         }
 
         if (toBeSquashed != null) {
-            result.add(CommentDto.ofLine(toBeSquashed.comment.toString(), toBeSquashed.startLine, fullyQualifiedName));
+            result.add(Comment.ofLine(toBeSquashed.comment.toString(), toBeSquashed.startLine, fullyQualifiedName));
         }
 
         return result;

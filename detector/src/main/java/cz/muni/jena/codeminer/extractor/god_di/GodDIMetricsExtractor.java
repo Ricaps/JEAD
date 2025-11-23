@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.resolution.declarations.ResolvedAnnotationDeclaration;
-import cz.muni.jena.codeminer.EvaluatedNode;
+import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.codeminer.extractor.BaseCodeExtractor;
 import cz.muni.jena.codeminer.extractor.god_di.metrics.MetricComputer;
 import cz.muni.jena.configuration.Configuration;
@@ -59,8 +59,8 @@ public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetricsDto> {
         return Stream.of(objectMapper.convertValue(objectValueMap, DIMetricsDto.class));
     }
 
-    private EvaluatedNode getEvaluatedNode(ClassOrInterfaceDeclaration classOrInterfaceDeclaration) {
-        return new EvaluatedNodeProvider(classOrInterfaceDeclaration.getFullyQualifiedName().orElse(null), NodeUtil.getStartLineNumber(classOrInterfaceDeclaration).orElse(null));
+    private EvaluationModel getEvaluatedNode(ClassOrInterfaceDeclaration classOrInterfaceDeclaration) {
+        return new EvaluationModelProvider(classOrInterfaceDeclaration.getFullyQualifiedName().orElse(null), NodeUtil.getStartLineNumber(classOrInterfaceDeclaration).orElse(null));
     }
 
     private String getCode(ClassOrInterfaceDeclaration classOrInterfaceDeclaration) {

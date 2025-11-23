@@ -1,7 +1,7 @@
 package cz.muni.jena.issue.detectors.machine_learning;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import cz.muni.jena.codeminer.EvaluatedNode;
+import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.codeminer.extractor.CodeExtractor;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.exception.InferenceFailedException;
@@ -32,10 +32,10 @@ public class MachineLearningDetectorCombiner implements MachineLearningDetector 
     private static final Logger LOGGER = LoggerFactory.getLogger(MachineLearningDetectorCombiner.class);
     private final InferenceConfiguration inferenceConfiguration;
     private Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate;
-    private final InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder;
+    private final InferenceQueueHolder<EvaluationModel> inferenceQueueHolder;
 
     @Inject
-    public MachineLearningDetectorCombiner(InferenceConfiguration inferenceConfiguration, InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder) {
+    public MachineLearningDetectorCombiner(InferenceConfiguration inferenceConfiguration, InferenceQueueHolder<EvaluationModel> inferenceQueueHolder) {
         this.inferenceConfiguration = inferenceConfiguration;
         this.inferenceQueueHolder = inferenceQueueHolder;
     }
@@ -60,7 +60,7 @@ public class MachineLearningDetectorCombiner implements MachineLearningDetector 
     }
 
     private void processExtractor(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, CodeExtractor<?> extractor, List<MLDetectorConfig> detectorConfigs, Configuration configuration) {
-        Collection<? extends EvaluatedNode> inferenceItems = extractor
+        Collection<? extends EvaluationModel> inferenceItems = extractor
                 .extract(classOrInterfaceDeclaration, configuration)
                 .toList();
 
@@ -77,8 +77,8 @@ public class MachineLearningDetectorCombiner implements MachineLearningDetector 
         }
     }
 
-    private void processDetector(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Collection<? extends EvaluatedNode> evaluatedNodesStream, MLDetectorConfig mlDetectorConfig) {
-        Stream<InferenceItem<EvaluatedNode>> inferenceItemStream = evaluatedNodesStream
+    private void processDetector(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Collection<? extends EvaluationModel> evaluatedNodesStream, MLDetectorConfig mlDetectorConfig) {
+        Stream<InferenceItem<EvaluationModel>> inferenceItemStream = evaluatedNodesStream
                 .stream()
                 .map(evaluatedNode -> new InferenceItem<>(evaluatedNode, (inferenceItem) -> this.mapItemToIssue(classOrInterfaceDeclaration, inferenceItem, mlDetectorConfig)));
 
@@ -86,7 +86,7 @@ public class MachineLearningDetectorCombiner implements MachineLearningDetector 
 
     }
 
-    private <T extends EvaluatedNode> IssueWithLazyMeta mapItemToIssue(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, InferenceItem<T> inferenceItem, MLDetectorConfig mlDetectorConfig) {
+    private <T extends EvaluationModel> IssueWithLazyMeta mapItemToIssue(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, InferenceItem<T> inferenceItem, MLDetectorConfig mlDetectorConfig) {
         Optional<MLDetectorConfig.LabelEvaluationConfig> matchingEvaluation = getMatchingEvaluation(inferenceItem, mlDetectorConfig);
 
         return matchingEvaluation
@@ -95,7 +95,7 @@ public class MachineLearningDetectorCombiner implements MachineLearningDetector 
                 .orElse(null);
     }
 
-    private <T extends EvaluatedNode> Optional<MLDetectorConfig.LabelEvaluationConfig> getMatchingEvaluation(InferenceItem<T> inferenceItem, MLDetectorConfig mlDetectorConfig) {
+    private <T extends EvaluationModel> Optional<MLDetectorConfig.LabelEvaluationConfig> getMatchingEvaluation(InferenceItem<T> inferenceItem, MLDetectorConfig mlDetectorConfig) {
         return mlDetectorConfig.evaluations().stream()
                 .filter(evaluation -> {
                     if (evaluationPredicate == null) {

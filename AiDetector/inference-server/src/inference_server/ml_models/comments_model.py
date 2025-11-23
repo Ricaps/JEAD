@@ -1,4 +1,6 @@
 import asyncio
+import dataclasses
+import json
 
 import numpy as np
 from aiopath import AsyncPath
@@ -13,10 +15,17 @@ from inference_server.model.inference_model import (
     ModelInferenceRequestBatch,
     ModelInferenceResult,
     LabelEvaluation,
+    ModelInferenceRequest,
 )
 from transformers import (
     AutoTokenizer,
 )
+
+
+@dataclasses.dataclass
+class InputRequest:
+    commentType: str
+    text: str
 
 
 class CommentsModel(InferenceModel):
@@ -30,10 +39,21 @@ class CommentsModel(InferenceModel):
         self._access_lock = asyncio.Lock()
         self.__logger = logging.getLogger(self.__class__.__name__)
 
+    @staticmethod
+    def map_json_content(request: ModelInferenceRequest) -> str:
+        content = request.content
+        json_content = json.loads(content)
+
+        return CommentsModel.get_model_input(InputRequest(**json_content))
+
+    @staticmethod
+    def get_model_input(request: InputRequest) -> str:
+        return f"{request.commentType}: {request.text}"
+
     async def execute(
         self, data: ModelInferenceRequestBatch
     ) -> Optional[ModelInferenceResultBatch]:
-        mapped = map(lambda request: request.content, data.contents)
+        mapped = map(lambda request: self.map_json_content(request), data.contents)
 
         async with self._access_lock:
             inputs = self.tokenizer(

@@ -1,6 +1,6 @@
 package cz.muni.jena.issue.detectors.machine_learning;
 
-import cz.muni.jena.codeminer.EvaluatedNode;
+import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.inference.model.InferenceItem;
 import cz.muni.jena.issue.IssueWithLazyMeta;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 @Component
 @ConditionalOnProperty(value = "inference.enabled", havingValue = "false", matchIfMissing = true)
-public class EmptyInferenceQueueHolder implements InferenceQueueHolder<EvaluatedNode> {
+public class EmptyInferenceQueueHolder implements InferenceQueueHolder<EvaluationModel> {
 
     @Override
     public void startQueues() {
@@ -18,7 +18,7 @@ public class EmptyInferenceQueueHolder implements InferenceQueueHolder<Evaluated
     }
 
     @Override
-    public void addToQueue(String modelName, Stream<InferenceItem<EvaluatedNode>> inferenceItemStream) {
+    public void addToQueue(String modelName, Stream<InferenceItem<EvaluationModel>> inferenceItemStream) {
 
     }
 

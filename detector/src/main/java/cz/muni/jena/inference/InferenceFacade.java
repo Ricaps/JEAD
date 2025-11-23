@@ -1,6 +1,6 @@
 package cz.muni.jena.inference;
 
-import cz.muni.jena.codeminer.EvaluatedNode;
+import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.issue.IssueWithLazyMeta;
 import cz.muni.jena.issue.detectors.machine_learning.InferenceQueueControl;
 import cz.muni.jena.issue.detectors.machine_learning.InferenceQueueHolder;
@@ -17,10 +17,10 @@ public class InferenceFacade implements InferenceQueueControl {
     private static final Logger LOGGER = LoggerFactory.getLogger(InferenceFacade.class);
 
     private final InferenceService inferenceService;
-    private final InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder;
+    private final InferenceQueueHolder<EvaluationModel> inferenceQueueHolder;
 
     @Inject
-    public InferenceFacade(InferenceService inferenceService, InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder) {
+    public InferenceFacade(InferenceService inferenceService, InferenceQueueHolder<EvaluationModel> inferenceQueueHolder) {
         this.inferenceService = inferenceService;
         this.inferenceQueueHolder = inferenceQueueHolder;
     }

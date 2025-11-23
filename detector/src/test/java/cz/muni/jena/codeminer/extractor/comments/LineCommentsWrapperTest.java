@@ -2,7 +2,7 @@ package cz.muni.jena.codeminer.extractor.comments;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.comments.Comment;
+import cz.muni.jena.codeminer.extractor.comments.model.Comment;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,7 +20,7 @@ class LineCommentsWrapperTest {
     private static final String TEST_CLASS_PATH = "src/test/java/cz/muni/jena/test_data/LineCommentsParserTestClass.java";
     private static final String A_LOT_OF_SPACES_COMMENT = "a lot of spaces";
     private static final String SIMILARITY_MATCHER_COMMENT = "public EditDistance<?> similarityMatcher()";
-    private List<Comment> allContainedComments;
+    private List<com.github.javaparser.ast.comments.Comment> allContainedComments;
     private LineCommentsWrapper commentsWrapper;
     private static final Pattern SPACES_PATTERN = Pattern.compile(CommentUtils.SPACES_PATTERN);
 
@@ -36,36 +36,36 @@ class LineCommentsWrapperTest {
 
     @Test
     void processComments_commentType_isLineComment() {
-        LinkedList<CommentDto> comments = commentsWrapper.processLineComment();
+        LinkedList<Comment> comments = commentsWrapper.processLineComment();
 
         assertThat(comments).allMatch(comment -> comment.commentType().equals(CommentType.LINE));
     }
 
     @Test
     void processComments_commentsSquashed() {
-        LinkedList<CommentDto> comments = commentsWrapper.processLineComment();
+        LinkedList<Comment> comments = commentsWrapper.processLineComment();
 
         String beanDeclaration = allContainedComments.get(3).getContent();
         String methodDeclaration = allContainedComments.get(4).getContent();
         String methodBlock = allContainedComments.get(5).getContent();
         String bracket = allContainedComments.get(6).getContent();
 
-        Optional<CommentDto> comment = getCommentContaining(SIMILARITY_MATCHER_COMMENT, comments);
+        Optional<Comment> comment = getCommentContaining(SIMILARITY_MATCHER_COMMENT, comments);
         assertThat(comment).isPresent();
         assertThat(comment.get().text()).isEqualTo(getSquashedComment(beanDeclaration, methodDeclaration, methodBlock, bracket));
     }
 
     @Test
     void processComments_consecutiveSpaces_removed() {
-        LinkedList<CommentDto> comments = commentsWrapper.processLineComment();
+        LinkedList<Comment> comments = commentsWrapper.processLineComment();
 
-        Optional<CommentDto> comment = getCommentContaining(A_LOT_OF_SPACES_COMMENT, comments);
+        Optional<Comment> comment = getCommentContaining(A_LOT_OF_SPACES_COMMENT, comments);
         assertThat(comment).isPresent();
         assertThat(comment.get().text()).doesNotContainPattern(SPACES_PATTERN);
         assertThat(comment.get().commentType()).isEqualTo(CommentType.LINE);
     }
 
-    private static Optional<CommentDto> getCommentContaining(String containedText, LinkedList<CommentDto> comments) {
+    private static Optional<Comment> getCommentContaining(String containedText, LinkedList<Comment> comments) {
         return comments.stream().filter(comm -> comm.text().contains(containedText)).findFirst();
     }
 

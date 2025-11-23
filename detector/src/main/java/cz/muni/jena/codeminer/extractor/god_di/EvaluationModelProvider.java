@@ -1,12 +1,11 @@
 package cz.muni.jena.codeminer.extractor.god_di;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import cz.muni.jena.codeminer.EvaluatedNode;
+import cz.muni.jena.inference.model.EvaluationModel;
 
-public record EvaluatedNodeProvider(
+public record EvaluationModelProvider(
         String fullyQualifiedName,
         Integer startLine
-) implements EvaluatedNode {
+) implements EvaluationModel {
 
     @Override
     public String getFullyQualifiedName() {
@@ -16,11 +15,5 @@ public record EvaluatedNodeProvider(
     @Override
     public Integer getStartLine() {
         return startLine;
-    }
-
-    @Override
-    @JsonIgnore
-    public String getContent() {
-        return null;
     }
 }
