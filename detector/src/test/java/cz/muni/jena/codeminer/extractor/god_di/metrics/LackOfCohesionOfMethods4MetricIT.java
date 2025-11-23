@@ -1,7 +1,7 @@
 package cz.muni.jena.codeminer.extractor.god_di.metrics;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import cz.muni.jena.test_data.god_di.*;
+import cz.muni.jena.test_data.god_di.lcom4.*;
 import cz.muni.jena.utils.ParserTest;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -9,7 +9,7 @@ import org.mockito.Mockito;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-class LackOfCohesionOfMethodsMetricIT {
+class LackOfCohesionOfMethods4MetricIT {
 
     private final LackOfCohesionOfMethodsMetric lcomExtractor = new LackOfCohesionOfMethodsMetric();
 

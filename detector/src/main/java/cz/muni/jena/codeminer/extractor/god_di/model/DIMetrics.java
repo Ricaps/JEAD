@@ -1,27 +1,26 @@
-package cz.muni.jena.codeminer.extractor.god_di;
+package cz.muni.jena.codeminer.extractor.god_di.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import cz.muni.jena.codeminer.extractor.god_di.EvaluationModelProvider;
 import cz.muni.jena.inference.model.EvaluationModel;
 
-public record DIMetricsDto(
+public record DIMetrics(
         Integer linesOfCode,
         Long cyclomaticComplexity,
         Long injectedFields,
-        Integer lcom4,
+        Double lcom5,
         Integer methodsCount,
+        Integer staticMethodsCount,
         @JsonInclude(JsonInclude.Include.NON_NULL) String code,
-        @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) EvaluationModelProvider evaluatedNode
+        EvaluationModelProvider evaluatedNode
 ) implements EvaluationModel {
 
     @Override
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String getFullyQualifiedName() {
         return evaluatedNode.getFullyQualifiedName();
     }
 
     @Override
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public Integer getStartLine() {
         return evaluatedNode.getStartLine();
     }

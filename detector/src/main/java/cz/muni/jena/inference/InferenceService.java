@@ -1,13 +1,8 @@
 package cz.muni.jena.inference;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.exception.InferenceFailedException;
-import cz.muni.jena.grpc.InferenceRequest;
-import cz.muni.jena.grpc.InferenceResponse;
-import cz.muni.jena.grpc.InferenceServiceGrpc;
-import cz.muni.jena.grpc.ServerReadyRequest;
-import cz.muni.jena.grpc.ServerReadyResponse;
+import cz.muni.jena.grpc.*;
+import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.inference.model.InferenceItem;
 import cz.muni.jena.inference.model.mapping.InferenceMapper;
 import cz.muni.jena.inference.model.mapping.ModelSerializer;

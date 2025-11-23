@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.resolution.declarations.ResolvedAnnotationDeclaration;
+import cz.muni.jena.codeminer.extractor.god_di.model.DIMetrics;
 import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.codeminer.extractor.BaseCodeExtractor;
 import cz.muni.jena.codeminer.extractor.god_di.metrics.MetricComputer;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
-public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetricsDto> {
+public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetrics> {
 
     private static final String GOD_DI_METRIC_EXTRACTOR = "god-metrics";
     private static final String INCLUDE_CODE_SETTINGS = "code";
@@ -37,7 +38,7 @@ public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetricsDto> {
     }
 
     @Override
-    public Stream<DIMetricsDto> extract(ClassOrInterfaceDeclaration classOrInterface, Configuration configuration, CommandSettingsMap commandSettingsMap) {
+    public Stream<DIMetrics> extract(ClassOrInterfaceDeclaration classOrInterface, Configuration configuration, CommandSettingsMap commandSettingsMap) {
         if (!containsAnnotation(classOrInterface, configuration.diConfiguration())) {
             return Stream.empty();
         }
@@ -56,7 +57,7 @@ public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetricsDto> {
             objectValueMap.put("code", getCode(classOrInterface));
         }
 
-        return Stream.of(objectMapper.convertValue(objectValueMap, DIMetricsDto.class));
+        return Stream.of(objectMapper.convertValue(objectValueMap, DIMetrics.class));
     }
 
     private EvaluationModel getEvaluatedNode(ClassOrInterfaceDeclaration classOrInterfaceDeclaration) {

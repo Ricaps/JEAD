@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-@Component
+//@Component
 public class LackOfCohesionOfMethodsMetric implements MetricComputer<Integer> {
 
     private static void doDfs(String currentMethod, Set<String> visitedMethods, Map<String, Set<String>> methodsGraph) {
