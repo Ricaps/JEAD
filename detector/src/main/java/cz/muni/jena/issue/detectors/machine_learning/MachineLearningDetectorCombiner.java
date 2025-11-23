@@ -55,6 +55,11 @@ public class MachineLearningDetectorCombiner implements MachineLearningDetector 
                         return extractor.evaluations().stream().anyMatch(evaluation -> evaluationPredicate.test(evaluation));
                     }).toList();
 
+                    if (filteredDetectorConfigs.isEmpty()) {
+                        // Current extractor shouldn't be run for this configuration
+                        return;
+                    }
+
                     processExtractor(classOrInterfaceDeclaration, key, filteredDetectorConfigs, configuration);
                 });
     }
