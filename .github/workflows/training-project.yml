@@ -1,4 +1,4 @@
-name: Python AiDetector Tests
+name: Python Training Project Tests
 on:
   push:
     branches: [ "master" ]
