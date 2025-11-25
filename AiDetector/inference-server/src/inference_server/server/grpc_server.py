@@ -1,9 +1,12 @@
+import asyncio
+import signal
 from typing import Any
 import logging
 from grpc.aio import Server, server
 from grpc_reflection.v1alpha import reflection
 
 from inference_server.business.model_storage import ModelStorage
+from inference_server.business.shutdown_aware import ShutdownAware
 from inference_server.configuration.config import ServerConfig
 from inference_server.business.inference_service import InferenceService
 from inference_server.ml_models import model_type_registry
@@ -12,6 +15,8 @@ from inference_server.grpc_service.inference_port import InferenceServicerPort
 from inference_server.server.exception_handler import ExceptionHandlerInterceptor
 
 __LOGGER = logging.getLogger(__name__)
+
+__shutdown_listeners: list[ShutdownAware] = []
 
 
 async def __add_services(grpc_server: Server, server_config: ServerConfig):
@@ -26,6 +31,8 @@ async def __add_services(grpc_server: Server, server_config: ServerConfig):
     inference_pb2_grpc.add_InferenceServiceServicer_to_server(
         inference_grpc, grpc_server
     )
+
+    __shutdown_listeners.append(model_storage)
 
 
 def __extract_services(services: dict[str, Any]) -> list[str]:
@@ -52,6 +59,19 @@ async def create_server() -> Server:
     return grpc_server
 
 
+async def _notify_shutdown_listeners() -> None:
+    for listener in __shutdown_listeners:
+        await listener.on_shutdown()
+
+
+async def _wait_on_termination():
+    stop_event = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(sig, stop_event.set)
+    await stop_event.wait()
+
+
 async def run_and_wait():
     """
     Runs async.io GRPC server and waits until the termination
@@ -64,4 +84,9 @@ async def run_and_wait():
     __LOGGER.info("Starting GRPC server at %s", address)
     grpc_server.add_insecure_port(address)
     await grpc_server.start()
-    await grpc_server.wait_for_termination()
+
+    await _wait_on_termination()
+
+    __LOGGER.info("Shutting down GRPC server...")
+    await grpc_server.stop(None)
+    await _notify_shutdown_listeners()
