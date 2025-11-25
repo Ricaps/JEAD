@@ -1,6 +1,4 @@
 import asyncio
-import dataclasses
-import json
 
 import numpy as np
 from aiopath import AsyncPath
@@ -8,6 +6,7 @@ from typing import Optional, Any
 import logging
 
 from onnxruntime import InferenceSession, get_available_providers, preload_dlls
+from pydantic import BaseModel
 
 from inference_server.ml_models.inference_model import InferenceModel
 from inference_server.model.inference_model import (
@@ -17,10 +16,10 @@ from inference_server.model.inference_model import (
     LabelEvaluation,
     ModelInferenceRequest,
 )
+from inference_server.model.validation import validate_model_and_get
 
 
-@dataclasses.dataclass
-class InputRequest:
+class InputRequest(BaseModel):
     """The order of elements must be kept! The model depends on it."""
 
     noom: int
@@ -44,13 +43,13 @@ class GodDiModel(InferenceModel):
     @staticmethod
     def map_json_content(request: ModelInferenceRequest):
         content = request.content
-        json_content = json.loads(content)
+        input_request = validate_model_and_get(content, InputRequest)
 
-        return GodDiModel.get_model_input(InputRequest(**json_content))
+        return GodDiModel.get_model_input(input_request)
 
     @staticmethod
     def get_model_input(request: InputRequest):
-        return [getattr(request, field.name) for field in dataclasses.fields(request)]
+        return [value for value in request.model_dump().values()]
 
     async def execute(
         self, data: ModelInferenceRequestBatch

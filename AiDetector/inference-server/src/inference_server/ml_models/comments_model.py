@@ -1,6 +1,4 @@
 import asyncio
-import dataclasses
-import json
 
 import numpy as np
 from aiopath import AsyncPath
@@ -8,6 +6,7 @@ from typing import Optional, Any, Callable
 import logging
 
 from onnxruntime import InferenceSession, get_available_providers, preload_dlls
+from pydantic import BaseModel
 
 from inference_server.ml_models.inference_model import InferenceModel
 from inference_server.model.inference_model import (
@@ -21,9 +20,10 @@ from transformers import (
     AutoTokenizer,
 )
 
+from inference_server.model.validation import validate_model_and_get
 
-@dataclasses.dataclass
-class InputRequest:
+
+class InputRequest(BaseModel):
     commentType: str
     text: str
 
@@ -42,9 +42,9 @@ class CommentsModel(InferenceModel):
     @staticmethod
     def map_json_content(request: ModelInferenceRequest) -> str:
         content = request.content
-        json_content = json.loads(content)
+        input_request = validate_model_and_get(content, InputRequest)
 
-        return CommentsModel.get_model_input(InputRequest(**json_content))
+        return CommentsModel.get_model_input(input_request)
 
     @staticmethod
     def get_model_input(request: InputRequest) -> str:
