@@ -2,7 +2,7 @@ from grpc import StatusCode
 from grpc.aio import AioRpcError
 
 from inference_server.proto.inference_pb2 import ModelNameRequest, ModelReadyResponse
-from util.grpc_test import AsyncGrpcTestCase
+from tests.util.grpc_test import AsyncGrpcTestCase
 
 
 class TestModelReadyIntegration(AsyncGrpcTestCase):

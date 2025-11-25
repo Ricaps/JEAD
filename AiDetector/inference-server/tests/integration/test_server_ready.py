@@ -1,5 +1,5 @@
 from inference_server.proto.inference_pb2 import ServerReadyRequest, ServerReadyResponse
-from util.grpc_test import AsyncGrpcTestCase
+from tests.util.grpc_test import AsyncGrpcTestCase
 
 
 class TestServerReadyIntegration(AsyncGrpcTestCase):
