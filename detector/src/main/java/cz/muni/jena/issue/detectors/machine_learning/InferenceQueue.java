@@ -21,8 +21,9 @@ import java.util.stream.Stream;
 
 public class InferenceQueue<T extends EvaluationModel> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(InferenceQueue.class);
     private static final int RETRY_TIMEOUT = 100;
-    private final Logger LOGGER = LoggerFactory.getLogger(InferenceQueue.class);
+
     private final BlockingQueue<InferenceItem<T>> sendQueue;
     private final List<IssueWithLazyMeta> results = Collections.synchronizedList(new ArrayList<>());
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
