@@ -1,6 +1,8 @@
 package cz.muni.jena.inference;
 
 import cz.muni.jena.configuration.Configuration;
+import cz.muni.jena.inference.config.InferenceConfiguration;
+import cz.muni.jena.inference.config.MLDetectorConfig;
 import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueCategory;
@@ -18,6 +20,7 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Service
@@ -29,18 +32,20 @@ public class InferenceFacade implements InferenceQueueControl {
     private final InferenceQueueHolder<EvaluationModel> inferenceQueueHolder;
     private final MachineLearningDetector machineLearningDetector;
     private final IssueMetadataService issueMetadataService;
+    private final InferenceConfiguration inferenceConfiguration;
 
     @Inject
     public InferenceFacade(
             InferenceService inferenceService,
             InferenceQueueHolder<EvaluationModel> inferenceQueueHolder,
             MachineLearningDetector machineLearningDetector,
-            IssueMetadataService issueMetadataService
-    ) {
+            IssueMetadataService issueMetadataService,
+            InferenceConfiguration inferenceConfiguration) {
         this.inferenceService = inferenceService;
         this.inferenceQueueHolder = inferenceQueueHolder;
         this.machineLearningDetector = machineLearningDetector;
         this.issueMetadataService = issueMetadataService;
+        this.inferenceConfiguration = inferenceConfiguration;
     }
 
     /**
@@ -80,12 +85,13 @@ public class InferenceFacade implements InferenceQueueControl {
             LOGGER.warn("Inference server is not available. Machine learning evaluation won't be not used!");
             return Optional.empty();
         }
+        Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate = evaluationConfig -> issueDetectorFilter.contains(evaluationConfig.issueType().getCategory());
         machineLearningDetector.setEvaluationPredicate(
-                evaluationConfig -> issueDetectorFilter.contains(evaluationConfig.issueType().getCategory())
+                evaluationPredicate
         );
         startQueues();
 
-        return Optional.of(new MachineLearningDetectorCallback(machineLearningDetector, configuration));
+        return Optional.of(new MachineLearningDetectorCallback(machineLearningDetector, configuration, inferenceConfiguration, evaluationPredicate));
     }
 
     public List<Issue> endMachineLearningEvaluation(boolean useMachineLearning, String projectLabel) {
