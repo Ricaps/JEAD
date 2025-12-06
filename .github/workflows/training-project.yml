@@ -16,6 +16,7 @@ env:
 
 jobs:
   training-project:
+    if: false # Disable job because the GitHub runner doesn't have enough memory
     environment: Python
     runs-on: ubuntu-latest
     steps:
