@@ -1,6 +1,6 @@
 package cz.muni.jena.issue.detectors.machine_learning;
 
-import cz.muni.jena.codeminer.EvaluatedNode;
+import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.inference.InferenceService;
 import cz.muni.jena.inference.config.ModelConfiguration;
 import cz.muni.jena.inference.model.InferenceItem;
@@ -19,10 +19,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-public class InferenceQueue<T extends EvaluatedNode> {
+public class InferenceQueue<T extends EvaluationModel> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(InferenceQueue.class);
     private static final int RETRY_TIMEOUT = 100;
-    private final Logger LOGGER = LoggerFactory.getLogger(InferenceQueue.class);
+
     private final BlockingQueue<InferenceItem<T>> sendQueue;
     private final List<IssueWithLazyMeta> results = Collections.synchronizedList(new ArrayList<>());
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();

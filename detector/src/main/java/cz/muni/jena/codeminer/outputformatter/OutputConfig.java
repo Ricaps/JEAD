@@ -24,4 +24,9 @@ public class OutputConfig {
     public OutputFormatter jsonOutputFormatter(ObjectMapper objectMapper) {
         return new JsonOutput(objectMapper);
     }
+
+    @Bean(destroyMethod = "", name = "jsonlOutputFormatter")
+    public OutputFormatter jsonLinesOutputFormatter(ObjectMapper objectMapper) {
+        return new JsonLinesOutput(objectMapper);
+    }
 }

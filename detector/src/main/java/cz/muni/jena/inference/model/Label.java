@@ -7,6 +7,6 @@ public record Label(String labelName, double value) {
             return false;
         }
 
-        return this.value > referenceValue;
+        return this.value >= referenceValue;
     }
 }

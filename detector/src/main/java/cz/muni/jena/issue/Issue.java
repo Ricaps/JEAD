@@ -14,7 +14,8 @@ import java.util.Optional;
                 "issue_type",
                 "line_number",
                 "fully_qualified_name",
-                "project_label"
+                "project_label",
+                "analysis_type"
         },
         name = "IssueUniqueConstraint")}
 )
@@ -37,6 +38,10 @@ public final class Issue
     @Column(name = "project_label")
     private String projectLabel;
 
+    @Column(name = "analysis_type")
+    @Enumerated(EnumType.STRING)
+    private AnalysisType analysisType = AnalysisType.STATIC;
+
     @ManyToOne
     private IssueClass issueClass;
 
@@ -51,6 +56,12 @@ public final class Issue
         this.issueType = issueType;
         this.lineNumber = Optional.ofNullable(lineNumber).map(String::valueOf).orElse("None");
         this.fullyQualifiedName = fullyQualifiedName;
+    }
+
+    public Issue(IssueType issueType, Integer lineNumber, String fullyQualifiedName, AnalysisType analysisType)
+    {
+        this(issueType, lineNumber, fullyQualifiedName);
+        this.analysisType = analysisType;
     }
 
     public static Issue fromNodeWithRange(
@@ -97,7 +108,8 @@ public final class Issue
                 issueType.toString() + " ",
                 Optional.ofNullable(lineNumber).map(Objects::toString).orElse("None") + " ",
                 fullyQualifiedName + " ",
-                Optional.ofNullable(method).map(IssueMethod::getName).orElse("None") + " "
+                Optional.ofNullable(method).map(IssueMethod::getName).orElse("None") + " ",
+                analysisType.name() + " "
         };
     }
 
@@ -182,6 +194,14 @@ public final class Issue
         this.method = methodName;
     }
 
+    public AnalysisType getAnalysisType() {
+        return analysisType;
+    }
+
+    public void setAnalysisType(AnalysisType analysisType) {
+        this.analysisType = analysisType;
+    }
+
     @Override
     public boolean equals(Object obj)
     {
@@ -198,4 +218,5 @@ public final class Issue
     {
         return Objects.hash(issueType, lineNumber, fullyQualifiedName);
     }
+
 }

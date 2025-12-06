@@ -1,15 +1,14 @@
 package cz.muni.jena.issue.detectors.machine_learning;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import cz.muni.jena.codeminer.EvaluatedNode;
-import cz.muni.jena.codeminer.extractor.CodeExtractor;
-import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.exception.InferenceFailedException;
-import cz.muni.jena.inference.config.InferenceConfiguration;
 import cz.muni.jena.inference.config.MLDetectorConfig;
+import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.inference.model.InferenceItem;
+import cz.muni.jena.issue.AnalysisType;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueWithLazyMeta;
+import cz.muni.jena.issue.detectors.compilation_unit.EvaluationPredicate;
 import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningDetector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,50 +17,25 @@ import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.groupingBy;
 
 @Component
 @ConditionalOnProperty(value = "inference.enabled", havingValue = "true")
 public class MachineLearningDetectorCombiner implements MachineLearningDetector {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MachineLearningDetectorCombiner.class);
-    private final InferenceConfiguration inferenceConfiguration;
-    private Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate;
-    private final InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder;
+    private final InferenceQueueHolder<EvaluationModel> inferenceQueueHolder;
 
     @Inject
-    public MachineLearningDetectorCombiner(InferenceConfiguration inferenceConfiguration, InferenceQueueHolder<EvaluatedNode> inferenceQueueHolder) {
-        this.inferenceConfiguration = inferenceConfiguration;
+    public MachineLearningDetectorCombiner(InferenceQueueHolder<EvaluationModel> inferenceQueueHolder) {
         this.inferenceQueueHolder = inferenceQueueHolder;
     }
 
     @Override
-    public void runDetector(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Configuration configuration) {
-
-        inferenceConfiguration.detectors()
-                .stream()
-                .collect(groupingBy(MLDetectorConfig::extractor))
-                .forEach((key, value) -> {
-                    List<MLDetectorConfig> filteredDetectorConfigs = value.stream().filter((extractor) -> {
-                        if (evaluationPredicate == null) {
-                            return true;
-                        }
-
-                        return extractor.evaluations().stream().anyMatch(evaluation -> evaluationPredicate.test(evaluation));
-                    }).toList();
-
-                    processExtractor(classOrInterfaceDeclaration, key, filteredDetectorConfigs);
-                });
-    }
-
-    private void processExtractor(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, CodeExtractor<?> extractor, List<MLDetectorConfig> detectorConfigs) {
-        Collection<? extends EvaluatedNode> inferenceItems = extractor
-                .extract(classOrInterfaceDeclaration)
+    public void runDetector(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, ExtractorDetectorsMapping extractorDetectorsMapping) {
+        Collection<? extends EvaluationModel> inferenceItems = extractorDetectorsMapping.extractor()
+                .extract(classOrInterfaceDeclaration, extractorDetectorsMapping.configuration())
                 .toList();
 
         if (inferenceItems.isEmpty()) {
@@ -69,48 +43,59 @@ public class MachineLearningDetectorCombiner implements MachineLearningDetector 
         }
 
         try {
-            detectorConfigs
-                    .forEach(detector -> processDetector(classOrInterfaceDeclaration, inferenceItems, detector));
+            extractorDetectorsMapping.detectorConfigs()
+                    .forEach(detector -> processDetector(classOrInterfaceDeclaration, inferenceItems, detector, extractorDetectorsMapping.evaluationPredicate()));
         } catch (InferenceFailedException ex) {
             LOGGER.error("Inference for class {}. Reason: {}", classOrInterfaceDeclaration.getFullyQualifiedName(), ex.getMessage());
             LOGGER.trace("Stacktrace: ", ex);
         }
     }
 
-    private void processDetector(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Collection<? extends EvaluatedNode> evaluatedNodesStream, MLDetectorConfig mlDetectorConfig) {
-        Stream<InferenceItem<EvaluatedNode>> inferenceItemStream = evaluatedNodesStream
+    private void processDetector(
+            ClassOrInterfaceDeclaration classOrInterfaceDeclaration,
+            Collection<? extends EvaluationModel> evaluatedNodesStream,
+            MLDetectorConfig mlDetectorConfig,
+            EvaluationPredicate evaluationPredicate) {
+        Stream<InferenceItem<EvaluationModel>> inferenceItemStream = evaluatedNodesStream
                 .stream()
-                .map(evaluatedNode -> new InferenceItem<>(evaluatedNode, (inferenceItem) -> this.mapItemToIssue(classOrInterfaceDeclaration, inferenceItem, mlDetectorConfig)));
+                .map(evaluatedNode -> new InferenceItem<>(
+                        evaluatedNode,
+                        (inferenceItem) -> this.mapItemToIssue(classOrInterfaceDeclaration, inferenceItem, mlDetectorConfig, evaluationPredicate))
+                );
 
         inferenceQueueHolder.addToQueue(mlDetectorConfig.model().modelName(), inferenceItemStream);
 
     }
 
-    private <T extends EvaluatedNode> IssueWithLazyMeta mapItemToIssue(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, InferenceItem<T> inferenceItem, MLDetectorConfig mlDetectorConfig) {
-        Optional<MLDetectorConfig.LabelEvaluationConfig> matchingEvaluation = getMatchingEvaluation(inferenceItem, mlDetectorConfig);
+    private <T extends EvaluationModel> IssueWithLazyMeta mapItemToIssue(
+            ClassOrInterfaceDeclaration classOrInterfaceDeclaration,
+            InferenceItem<T> inferenceItem,
+            MLDetectorConfig mlDetectorConfig,
+            EvaluationPredicate evaluationPredicate
+    ) {
+        Optional<MLDetectorConfig.LabelEvaluationConfig> matchingEvaluation = getMatchingEvaluation(inferenceItem, mlDetectorConfig, evaluationPredicate);
 
         return matchingEvaluation
-                .map(evaluation -> new Issue(evaluation.issueType(), inferenceItem.getStartLine(), inferenceItem.getFullyQualifiedName()))
+                .map(evaluation -> new Issue(evaluation.issueType(), inferenceItem.getStartLine(), inferenceItem.getFullyQualifiedName(), AnalysisType.MACHINE_LEARNING))
                 .map(issue -> new IssueWithLazyMeta(issue, classOrInterfaceDeclaration))
                 .orElse(null);
     }
 
-    private <T extends EvaluatedNode> Optional<MLDetectorConfig.LabelEvaluationConfig> getMatchingEvaluation(InferenceItem<T> inferenceItem, MLDetectorConfig mlDetectorConfig) {
+    private <T extends EvaluationModel> Optional<MLDetectorConfig.LabelEvaluationConfig> getMatchingEvaluation(
+            InferenceItem<T> inferenceItem,
+            MLDetectorConfig mlDetectorConfig,
+            EvaluationPredicate evaluationPredicate
+    ) {
         return mlDetectorConfig.evaluations().stream()
                 .filter(evaluation -> {
                     if (evaluationPredicate == null) {
                         return true;
                     }
 
-                    return evaluationPredicate.test(evaluation);
+                    return evaluationPredicate.test(evaluation.issueType().getCategory());
                 })
                 .filter(evaluation ->
                         inferenceItem.labels().stream().anyMatch(label -> label.matches(evaluation.labelName(), evaluation.threshold()))
                 ).findAny();
-    }
-
-    @Override
-    public void setEvaluationPredicate(Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate) {
-        this.evaluationPredicate = evaluationPredicate;
     }
 }

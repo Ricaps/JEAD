@@ -6,40 +6,31 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.nio.file.*;
+import java.util.*;
 
-public class FolderDependenciesFinder implements DependenciesFinder
-{
+public class FolderDependenciesFinder implements DependenciesFinder {
+
+    private static final PathMatcher TARGET_DEPENDENCY_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**/target/dependency/**.jar");
+
     @Override
-    public List<JarTypeSolver> findJarTypeSolvers(String projectPath)
-    {
-        List<JarTypeSolver> jarTypeSolvers = new ArrayList<>();
-        File projectDirectory = Paths.get(projectPath, "target", "dependency").toFile();
-        List<String> jars = Optional.ofNullable(
-                        projectDirectory.list((current, name) -> new File(current, name).isFile())
-                )
-                .stream()
-                .flatMap(Arrays::stream)
-                .filter(path -> path.endsWith(".jar"))
-                .toList();
-        Logger logger = LoggerFactory.getLogger(FolderDependenciesFinder.class);
-        for (String jar : jars)
-        {
-            Path pathToJar = Paths.get(projectDirectory.getAbsolutePath(), jar);
-            try
-            {
-                jarTypeSolvers.add(new JarTypeSolver(pathToJar));
-            } catch (IOException ignored)
-            {
-                logger.atWarn().log("Jena failed to read following jar: " + pathToJar);
-            }
-        }
+    public List<JarTypeSolver> findJarTypeSolvers(String projectPath) {
 
-        return jarTypeSolvers;
+        try (var stream = Files.walk(Path.of(projectPath))) {
+            return stream
+                    .filter(TARGET_DEPENDENCY_MATCHER::matches)
+                    .map(file -> {
+                        try {
+                            return new JarTypeSolver(file);
+                        } catch (IOException e) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

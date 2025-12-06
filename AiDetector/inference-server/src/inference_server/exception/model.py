@@ -18,3 +18,8 @@ class ModelNotLoadedException(BaseServerException):
         super().__init__(
             StatusCode.FAILED_PRECONDITION, f"Desired model is not loaded: {model_name}"
         )
+
+
+class ContentNotValidException(BaseServerException):
+    def __init__(self, message: str):
+        super().__init__(StatusCode.INVALID_ARGUMENT, message)

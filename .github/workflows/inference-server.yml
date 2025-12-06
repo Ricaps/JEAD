@@ -1,4 +1,4 @@
-name: Python AiDetector Tests
+name: Python Inference Server tests
 on:
   push:
     branches: [ "master" ]

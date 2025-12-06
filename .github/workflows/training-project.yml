@@ -1,4 +1,4 @@
-name: Python AiDetector Tests
+name: Python Training Project Tests
 on:
   push:
     branches: [ "master" ]
@@ -16,6 +16,7 @@ env:
 
 jobs:
   training-project:
+    if: false # Disable job because the GitHub runner doesn't have enough memory
     environment: Python
     runs-on: ubuntu-latest
     steps:
@@ -32,6 +33,7 @@ jobs:
       - name: Install dependencies
         working-directory: ${{ env.PROJECT_PATH }}
         run: |
+          poetry config virtualenvs.create false
           poetry install --with dev
       - name: Run tests using unittest
         working-directory: ${{ env.PROJECT_PATH }}

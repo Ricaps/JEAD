@@ -17,7 +17,7 @@ spring:
     client:
       channels:
         inference-server:
-          address: localhost:8080
+          address: localhost:8081
 
 inference:
   enabled: true
@@ -26,6 +26,11 @@ inference:
       model-name: comments-model
       batch-size: 30
       batch-period: 100
+    - &god-di-model
+      model-name: god-di-model
+      batch-size: 30
+      batch-period: 100
+
   detectors:
   - detector-name: technical-debt
     extractor: comments
@@ -37,4 +42,12 @@ inference:
       - label-name: "code_comment"
         threshold: 0.8
         issue-type: COMMENTED_OUT_CODE
+
+  - detector-name: god-di
+    extractor: god-metrics
+    model: *god-di-model
+    evaluations:
+      - label-name: "god_di"
+        threshold: 1
+        issue-type: GOD_DI_CLASS
 

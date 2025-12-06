@@ -2,8 +2,10 @@ package cz.muni.jena.codeminer.extractor.comments;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.comments.BlockComment;
-import com.github.javaparser.ast.comments.Comment;
 import cz.muni.jena.codeminer.extractor.BaseCodeExtractor;
+import cz.muni.jena.codeminer.extractor.comments.model.Comment;
+import cz.muni.jena.configuration.Configuration;
+import cz.muni.jena.frontend.commands.commands.CommandSettingsMap;
 import cz.muni.jena.util.NodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @Component
-public class CommentsCodeExtractor extends BaseCodeExtractor<CommentDto> {
+public class CommentsCodeExtractor extends BaseCodeExtractor<Comment> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CommentsCodeExtractor.class);
     private static final String COMMENTS_EXTRACTOR_IDENTIFIER = "comments";
@@ -25,43 +27,43 @@ public class CommentsCodeExtractor extends BaseCodeExtractor<CommentDto> {
     }
 
     @Override
-    public Stream<CommentDto> extract(ClassOrInterfaceDeclaration classOrInterface) {
-        List<Comment> comments = classOrInterface.getAllContainedComments();
+    public Stream<Comment> extract(ClassOrInterfaceDeclaration classOrInterface, Configuration configuration, CommandSettingsMap commandSettingsMap) {
+        List<com.github.javaparser.ast.comments.Comment> comments = classOrInterface.getAllContainedComments();
 
-        List<CommentDto> outputComments = processComments(comments, classOrInterface);
+        List<Comment> outputComments = processComments(comments, classOrInterface);
 
-        LOGGER.info("Extracted {} comments from {}", outputComments.size(), classOrInterface.getNameAsString());
+        LOGGER.debug("Extracted {} comments from {}", outputComments.size(), classOrInterface.getNameAsString());
 
         return outputComments.stream();
     }
 
-    private List<CommentDto> processComments(List<Comment> comments, ClassOrInterfaceDeclaration classOrInterfaceDeclaration) {
+    private List<Comment> processComments(List<com.github.javaparser.ast.comments.Comment> comments, ClassOrInterfaceDeclaration classOrInterfaceDeclaration) {
         String fullyQualifiedName = getFullyQualifiedName(classOrInterfaceDeclaration);
-        List<CommentDto> output = new LinkedList<>();
-        for (Comment comment : comments) {
+        List<Comment> output = new LinkedList<>();
+        for (com.github.javaparser.ast.comments.Comment comment : comments) {
             if (comment.isBlockComment()) {
                 output.add(processBlockComment(comment.asBlockComment(), fullyQualifiedName));
             }
         }
 
-        List<CommentDto> lineComments = processLineComments(comments, fullyQualifiedName);
-        List<CommentDto> javadocComments = processJavadocComments(comments, fullyQualifiedName);
+        List<Comment> lineComments = processLineComments(comments, fullyQualifiedName);
+        List<Comment> javadocComments = processJavadocComments(comments, fullyQualifiedName);
 
         output.addAll(lineComments);
         output.addAll(javadocComments);
         return output;
     }
 
-    private List<CommentDto> processLineComments(List<Comment> comments, String fullyQualifiedName) {
+    private List<Comment> processLineComments(List<com.github.javaparser.ast.comments.Comment> comments, String fullyQualifiedName) {
         return new LineCommentsWrapper(fullyQualifiedName, comments).processLineComment();
     }
 
-    private List<CommentDto> processJavadocComments(List<Comment> comments, String fullyQualifiedName) {
+    private List<Comment> processJavadocComments(List<com.github.javaparser.ast.comments.Comment> comments, String fullyQualifiedName) {
         return new JavadocCommentsWrapper(fullyQualifiedName, comments).parseJavadocComments();
     }
 
-    private CommentDto processBlockComment(BlockComment comment, String fullyQualifiedName) {
-        return CommentDto.ofBlock(CommentUtils.getTrimmedContent(comment), NodeUtil.getStartLineNumber(comment).orElse(null), fullyQualifiedName);
+    private Comment processBlockComment(BlockComment comment, String fullyQualifiedName) {
+        return Comment.ofBlock(CommentUtils.getTrimmedContent(comment), NodeUtil.getStartLineNumber(comment).orElse(null), fullyQualifiedName);
     }
 
     private static String getFullyQualifiedName(ClassOrInterfaceDeclaration classOrInterfaceDeclaration) {

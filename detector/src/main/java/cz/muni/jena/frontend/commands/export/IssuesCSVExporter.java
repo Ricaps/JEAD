@@ -43,7 +43,8 @@ public class IssuesCSVExporter implements CSVExporter
                                 issue.getFullyQualifiedName(),
                                 issue.getProjectLabel(),
                                 Optional.ofNullable(issue.getMethod()).map(IssueMethod::getId).orElse(null),
-                                Optional.ofNullable(issue.getIssueClass()).map(IssueClass::getId).orElse(null)
+                                Optional.ofNullable(issue.getIssueClass()).map(IssueClass::getId).orElse(null),
+                                issue.getAnalysisType().name()
                         );
                     } catch (IOException e) {
                         e.printStackTrace();

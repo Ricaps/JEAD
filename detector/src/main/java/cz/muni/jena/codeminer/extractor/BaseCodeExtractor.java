@@ -1,10 +1,9 @@
 package cz.muni.jena.codeminer.extractor;
 
 
-import cz.muni.jena.codeminer.EvaluatedNode;
+import cz.muni.jena.inference.model.EvaluationModel;
 
-public abstract class
-BaseCodeExtractor<T extends EvaluatedNode> implements CodeExtractor<T> {
+public abstract class BaseCodeExtractor<T extends EvaluationModel> implements CodeExtractor<T> {
 
     private final String identifier;
 

@@ -1,10 +1,10 @@
 package cz.muni.jena.inference.model.mapping;
 
-import cz.muni.jena.codeminer.EvaluatedNode;
 import cz.muni.jena.exception.InferenceFailedException;
 import cz.muni.jena.grpc.InferenceRequest;
 import cz.muni.jena.grpc.InferenceResponse;
 import cz.muni.jena.inference.InferenceUtil;
+import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.inference.model.InferenceItem;
 import cz.muni.jena.inference.model.Label;
 import org.mapstruct.CollectionMappingStrategy;
@@ -19,8 +19,7 @@ import java.util.UUID;
 @Mapper(componentModel = "spring", collectionMappingStrategy = CollectionMappingStrategy.ADDER_PREFERRED)
 public interface InferenceMapper {
 
-    InferenceRequest.InferenceRequestContent mapItemToRequest(InferenceItem<?> inferenceItem);
-    Collection<InferenceRequest.InferenceRequestContent> mapItemToRequest(Collection<? extends InferenceItem<?>> inferenceItem);
+    InferenceRequest.InferenceRequestContent mapItemToRequest(InferenceItem<?> inferenceItem, String content);
     InferenceRequest mapContentsToRequest(Collection<InferenceRequest.InferenceRequestContent> contentsList, String modelName);
 
     @Mapping(source = "label", target = "labelName")
@@ -28,7 +27,7 @@ public interface InferenceMapper {
     Label mapLabelEvaluationToLabel(InferenceResponse.LabelEvaluation labelEvaluation);
     List<Label> mapLabelEvaluationToLabel(List<InferenceResponse.LabelEvaluation> labelEvaluation);
 
-    default <T extends EvaluatedNode> InferenceItem<T> mapResponseToItem(Map<UUID, InferenceItem<T>> inferenceItemMap, InferenceResponse.InferenceResponseContent responseContent) throws InferenceFailedException {
+    default <T extends EvaluationModel> InferenceItem<T> mapResponseToItem(Map<UUID, InferenceItem<T>> inferenceItemMap, InferenceResponse.InferenceResponseContent responseContent) throws InferenceFailedException {
         UUID itemID = InferenceUtil.parseItemID(responseContent.getId());
         InferenceItem<T> referenceItem = inferenceItemMap.get(itemID);
         List<Label> labels = mapLabelEvaluationToLabel(responseContent.getLabelEvaluationList());

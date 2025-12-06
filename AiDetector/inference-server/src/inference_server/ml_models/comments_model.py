@@ -6,6 +6,7 @@ from typing import Optional, Any, Callable
 import logging
 
 from onnxruntime import InferenceSession, get_available_providers, preload_dlls
+from pydantic import BaseModel
 
 from inference_server.ml_models.inference_model import InferenceModel
 from inference_server.model.inference_model import (
@@ -13,10 +14,18 @@ from inference_server.model.inference_model import (
     ModelInferenceRequestBatch,
     ModelInferenceResult,
     LabelEvaluation,
+    ModelInferenceRequest,
 )
 from transformers import (
     AutoTokenizer,
 )
+
+from inference_server.model.validation import validate_model_and_get
+
+
+class InputRequest(BaseModel):
+    commentType: str
+    text: str
 
 
 class CommentsModel(InferenceModel):
@@ -30,10 +39,21 @@ class CommentsModel(InferenceModel):
         self._access_lock = asyncio.Lock()
         self.__logger = logging.getLogger(self.__class__.__name__)
 
+    @staticmethod
+    def map_json_content(request: ModelInferenceRequest) -> str:
+        content = request.content
+        input_request = validate_model_and_get(content, InputRequest)
+
+        return CommentsModel.get_model_input(input_request)
+
+    @staticmethod
+    def get_model_input(request: InputRequest) -> str:
+        return f"{request.commentType}: {request.text}"
+
     async def execute(
         self, data: ModelInferenceRequestBatch
     ) -> Optional[ModelInferenceResultBatch]:
-        mapped = map(lambda request: request.content, data.contents)
+        mapped = map(lambda request: self.map_json_content(request), data.contents)
 
         async with self._access_lock:
             inputs = self.tokenizer(

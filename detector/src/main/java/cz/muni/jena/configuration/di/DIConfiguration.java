@@ -5,6 +5,7 @@ import java.util.Set;
 
 public record DIConfiguration(
         List<Annotation> injectionAnnotations,
+        List<Annotation> beanAnnotations,
         int maxNumberOfInjections,
         int maxProducerMethodComplexity,
         List<Annotation> producerAnnotations,

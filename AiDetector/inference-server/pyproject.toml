@@ -36,8 +36,5 @@ gpu = [
     "onnxruntime-gpu[cuda,cudnn] (>=1.23.0,<2.0.0)"
 ]
 
-[tool.poetry.group.gpu]
-optional = true
-
 [tool.ruff]
 extend-exclude = ["src/inference_server/proto"]

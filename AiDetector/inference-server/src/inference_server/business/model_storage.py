@@ -6,6 +6,7 @@ from _weakref import ReferenceType
 from typing import Final, Optional
 from aiopath import AsyncPath
 
+from inference_server.business.shutdown_aware import ShutdownAware
 from inference_server.ml_models.inference_model import (
     InferenceModel,
     InferenceModelExecutable,
@@ -59,7 +60,7 @@ class ModelDefinition(InferenceModelExecutable):
         return self.__model_path.name
 
 
-class ModelStorage:
+class ModelStorage(ShutdownAware):
     def __init__(
         self,
         server_config: ServerConfig,
@@ -101,3 +102,8 @@ class ModelStorage:
 
         if len(self.__model_holder.keys()) == 0:
             self._logger.info("No model found!")
+
+    async def on_shutdown(self) -> None:
+        async with self.__model_holder_lock:
+            for model_name, model in self.__model_holder.items():
+                await model.unload_model()

@@ -7,16 +7,13 @@ import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueCategory;
 import cz.muni.jena.issue.IssueDao;
 import cz.muni.jena.issue.IssueMetadataService;
-import cz.muni.jena.issue.IssueWithLazyMeta;
 import cz.muni.jena.issue.detectors.compilation_unit.DetectorCombiner;
 import cz.muni.jena.issue.detectors.compilation_unit.IssueDetector;
-import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningDetector;
 import cz.muni.jena.issue.detectors.compilation_unit.SpecificIssueDetector;
 import cz.muni.jena.issue.detectors.project.ProjectIssueDetector;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
 import cz.muni.jena.parser.CallbackCombiner;
 import cz.muni.jena.parser.IssueDetectorCallback;
-import cz.muni.jena.parser.MachineLearningDetectorCallback;
 import cz.muni.jena.parser.ThreadExecutionLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,13 +26,7 @@ import org.springframework.shell.table.TableBuilder;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -56,7 +47,6 @@ public class DetectIssuesCommand {
     private final List<ProjectIssueDetector> projectIssueDetectors;
     private final IssueDao issueDao;
     private final IssueMetadataService issueMetadataService;
-    private final MachineLearningDetector machineLearningDetector;
     private final InferenceFacade inferenceFacade;
 
     @Inject
@@ -65,14 +55,12 @@ public class DetectIssuesCommand {
             List<ProjectIssueDetector> projectIssueDetectors,
             IssueDao issueDao,
             IssueMetadataService issueMetadataService,
-            MachineLearningDetector machineLearningDetector,
             InferenceFacade inferenceFacade
     ) {
         this.compilationUnitIssueDetectors = compilationUnitIssueDetectors;
         this.projectIssueDetectors = projectIssueDetectors;
         this.issueDao = issueDao;
         this.issueMetadataService = issueMetadataService;
-        this.machineLearningDetector = machineLearningDetector;
         this.inferenceFacade = inferenceFacade;
     }
 
@@ -99,7 +87,7 @@ public class DetectIssuesCommand {
 
         IssueDetector combinedIssueDetector = new DetectorCombiner(detectors);
         List<Issue> issues = Collections.synchronizedList(new ArrayList<>());
-        IssueDetectorCallback callback = new IssueDetectorCallback(
+        IssueDetectorCallback staticDetectionCallback = new IssueDetectorCallback(
                 combinedIssueDetector,
                 configuration,
                 issues,
@@ -108,15 +96,18 @@ public class DetectIssuesCommand {
         );
 
         List<SourceRoot.Callback> callbackList = new ArrayList<>();
-        callbackList.add(callback);
-        startMachineLearningEvaluation(useMachineLearning, issueDetectorFilter, configuration)
-                .ifPresent(callbackList::add);
+        callbackList.add(staticDetectionCallback);
+        try {
+            inferenceFacade.startMachineLearningEvaluation(useMachineLearning, issueDetectorFilter, configuration)
+                    .ifPresent(callbackList::add);
 
-        CallbackCombiner callbackCombiner = new CallbackCombiner(callbackList);
-        new AsyncCompilationUnitParser(path).processCompilationUnits(callbackCombiner);
+            CallbackCombiner callbackCombiner = new CallbackCombiner(callbackList);
+            new AsyncCompilationUnitParser(path).processCompilationUnits(callbackCombiner);
+        } finally {
+            List<Issue> mlIssues = inferenceFacade.endMachineLearningEvaluation(useMachineLearning, projectLabel);
+            issues.addAll(mlIssues);
+        }
 
-        List<Issue> mlIssues = endMachineLearningEvaluation(useMachineLearning, projectLabel);
-        issues.addAll(mlIssues);
         issues.addAll(
                 projectIssueDetectors.stream()
                         .filter(issueDetector -> issueDetectorFilter.contains(issueDetector.getIssueCategory()))
@@ -127,33 +118,7 @@ public class DetectIssuesCommand {
         issues.forEach(this::saveIssue);
 
         return prepareIssuesAsString(issues)
-                + (showThreadsRuntime ? prepareThreadExecutionLogs(callback.getThreadExecutionLogs()) : "");
-    }
-
-    private Optional<MachineLearningDetectorCallback> startMachineLearningEvaluation(boolean useMachineLearning, Set<IssueCategory> issueDetectorFilter, Configuration configuration) {
-        if (!useMachineLearning) {
-            return Optional.empty();
-        }
-        if (!inferenceFacade.canUseMachineLearning()) {
-            LOGGER.warn("Inference server is not available. Machine learning evaluation won't be not used!");
-            return Optional.empty();
-        }
-        machineLearningDetector.setEvaluationPredicate(
-                evaluationConfig -> issueDetectorFilter.contains(evaluationConfig.issueType().getCategory())
-        );
-        inferenceFacade.startQueues();
-
-        return Optional.of(new MachineLearningDetectorCallback(machineLearningDetector, configuration));
-    }
-
-    private List<Issue> endMachineLearningEvaluation(boolean useMachineLearning, String projectLabel) {
-        if (!useMachineLearning || !inferenceFacade.canUseMachineLearning()) {
-            return List.of();
-        }
-        List<IssueWithLazyMeta> foundIssues = inferenceFacade.terminateQueuesAndWait().toList();
-        issueMetadataService.setMetaDataToIssues(foundIssues, projectLabel);
-
-        return foundIssues.stream().map(IssueWithLazyMeta::issue).toList();
+                + (showThreadsRuntime ? prepareThreadExecutionLogs(staticDetectionCallback.getThreadExecutionLogs()) : "");
     }
 
     private void saveIssue(Issue issue) {
@@ -171,7 +136,7 @@ public class DetectIssuesCommand {
 
     private String prepareIssuesAsString(List<Issue> issues) {
         String[][] rows = new String[issues.size() + 1][];
-        rows[0] = new String[]{"Issue type ", "Line number ", "Class fully qualified name ", "Method name "};
+        rows[0] = new String[]{"Issue type ", "Line number ", "Class fully qualified name ", "Method name ", "Analysis type "};
         int i = 1;
         List<String[]> rowsWithoutHeader = issues.stream().sorted(Comparator.comparing(Issue::getIssueType))
                 .map(Issue::toTableRow)

@@ -27,23 +27,29 @@ public class JsonOutput extends BaseOutputFormatter {
         if (codeSnippets.isEmpty()) {
             return;
         }
-        buffer.addAll(codeSnippets);
+
+        synchronized (buffer) {
+            buffer.addAll(codeSnippets);
+        }
     }
 
     @Override
     public void close() {
-        if (buffer.isEmpty()) {
-            return;
-        }
+        synchronized (buffer) {
 
-        try (OutputStream outputStream = getOutputStream()) {
-            objectMapper
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValue(outputStream, buffer);
-        } catch (IOException e) {
-            LOGGER.error("Failed to write JSON output to file", e);
-        } finally {
-            buffer.clear();
+            if (buffer.isEmpty()) {
+                return;
+            }
+
+            try (OutputStream outputStream = getOutputStream()) {
+                objectMapper
+                        .writerWithDefaultPrettyPrinter()
+                        .writeValue(outputStream, buffer);
+            } catch (IOException e) {
+                LOGGER.error("Failed to write JSON output to file", e);
+            } finally {
+                buffer.clear();
+            }
         }
     }
 }

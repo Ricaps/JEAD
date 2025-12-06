@@ -1,19 +1,21 @@
 package cz.muni.jena.inference;
 
-import cz.muni.jena.codeminer.extractor.comments.CommentDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import cz.muni.jena.codeminer.extractor.comments.model.Comment;
 import cz.muni.jena.codeminer.extractor.comments.CommentType;
+import cz.muni.jena.codeminer.extractor.comments.model.CommentsMapper;
 import cz.muni.jena.exception.InferenceFailedException;
 import cz.muni.jena.grpc.InferenceResponse;
 import cz.muni.jena.grpc.InferenceServiceGrpc;
 import cz.muni.jena.inference.model.InferenceItem;
 import cz.muni.jena.inference.model.mapping.InferenceMapper;
+import cz.muni.jena.inference.model.mapping.ModelSerializer;
 import io.grpc.Status;
 import io.grpc.StatusException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,17 +30,23 @@ import static org.mockito.Mockito.when;
 
 class InferenceServiceTest {
 
-    public static final List<InferenceItem<CommentDto>> INPUTS = List.of(
-            new InferenceItem<>(new CommentDto(CommentType.JAVADOC, "test", 0, "test"), null),
-            new InferenceItem<>(new CommentDto(CommentType.LINE, "test-2", 10, "test-2"), null)
+    public static final Comment COMMENT_1 = new Comment(CommentType.JAVADOC, "test", 0, "test");
+    public static final Comment COMMENT_2 = new Comment(CommentType.LINE, "test-2", 10, "test-2");
+    public static final List<InferenceItem<Comment>> INPUTS = List.of(
+            new InferenceItem<>(COMMENT_1, null),
+            new InferenceItem<>(COMMENT_2, null)
     );
-    @Mock
     private InferenceServiceGrpc.InferenceServiceBlockingV2Stub stub;
 
-    @InjectMocks
     private InferenceService inferenceService;
 
-    private static void checkResult(InferenceItem<CommentDto> result1, InferenceItem<CommentDto> inferenceItem, InferenceResponse.InferenceResponseContent expectedResponseContent1, List<InferenceResponse.LabelEvaluation> labelEvaluations) {
+    private ModelSerializer modelSerializer;
+
+    final private CommentsMapper commentsMapper = Mappers.getMapper(CommentsMapper.class);
+
+    final private ObjectMapper objectMapper = new ObjectMapper();
+
+    private static void checkResult(InferenceItem<Comment> result1, InferenceItem<Comment> inferenceItem, InferenceResponse.InferenceResponseContent expectedResponseContent1, List<InferenceResponse.LabelEvaluation> labelEvaluations) {
         assertThat(result1.id()).isEqualTo(UUID.fromString(expectedResponseContent1.getId()));
         assertThat(result1.evaluableItem()).isEqualTo(inferenceItem.evaluableItem());
         assertThat(result1.labels()).hasSize(2);
@@ -62,7 +70,8 @@ class InferenceServiceTest {
     void beforeEach() {
         stub = mock(InferenceServiceGrpc.InferenceServiceBlockingV2Stub.class);
         InferenceMapper inferenceMapper = Mappers.getMapper(InferenceMapper.class);
-        inferenceService = new InferenceService(stub, inferenceMapper);
+        modelSerializer = mock(ModelSerializer.class);
+        inferenceService = new InferenceService(stub, inferenceMapper, modelSerializer);
     }
 
     @Test
@@ -81,6 +90,9 @@ class InferenceServiceTest {
 
     @Test
     void doInference_correctInput_correctOutput() throws StatusException {
+        when(modelSerializer.getSerializedDto(COMMENT_1)).thenReturn(serialize(COMMENT_1));
+        when(modelSerializer.getSerializedDto(COMMENT_2)).thenReturn(serialize(COMMENT_2));
+
         InferenceResponse.LabelEvaluation labelEvaluation1 = buildLabel("label-1", 0.99);
 
         InferenceResponse.LabelEvaluation labelEvaluation2 = buildLabel("label-2", 0.01);
@@ -98,7 +110,7 @@ class InferenceServiceTest {
         InferenceResponse expectedResponse = InferenceResponse.newBuilder().addAllContents(List.of(expectedResponseContent1, expectedResponseContent2)).build();
 
         when(stub.modelInference(any())).thenReturn(expectedResponse);
-        List<InferenceItem<CommentDto>> result = inferenceService.doInference(INPUTS, "model-name").toList();
+        List<InferenceItem<Comment>> result = inferenceService.doInference(INPUTS, "model-name").toList();
         verify(stub, times(1)).modelInference(any());
 
         checkResult(result.get(0), INPUTS.get(0), expectedResponseContent1, List.of(labelEvaluation1, labelEvaluation2));
@@ -108,10 +120,20 @@ class InferenceServiceTest {
     @Test
     void doInference_throwsStatusException_translatedToInferenceException() throws StatusException {
         when(stub.modelInference(any())).thenThrow(new StatusException(Status.CANCELLED));
+        when(modelSerializer.getSerializedDto(COMMENT_1)).thenReturn(serialize(COMMENT_1));
+        when(modelSerializer.getSerializedDto(COMMENT_2)).thenReturn(serialize(COMMENT_2));
 
         assertThatThrownBy(() -> inferenceService.doInference(INPUTS, "model-name"))
                 .isInstanceOf(InferenceFailedException.class)
                 .hasMessage("Evaluation of inference request failed with status %s".formatted(Status.CANCELLED));
+    }
+
+    private String serialize(Comment comment) {
+        try {
+            return objectMapper.writeValueAsString(commentsMapper.toDto(comment));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
