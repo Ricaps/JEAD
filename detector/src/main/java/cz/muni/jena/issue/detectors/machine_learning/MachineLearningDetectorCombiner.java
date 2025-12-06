@@ -8,6 +8,7 @@ import cz.muni.jena.exception.InferenceFailedException;
 import cz.muni.jena.inference.config.InferenceConfiguration;
 import cz.muni.jena.inference.config.MLDetectorConfig;
 import cz.muni.jena.inference.model.InferenceItem;
+import cz.muni.jena.issue.AnalysisType;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueWithLazyMeta;
 import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningDetector;
@@ -95,7 +96,7 @@ public class MachineLearningDetectorCombiner implements MachineLearningDetector 
         Optional<MLDetectorConfig.LabelEvaluationConfig> matchingEvaluation = getMatchingEvaluation(inferenceItem, mlDetectorConfig);
 
         return matchingEvaluation
-                .map(evaluation -> new Issue(evaluation.issueType(), inferenceItem.getStartLine(), inferenceItem.getFullyQualifiedName()))
+                .map(evaluation -> new Issue(evaluation.issueType(), inferenceItem.getStartLine(), inferenceItem.getFullyQualifiedName(), AnalysisType.MACHINE_LEARNING))
                 .map(issue -> new IssueWithLazyMeta(issue, classOrInterfaceDeclaration))
                 .orElse(null);
     }

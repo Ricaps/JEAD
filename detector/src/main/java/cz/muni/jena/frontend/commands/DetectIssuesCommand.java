@@ -136,7 +136,7 @@ public class DetectIssuesCommand {
 
     private String prepareIssuesAsString(List<Issue> issues) {
         String[][] rows = new String[issues.size() + 1][];
-        rows[0] = new String[]{"Issue type ", "Line number ", "Class fully qualified name ", "Method name "};
+        rows[0] = new String[]{"Issue type ", "Line number ", "Class fully qualified name ", "Method name ", "Analysis type "};
         int i = 1;
         List<String[]> rowsWithoutHeader = issues.stream().sorted(Comparator.comparing(Issue::getIssueType))
                 .map(Issue::toTableRow)
