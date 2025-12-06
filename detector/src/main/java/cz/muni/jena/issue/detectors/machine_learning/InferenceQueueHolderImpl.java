@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 
 @Component
 @ConditionalOnProperty(value = "inference.enabled", havingValue = "true")
-public class InferenceQueueHolderImpl implements InferenceQueueHolder<EvaluationModel> {
+public class InferenceQueueHolderImpl implements InferenceQueueHolder<EvaluationModel>, AutoCloseable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InferenceQueueHolderImpl.class);
     private final Map<String, InferenceQueue<EvaluationModel>> inferenceQueues = new ConcurrentHashMap<>();
@@ -63,5 +63,10 @@ public class InferenceQueueHolderImpl implements InferenceQueueHolder<Evaluation
             InferenceQueueHolderImpl.LOGGER.error("Failed to terminate inference queue for model {}. Results might be incomplete!", inferenceQueue.getModelName(), e);
             return Stream.of();
         }
+    }
+
+    @Override
+    public void close() {
+        terminateQueuesAndWait();
     }
 }
