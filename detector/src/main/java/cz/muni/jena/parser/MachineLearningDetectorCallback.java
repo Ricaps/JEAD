@@ -8,19 +8,20 @@ import cz.muni.jena.codeminer.extractor.CodeExtractor;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.inference.config.InferenceConfiguration;
 import cz.muni.jena.inference.config.MLDetectorConfig;
+import cz.muni.jena.issue.detectors.compilation_unit.EvaluationPredicate;
 import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningDetector;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.groupingBy;
 
 public record MachineLearningDetectorCallback(MachineLearningDetector machineLearningDetector,
                                               Configuration configuration,
                                               InferenceConfiguration inferenceConfiguration,
-                                              Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate) implements SourceRoot.Callback {
+                                              EvaluationPredicate evaluationPredicate
+) implements SourceRoot.Callback {
 
     @Override
     public Result process(Path localPath, Path absolutePath, ParseResult<CompilationUnit> result) {
@@ -54,7 +55,7 @@ public record MachineLearningDetectorCallback(MachineLearningDetector machineLea
                             return true;
                         }
 
-                        return detectorConfig.evaluations().stream().anyMatch(evaluationPredicate);
+                        return detectorConfig.evaluations().stream().anyMatch(config -> evaluationPredicate.test(config.issueType().getCategory()));
                     }).toList();
 
                     if (filteredDetectorConfigs.isEmpty()) {
@@ -62,7 +63,7 @@ public record MachineLearningDetectorCallback(MachineLearningDetector machineLea
                         return null;
                     }
 
-                    return new MachineLearningDetector.ExtractorDetectorsMapping(extractor, filteredDetectorConfigs, configuration);
+                    return new MachineLearningDetector.ExtractorDetectorsMapping(extractor, filteredDetectorConfigs, configuration, evaluationPredicate);
                 })
                 .filter(Objects::nonNull)
                 .toList();

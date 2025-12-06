@@ -2,12 +2,12 @@ package cz.muni.jena.inference;
 
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.inference.config.InferenceConfiguration;
-import cz.muni.jena.inference.config.MLDetectorConfig;
 import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueCategory;
 import cz.muni.jena.issue.IssueMetadataService;
 import cz.muni.jena.issue.IssueWithLazyMeta;
+import cz.muni.jena.issue.detectors.compilation_unit.EvaluationPredicate;
 import cz.muni.jena.issue.detectors.compilation_unit.MachineLearningDetector;
 import cz.muni.jena.issue.detectors.machine_learning.InferenceQueueControl;
 import cz.muni.jena.issue.detectors.machine_learning.InferenceQueueHolder;
@@ -20,7 +20,6 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 @Service
@@ -85,10 +84,7 @@ public class InferenceFacade implements InferenceQueueControl {
             LOGGER.warn("Inference server is not available. Machine learning evaluation won't be not used!");
             return Optional.empty();
         }
-        Predicate<MLDetectorConfig.LabelEvaluationConfig> evaluationPredicate = evaluationConfig -> issueDetectorFilter.contains(evaluationConfig.issueType().getCategory());
-        machineLearningDetector.setEvaluationPredicate(
-                evaluationPredicate
-        );
+        EvaluationPredicate evaluationPredicate = issueDetectorFilter::contains;
         startQueues();
 
         return Optional.of(new MachineLearningDetectorCallback(machineLearningDetector, configuration, inferenceConfiguration, evaluationPredicate));
