@@ -1,6 +1,7 @@
 package cz.muni.jena.codeminer.extractor.god_di.metrics;
 
 import com.github.javaparser.ast.AccessSpecifier;
+import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
@@ -8,8 +9,10 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.resolution.declarations.ResolvedDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
+import com.github.javaparser.resolution.declarations.ResolvedTypeDeclaration;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.language.elements.ResolvableNode;
+import cz.muni.jena.issue.language.elements.ResolvedClassDec;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -30,18 +33,24 @@ public class LackOfCohesionOfMethodsMetric implements MetricComputer<Integer> {
     private static void handleMethodCallsRelations(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Map<String, Set<String>> methodsGraph) {
         classOrInterfaceDeclaration.getMethods()
                 .forEach(callerMethod -> {
-                    Optional<String> callerMethodSignature = ResolvableNode.resolveOptional(callerMethod).map(ResolvedMethodDeclaration::getSignature);
+                    String callerMethodSignature = callerMethod.getSignature().asString();
 
                     if (callerMethodSignature.isEmpty()) {
                         return;
                     }
 
                     callerMethod.findAll(MethodCallExpr.class).forEach(callExpression -> {
-                        Optional<String> calleeMethodSignature = ResolvableNode.resolveOptional(callExpression).map(ResolvedMethodDeclaration::getSignature);
+                        Optional<String> calleeMethodSignature = ResolvableNode.resolveOptional(callExpression)
+                                .map(resolvedDeclaration -> resolvedDeclaration.toAst(MethodDeclaration.class))
+                                .flatMap(astDeclarationOptional -> astDeclarationOptional
+                                        .map(MethodDeclaration::getSignature)
+                                        .map(CallableDeclaration.Signature::asString)
+                                        .or(Optional::empty)
+                                );
 
                         if (calleeMethodSignature.isPresent() && methodsGraph.containsKey(calleeMethodSignature.get())) {
-                            methodsGraph.get(callerMethodSignature.get()).add(calleeMethodSignature.get());
-                            methodsGraph.get(calleeMethodSignature.get()).add(callerMethodSignature.get());
+                            methodsGraph.get(callerMethodSignature).add(calleeMethodSignature.get());
+                            methodsGraph.get(calleeMethodSignature.get()).add(callerMethodSignature);
                         }
                     });
                 });
@@ -85,11 +94,15 @@ public class LackOfCohesionOfMethodsMetric implements MetricComputer<Integer> {
             }
         }));
 
-        ResolvableNode.resolveOptional(method).ifPresent(methodSignature -> methodToFields.put(methodSignature.getSignature(), fieldsAccessInMethod));
+        methodToFields.put(method.getSignature().asString(), fieldsAccessInMethod);
     }
 
     @Override
     public Integer extractMetric(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, Configuration configuration) {
+        if (classOrInterfaceDeclaration.isInterface() || classOrInterfaceDeclaration.isRecordDeclaration()) {
+            return -1;
+        }
+
         Set<String> fields = new HashSet<>();
 
         classOrInterfaceDeclaration.getFields().forEach(field ->
@@ -97,6 +110,8 @@ public class LackOfCohesionOfMethodsMetric implements MetricComputer<Integer> {
         );
 
         ResolvableNode.resolve(classOrInterfaceDeclaration)
+                .map(ResolvedTypeDeclaration::asClass)
+                .map(ResolvedClassDec::new)
                 .flatMap(cls -> cls.getAllFields().stream())
                 .filter(field -> !field.accessSpecifier().equals(AccessSpecifier.PRIVATE))
                 .map(ResolvedDeclaration::getName)
