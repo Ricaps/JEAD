@@ -2,6 +2,7 @@ import torch
 
 
 def mean_pooling(model_output, attention_mask):
+    """https://zilliz.com/ai-faq/how-do-i-implement-embedding-pooling-strategies-mean-max-cls"""
     token_embeddings = model_output["last_hidden_state"]
     input_mask_expanded = (
         attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
