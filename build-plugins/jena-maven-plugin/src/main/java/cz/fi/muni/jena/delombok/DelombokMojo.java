@@ -42,10 +42,12 @@ public class DelombokMojo extends AbstractMojo {
     private String sourceDirectory;
 
     /**
-     * Output directory where the delomboked source codes should be stored
+     * Suffix of the directory where the delomboked source codes should be stored. <br>
+     * The suffix is added to the name of the sourceDirectory. <br>
+     * When source directory is 'src', then output directory will be 'src-delombok'
      */
-    @Parameter(property = "jena.delombok.outputDirectory", defaultValue = "src-delombok")
-    private String outputDirectory;
+    @Parameter(property = "jena.delombok.outputDirectory", defaultValue = "delombok")
+    private String outputDirectorySuffix;
 
     /**
      * If the maven should fail when the lombok jar is not found
@@ -107,6 +109,7 @@ public class DelombokMojo extends AbstractMojo {
 
         Artifact lombokArtifact = lombokOptional.get();
         File lombokJar = lombokArtifact.getFile();
+        String outputDirectory = sourceDirectoryFile.getName() + "-" + outputDirectorySuffix;
 
         List<String> commands = new ArrayList<>();
         commands.add("java");
@@ -144,6 +147,6 @@ public class DelombokMojo extends AbstractMojo {
             throw new MojoExecutionException("Failed to run delombok!", e);
         }
 
-        LOGGER.info("Delombok output written to {}", workingDirectory.toPath().resolve(outputDirectory));
+        LOGGER.info("Delombok output written to {}", workingDirectory.toPath().resolve(outputDirectorySuffix));
     }
 }
