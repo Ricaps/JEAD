@@ -8,6 +8,9 @@ def split_camel_case(text: str) -> list[str]:
 
             __append_part(index, last_index, result, text)
             last_index = index
+        elif char == "_":
+            __append_part(index, last_index, result, text)
+            last_index = index + 1  # Skips the underscore character
 
     input_length = len(text)
     if last_index != input_length - 1:
