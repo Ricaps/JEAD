@@ -23,10 +23,6 @@ import java.util.stream.Collectors;
 
 public class AsyncCompilationUnitParser {
     public static final String DELOMBOK_SUFFIX = "-delombok";
-    private static final String TARGET_FOLDER = "target";
-    private static final String POM_XML = "pom.xml";
-    private static final String BUILD_GRADLE = "build.gradle";
-    private static final String UNKNOWN_PROJECT = "UNKNOWN";
     private final Path path;
     private final TypeSolver typeSolver;
 
@@ -115,36 +111,6 @@ public class AsyncCompilationUnitParser {
         return projectRoot.getSourceRoots().stream()
                 .filter(sourceRoot -> !delombokedOriginalRoots.contains(sourceRoot.getRoot()))
                 .toList();
-    }
-
-    private String getProjectName(Path sourceRoot) {
-        Path currentPath = sourceRoot;
-
-        while (currentPath != null) {
-            Path fileName = currentPath.getFileName().getFileName();
-            if (isProjectRoot(fileName)) {
-                return currentPath.getParent().getFileName().toString();
-            }
-
-            currentPath = currentPath.getParent();
-        }
-
-        return UNKNOWN_PROJECT;
-    }
-
-    private boolean isProjectRoot(Path file) {
-        Path fileName = file.getFileName().getFileName();
-        if (fileName.toString().equals(TARGET_FOLDER)) {
-            return true;
-        }
-
-        Path pomFile = fileName.resolve(POM_XML);
-        if (pomFile.toFile().exists()) {
-            return true;
-        }
-
-        Path buildGradle = fileName.resolve(BUILD_GRADLE);
-        return buildGradle.toFile().exists();
     }
 
     private Optional<Path> getDelombokPath(Path sourceRoot) {
