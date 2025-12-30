@@ -56,7 +56,7 @@ public class CopyDependenciesMojo
 
     private static void createTargetDirectory(Path targetPath) throws MojoExecutionException {
         try {
-            Path createdDirectory = Files.createDirectory(targetPath);
+            Path createdDirectory = Files.createDirectories(targetPath);
             LOGGER.info("Created directory for dependencies {}", createdDirectory);
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to create target directory!", e);

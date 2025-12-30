@@ -102,7 +102,7 @@ public class DelombokMojo extends AbstractMojo {
 
         File sourceDirectoryFile = new File(sourceDirectory);
         if (!sourceDirectoryFile.isDirectory()) {
-            throw new MojoExecutionException("The 'sourceDirectory' property %s is not a directory!".formatted(sourceDirectory));
+            throw new MojoExecutionException(String.format("The 'sourceDirectory' property %s is not a directory!", sourceDirectory));
         }
 
         Artifact lombokArtifact = lombokOptional.get();

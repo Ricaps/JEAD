@@ -51,3 +51,7 @@ inference:
         threshold: 1
         issue-type: GOD_DI_CLASS
 
+prepare-plugin:
+  group-id: "cz.muni.fi.jena"
+  artifact-id: "jena-maven-plugin"
+  version: "1.0-SNAPSHOT"
