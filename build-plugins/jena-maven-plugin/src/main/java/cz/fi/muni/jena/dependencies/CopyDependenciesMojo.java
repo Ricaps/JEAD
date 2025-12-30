@@ -23,6 +23,9 @@ public class CopyDependenciesMojo
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CopyDependenciesMojo.class);
 
+    /**
+     * Target path where to copy .jar dependencies of the project
+     */
     @Parameter(property = "jena.dependenciesFolder", defaultValue = "${project.basedir}/target/dependencies")
     private String outputFolder;
 
