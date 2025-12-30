@@ -21,6 +21,7 @@ dependencies = [
     "plt (>=0.2.0,<0.3.0)",
     "notebook (>=7.5.0,<8.0.0)",
     "sentence-transformers (>=5.1.2,<6.0.0)",
+    "umap-learn (>=0.5.9.post2,<0.6.0)",
 ]
 
 [dependency-groups]

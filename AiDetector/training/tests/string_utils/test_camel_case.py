@@ -47,3 +47,10 @@ class TestCamelCase(unittest.TestCase):
     def test_empty_string(self):
         result = split_camel_case("")
         self.assertEqual(0, len(result))
+
+    def test_underscore_skipped(self):
+        result = split_camel_case("some_Test_Method")
+        self.assertEqual(3, len(result))
+        self.assertEqual("some", result[0])
+        self.assertEqual("test", result[1])
+        self.assertEqual("method", result[2])
