@@ -2,7 +2,7 @@ import java.nio.file.Path
 
 final LOMBOK_ARTIFACT_ID = "lombok-1.18.42.jar"
 
-File dependenciesDir = new File( basedir, "target/dependencies" )
+File dependenciesDir = new File( basedir, "target/dependency" )
 
 assert dependenciesDir.isDirectory()
 
