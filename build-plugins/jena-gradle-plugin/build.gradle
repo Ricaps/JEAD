@@ -20,7 +20,12 @@ repositories {
 publishing {
     repositories {
         maven {
+            name = "GitHub"
             url = uri(jenaV3RepoUrl)
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
         }
     }
 }
