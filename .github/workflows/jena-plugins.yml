@@ -41,6 +41,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-publish-gradle:
+    needs: build-and-publish-maven
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -67,7 +68,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./build-plugins/jena-gradle-plugin
-        run: ./gradlew test --no-daemon
+        run: ./gradlew test -Pversion=${{ env.VERSION }} --no-daemon
 
       - name: Publish jena-gradle-plugin
         working-directory: ./build-plugins/jena-gradle-plugin
