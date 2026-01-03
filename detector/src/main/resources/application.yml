@@ -55,9 +55,8 @@ prepare-plugin:
   artifact:
     group-id: "cz.muni.fi.jena"
     artifact-id: "jena-maven-plugin"
-#    version: @project.version@
-    version: 0.0.0-PR25-248d05c
+    version: @project.version@
   repository:
     id: jena-github
-    # Repository pull token
+    # Repository pull token - it's safe to have it here until the GitHub repo is made public
     url: https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3

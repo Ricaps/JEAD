@@ -111,10 +111,13 @@ public class JenaMavenPluginInitializer {
         repository.setId(repositoryConfig.id());
         repository.setUrl(repositoryConfig.url());
 
-        RepositoryPolicy repositoryPolicy = new RepositoryPolicy();
-        repositoryPolicy.setEnabled(true);
-        repository.setSnapshots(repositoryPolicy);
-        repository.setReleases(repositoryPolicy);
+        RepositoryPolicy snapshotPolicy = new RepositoryPolicy();
+        snapshotPolicy.setEnabled(true);
+        snapshotPolicy.setUpdatePolicy("always");
+        repository.setSnapshots(snapshotPolicy);
+
+        RepositoryPolicy releasePolicy = new RepositoryPolicy();
+        repository.setReleases(releasePolicy);
 
         if (repositoryOptional.isEmpty()) {
             mavenModel.addPluginRepository(repository);
