@@ -30,12 +30,12 @@ jobs:
 
       - name: Run integration tests
         working-directory: ./build-plugins
-        run: ../mvnw verify
+        run: ../mvnw --batch-mode verify
 
       - name: Publish jena-plugin-core & jena-maven-plugin
         working-directory: ./build-plugins
         run: |
-          mvn versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
-          mvn --batch-mode deploy -DskipTests
+          ../mvnw versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
+          ../mvnw --batch-mode deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
