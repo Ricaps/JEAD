@@ -5,7 +5,6 @@ plugins {
 }
 
 group = 'cz.muni.fi.jena'
-version = '1.0-SNAPSHOT'
 
 def jenaV3RepoUrl = "https://maven.pkg.github.com/Ricaps/JenaV3"
 
