@@ -18,18 +18,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class JenaDelombokTaskTest extends AbstractJenaGradleTaskTest {
 
     private static String getBuildScript(@Nullable String delombokArguments) {
-        String script = """
-                plugins {
-                    id 'java'
-                    id 'jena-gradle-plugin'
-                }
-                repositories {
-                    mavenCentral()
-                }
-                dependencies {
-                    compileOnly 'org.projectlombok:lombok:1.18.30'
-                }
-                """;
+        String script = "plugins {\n" +
+                "    id 'java'\n" +
+                "    id 'jena-gradle-plugin'\n" +
+                "}\n" +
+                "repositories {\n" +
+                "    mavenCentral()\n" +
+                "}\n" +
+                "dependencies {\n" +
+                "    compileOnly 'org.projectlombok:lombok:1.18.30'\n" +
+                "}\n";
 
         if (delombokArguments != null) {
             script += delombokArguments;
@@ -65,23 +63,20 @@ class JenaDelombokTaskTest extends AbstractJenaGradleTaskTest {
         Path sourceFile = sourceDir.resolve("User.java");
 
         String sourceContent =
-                """
-                        package com.example;
-                        import lombok.Data;
-                        @Data
-                        public class User {
-                            private String name;
-                        }""";
+                "package com.example;\n" +
+                "import lombok.Data;\n" +
+                "@Data\n" +
+                "public class User {\n" +
+                "    private String name;\n" +
+                "}";
         Files.writeString(sourceFile, sourceContent);
     }
 
     @Test
     void testLombokJarNotFound() throws IOException {
-        String taskArguments = """
-                %s {
-                   lombokArtifact.artifactId = 'test'\s
-                }
-                """.formatted(JenaGradlePlugin.DELOMBOK_TASK);
+        String taskArguments = String.format("%s {\n" +
+                "   lombokArtifact.artifactId = 'test' \n" +
+                "}\n", JenaGradlePlugin.DELOMBOK_TASK);
 
         String buildScript = getBuildScript(taskArguments);
         setupSources(buildScript);

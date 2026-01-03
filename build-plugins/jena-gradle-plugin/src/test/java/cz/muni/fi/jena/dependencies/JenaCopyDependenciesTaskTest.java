@@ -34,11 +34,9 @@ class JenaCopyDependenciesTaskTest extends AbstractJenaGradleTaskTest {
 
     @Test
     void testCopyDependenciesCustomOutputDirectory() throws IOException {
-        String extraConfig = """
-                %s {
-                    outputFolder = file('custom/deps')
-                }
-                """.formatted(JenaGradlePlugin.COPY_DEPENDENCIES_TASK);
+        String extraConfig = String.format("%s {\n" +
+                "    outputFolder = file('custom/deps')\n" +
+                "}\n", JenaGradlePlugin.COPY_DEPENDENCIES_TASK);
 
         setupSources(createBuildScript(COMMONS_LANG_DEPENDENCY, extraConfig));
 
@@ -54,10 +52,7 @@ class JenaCopyDependenciesTaskTest extends AbstractJenaGradleTaskTest {
 
     @Test
     void testCopyMultipleDependencies() throws IOException {
-        String dependencies = """
-                %s
-                %s
-                """.formatted(COMMONS_LANG_DEPENDENCY, COMMONS_IO_DEPENDENCY);
+        String dependencies = String.format("%s\n%s\n", COMMONS_LANG_DEPENDENCY, COMMONS_IO_DEPENDENCY);
 
         setupSources(createBuildScript(dependencies, null));
 
@@ -73,19 +68,17 @@ class JenaCopyDependenciesTaskTest extends AbstractJenaGradleTaskTest {
     }
 
     private String createBuildScript(String dependencies, String extraConfig) {
-        return """
-                plugins {
-                    id 'java'
-                    id 'jena-gradle-plugin'
-                }
-                repositories {
-                    mavenCentral()
-                }
-                dependencies {
-                    %s
-                }
-                %s
-                """.formatted(dependencies, extraConfig != null ? extraConfig : "");
+        return String.format("plugins {\n" +
+                "    id 'java'\n" +
+                "    id 'jena-gradle-plugin'\n" +
+                "}\n" +
+                "repositories {\n" +
+                "    mavenCentral()\n" +
+                "}\n" +
+                "dependencies {\n" +
+                "    %s\n" +
+                "}\n" +
+                "%s\n", dependencies, extraConfig != null ? extraConfig : "");
     }
 
     private void assertDependencyExists(File outputDir, String fileName) {

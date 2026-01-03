@@ -6,6 +6,12 @@ plugins {
 
 group = 'cz.muni.fi.jena'
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
 def jenaV3RepoUrl = "https://maven.pkg.github.com/Ricaps/JenaV3"
 
 repositories {
