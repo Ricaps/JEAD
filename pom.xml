@@ -13,7 +13,7 @@
         <module>antipatterns</module>
         <module>PowerMockUsage</module>
         <module>AuthorizationServer</module>
-        <module>build-plugins/jena-maven-plugin</module>
+        <module>build-plugins</module>
     </modules>
 
     <properties>

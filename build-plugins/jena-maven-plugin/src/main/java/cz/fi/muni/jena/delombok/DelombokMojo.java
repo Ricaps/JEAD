@@ -2,6 +2,8 @@ package cz.fi.muni.jena.delombok;
 
 
 import cz.fi.muni.jena.model.ProjectModel;
+import cz.muni.fi.jena.plugin.delombok.DelombokExecutor;
+import cz.muni.fi.jena.plugin.delombok.DelombokExecutorException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -13,12 +15,7 @@ import org.apache.maven.project.MavenProject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @Mojo(name = "delombok", threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST)
@@ -90,6 +87,27 @@ public class DelombokMojo extends AbstractMojo {
             lombok.setArtifactId(LOMBOK_ARTIFACT_ID);
         }
 
+        Optional<Artifact> lombokOptional = getLombokArtifact();
+        if (lombokOptional.isEmpty()) {
+            LOGGER.warn("Lombok artifact was not found!");
+            return;
+        }
+
+        File sourceDirectoryFile = new File(sourceDirectory);
+
+        Artifact lombokArtifact = lombokOptional.get();
+        File lombokJar = lombokArtifact.getFile();
+
+        DelombokExecutor delombokExecutor = new DelombokExecutor(sourceDirectoryFile, lombokJar, outputDirectorySuffix);
+
+        try {
+            delombokExecutor.execute();
+        } catch (DelombokExecutorException e) {
+            throw new MojoExecutionException("Delombok execution failed!", e);
+        }
+    }
+
+    private Optional<Artifact> getLombokArtifact() throws MojoExecutionException {
         LOGGER.info("Looking for lombok jar file! {}:{}", lombok.getGroupId(), lombok.getArtifactId());
         Optional<Artifact> lombokOptional = mavenProject.getArtifacts().stream().filter(artifact ->
                 artifact.getArtifactId().equals(lombok.getArtifactId()) && artifact.getGroupId().equals(lombok.getGroupId())
@@ -97,56 +115,8 @@ public class DelombokMojo extends AbstractMojo {
 
         if (lombokOptional.isEmpty() && failIfNotFound) {
             throw new MojoExecutionException("Failed to found Lombok jar file! Does you project really use Project Lombok?");
-        } else if (lombokOptional.isEmpty()) {
-            LOGGER.warn("Failed to found Lombok jar file!");
-            return;
         }
 
-        File sourceDirectoryFile = new File(sourceDirectory);
-        if (!sourceDirectoryFile.isDirectory()) {
-            throw new MojoExecutionException(String.format("The 'sourceDirectory' property %s is not a directory!", sourceDirectory));
-        }
-
-        Artifact lombokArtifact = lombokOptional.get();
-        File lombokJar = lombokArtifact.getFile();
-        String outputDirectory = sourceDirectoryFile.getName() + "-" + outputDirectorySuffix;
-
-        List<String> commands = new ArrayList<>();
-        commands.add("java");
-        commands.add("-jar");
-        commands.add(lombokJar.getAbsolutePath());
-        commands.add("delombok");
-        commands.add(sourceDirectory);
-        commands.add("-d");
-        commands.add(outputDirectory);
-
-        File workingDirectory = sourceDirectoryFile.getParentFile();
-        LOGGER.info("Starting delombok with command {}", String.join(" ", commands));
-        LOGGER.info("At working directory {}", workingDirectory);
-
-        ProcessBuilder processBuilder = new ProcessBuilder(commands);
-        processBuilder.redirectErrorStream(true);
-        processBuilder.directory(workingDirectory);
-
-        try {
-            Process process = processBuilder.start();
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    LOGGER.info(line);
-                }
-            }
-
-            int exitCode = process.waitFor();
-
-            if (exitCode != 0) {
-                throw new MojoExecutionException("Delombok failed with status code " + exitCode);
-            }
-        } catch (IOException | InterruptedException e) {
-            throw new MojoExecutionException("Failed to run delombok!", e);
-        }
-
-        LOGGER.info("Delombok output written to {}", workingDirectory.toPath().resolve(outputDirectorySuffix));
+        return lombokOptional;
     }
 }
