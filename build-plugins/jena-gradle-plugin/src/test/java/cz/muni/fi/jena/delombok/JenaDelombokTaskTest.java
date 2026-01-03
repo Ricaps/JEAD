@@ -1,11 +1,10 @@
 package cz.muni.fi.jena.delombok;
 
+import cz.muni.fi.jena.AbstractJenaGradleTaskTest;
+import cz.muni.fi.jena.JenaGradlePlugin;
 import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -13,15 +12,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class JenaDelombokTaskTest {
-
-    @TempDir
-    File testProjectDir;
-
-    private File buildFile;
-    private File settingsFile;
+class JenaDelombokTaskTest extends AbstractJenaGradleTaskTest {
 
     private static String getBuildScript(@Nullable String delombokArguments) {
         String script = """
@@ -44,24 +38,15 @@ class JenaDelombokTaskTest {
         return script;
     }
 
-    @BeforeEach
-    void setup() {
-        buildFile = new File(testProjectDir, "build.gradle");
-        settingsFile = new File(testProjectDir, "settings.gradle");
-    }
-
     @Test
     void testDelombokExecution() throws IOException {
         String buildScript = getBuildScript(null);
         setupSources(buildScript);
+        setupJavaSources();
 
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
-                .withPluginClasspath()
-                .withArguments("delombok", "--stacktrace")
-                .build();
+        BuildResult result = runTask(JenaGradlePlugin.DELOMBOK_TASK);
 
-        assertEquals(TaskOutcome.SUCCESS, result.task(":delombok").getOutcome());
+        assertTaskOutcome(result, JenaGradlePlugin.DELOMBOK_TASK, TaskOutcome.SUCCESS);
 
         File outputDir = new File(testProjectDir, "src-delombok");
         assertTrue(outputDir.exists(), "Delombok output directory should exist");
@@ -74,11 +59,7 @@ class JenaDelombokTaskTest {
         assertFalse(content.contains("@Data"));
     }
 
-    private void setupSources(String buildScript) throws IOException {
-        Files.writeString(settingsFile.toPath(), "rootProject.name = 'test-project'");
-
-        Files.writeString(buildFile.toPath(), buildScript);
-
+    private void setupJavaSources() throws IOException {
         Path sourceDir = testProjectDir.toPath().resolve("src/main/java/com/example");
         Files.createDirectories(sourceDir);
         Path sourceFile = sourceDir.resolve("User.java");
@@ -97,21 +78,18 @@ class JenaDelombokTaskTest {
     @Test
     void testLombokJarNotFound() throws IOException {
         String taskArguments = """
-                delombok {
+                %s {
                    lombokArtifact.artifactId = 'test'\s
                 }
-                """;
+                """.formatted(JenaGradlePlugin.DELOMBOK_TASK);
 
         String buildScript = getBuildScript(taskArguments);
         setupSources(buildScript);
+        setupJavaSources();
 
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(testProjectDir)
-                .withPluginClasspath()
-                .withArguments("delombok", "--stacktrace")
-                .buildAndFail();
+        BuildResult result = runTaskAndFail(JenaGradlePlugin.DELOMBOK_TASK);
 
-        assertEquals(TaskOutcome.FAILED, result.task(":delombok").getOutcome());
+        assertTaskOutcome(result, JenaGradlePlugin.DELOMBOK_TASK, TaskOutcome.FAILED);
         assertTrue(result.getOutput().contains("Lombok dependency not found in 'compileClasspath'. Delombok failed."));
     }
 }
