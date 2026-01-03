@@ -35,7 +35,7 @@ jobs:
       - name: Publish jena-plugin-core & jena-maven-plugin
         working-directory: ./build-plugins
         run: |
-          ../mvnw versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
+          ../mvnw --batch-mode versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
           ../mvnw --batch-mode deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
