@@ -69,6 +69,8 @@ jobs:
       - name: Run tests
         working-directory: ./build-plugins/jena-gradle-plugin
         run: ./gradlew test -Pversion=${{ env.VERSION }} --no-daemon
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish jena-gradle-plugin
         working-directory: ./build-plugins/jena-gradle-plugin
