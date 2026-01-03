@@ -1,18 +1,29 @@
 plugins {
     id 'java'
     id 'java-gradle-plugin'
+    id 'maven-publish'
 }
 
 group = 'cz.muni.fi.jena'
 version = '1.0-SNAPSHOT'
 
+def jenaV3RepoUrl = "https://maven.pkg.github.com/Ricaps/JenaV3"
+
 repositories {
     mavenCentral()
 
     maven {
-        url = uri("https://maven.pkg.github.com/Ricaps/JenaV3")
+        url = uri(jenaV3RepoUrl)
     }
     mavenLocal()
+}
+
+publishing {
+    repositories {
+        maven {
+            url = uri(jenaV3RepoUrl)
+        }
+    }
 }
 
 gradlePlugin {
@@ -28,10 +39,9 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation("cz.muni.fi.jena:jena-plugin-core:$version")
+    implementation("cz.muni.fi.jena.jena-plugin-core:$version")
 }
 
 test {
     useJUnitPlatform()
 }
-
