@@ -9,6 +9,9 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - uses: actions/checkout@v4
@@ -29,14 +32,10 @@ jobs:
         working-directory: ./build-plugins
         run: ../mvnw verify
 
-      - name: Publish jena-plugin-core
+      - name: Publish jena-plugin-core & jena-maven-plugin
         working-directory: ./build-plugins
         run: |
           mvn versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
-          mvn deploy -DskipTests
-
-      - name: Publish jena-maven-plugin
-        working-directory: ./build-plugins
-        run: |
-          mvn versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
-          mvn deploy -DskipTests
+          mvn --batch-mode deploy -DskipTests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
