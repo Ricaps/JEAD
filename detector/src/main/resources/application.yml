@@ -59,6 +59,5 @@ prepare-plugin:
     version: 0.0.0-PR25-248d05c
   repository:
     id: jena-github
-    url: https://maven.pkg.github.com/Ricaps/JenaV3
     # Repository pull token
-    access-token: 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
+    url: https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3

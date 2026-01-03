@@ -123,7 +123,7 @@ public class JenaMavenPluginInitializer {
 
     private void addSettingsFile(String pomPath) throws XmlPullParserException, IOException {
         PreparePluginConfig.Repository repository = preparePluginConfig.repository();
-        if (repository == null) {
+        if (repository == null || repository.password() == null || repository.username() == null) {
             LOGGER.atDebug().log("Repository configuration not defined, skipping settings.xml generation.");
             return;
         }
@@ -140,7 +140,7 @@ public class JenaMavenPluginInitializer {
         Server server = serverOptional.orElse(new Server());
         server.setId(repository.id());
         server.setUsername(repository.username());
-        server.setPassword(repository.accessToken());
+        server.setPassword(repository.password());
 
         if (serverOptional.isEmpty()) {
             servers.add(server);
