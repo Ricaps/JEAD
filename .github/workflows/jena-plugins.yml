@@ -36,6 +36,6 @@ jobs:
         working-directory: ./build-plugins
         run: |
           ../mvnw --batch-mode versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
-          ../mvnw --batch-mode deploy -DskipTests
+          ../mvnw --batch-mode deploy -DskipTests -pl jena-plugin-core,jena-maven-plugin
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
