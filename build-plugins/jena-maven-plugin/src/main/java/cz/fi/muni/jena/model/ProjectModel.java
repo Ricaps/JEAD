@@ -1,10 +1,12 @@
 package cz.fi.muni.jena.model;
 
+import java.io.Serializable;
+
 /**
  * Model class to represent project model. <br>
  * Can be used as input configuration.
  */
-public class ProjectModel {
+public class ProjectModel implements Serializable {
 
     private String artifactId;
     private String groupId;

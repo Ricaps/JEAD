@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Executes the delombok process for a given source directory.
@@ -32,6 +33,10 @@ public class DelombokExecutor {
      *                              to form the output directory name.
      */
     public DelombokExecutor(File sourceDirectoryFile, File lombokJar, String outputDirectorySuffix) {
+        Objects.requireNonNull(sourceDirectoryFile, "sourceDirectoryFile must not be null");
+        Objects.requireNonNull(lombokJar, "lombokJar must not be null");
+        Objects.requireNonNull(outputDirectorySuffix, "outputDirectorySuffix must not be null");
+
         this.sourceDirectoryFile = sourceDirectoryFile;
         this.lombokJar = lombokJar;
         this.outputDirectorySuffix = outputDirectorySuffix;

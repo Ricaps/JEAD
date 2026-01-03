@@ -2,6 +2,7 @@ package cz.fi.muni.jena.delombok;
 
 
 import cz.fi.muni.jena.model.ProjectModel;
+import cz.muni.fi.jena.plugin.delombok.Constants;
 import cz.muni.fi.jena.plugin.delombok.DelombokExecutor;
 import cz.muni.fi.jena.plugin.delombok.DelombokExecutorException;
 import org.apache.maven.artifact.Artifact;
@@ -23,14 +24,6 @@ import java.util.Optional;
 public class DelombokMojo extends AbstractMojo {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DelombokMojo.class);
-    private static final String LOMBOK_ARTIFACT_ID = "lombok";
-    private static final String LOMBOK_GROUP_ID = "org.projectlombok";
-
-    /**
-     * Path to the folder with exposed .jar dependencies
-     */
-    @Parameter(property = "jena.dependenciesFolder", defaultValue = "${project.basedir}/target/dependencies")
-    private String dependenciesFolder;
 
     /**
      * Source code directory which should be delomboked
@@ -81,10 +74,10 @@ public class DelombokMojo extends AbstractMojo {
         }
 
         if (lombok.getGroupId() == null) {
-            lombok.setGroupId(LOMBOK_GROUP_ID);
+            lombok.setGroupId(Constants.DEFAULT_LOMBOK_GROUP_ID);
         }
         if (lombok.getArtifactId() == null) {
-            lombok.setArtifactId(LOMBOK_ARTIFACT_ID);
+            lombok.setArtifactId(Constants.DEFAULT_LOMBOK_ARTIFACT_ID);
         }
 
         Optional<Artifact> lombokOptional = getLombokArtifact();
