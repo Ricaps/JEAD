@@ -61,6 +61,9 @@ jobs:
           chmod +x .github/scripts/calculate-version.sh
           .github/scripts/calculate-version.sh
 
+      - name: Setup Gradle Wrapper
+        run: chmod +x ./gradlew
+
       - name: Run tests
         working-directory: ./build-plugins/jena-gradle-plugin
         run: ./gradlew test --no-daemon
