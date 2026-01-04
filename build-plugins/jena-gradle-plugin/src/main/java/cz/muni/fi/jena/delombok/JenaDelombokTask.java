@@ -7,12 +7,18 @@ import cz.muni.fi.jena.plugin.delombok.DelombokExecutorException;
 import cz.muni.fi.jena.utils.ProjectUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.Project;
 import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
@@ -29,11 +35,24 @@ public abstract class JenaDelombokTask extends DefaultTask {
     private static final String DELOMBOK_SUFFIX = "delombok";
 
     public JenaDelombokTask() {
-        getSourceDirectory().convention(getProject().getLayout().getProjectDirectory().dir("src"));
+        Project project = getProject();
+        getSourceDirectory().convention(project.provider(() -> {
+            Directory defaultDirectory = project.getLayout().getProjectDirectory().dir("src");
+            File directoryAsFile = defaultDirectory.getAsFile();
+
+            return directoryAsFile.exists() ? defaultDirectory : null;
+        }));
         getOutputDirectorySuffix().convention(DELOMBOK_SUFFIX);
-        getFailIfNotFound().convention(true);
+        getFailIfNotFound().convention(false);
         getLombokArtifact().getGroupId().convention(Constants.DEFAULT_LOMBOK_GROUP_ID);
         getLombokArtifact().getArtifactId().convention(Constants.DEFAULT_LOMBOK_ARTIFACT_ID);
+
+        getLombokJarFile().convention(project.getLayout().file(project.provider(() -> {
+            Set<ResolvedArtifact> resolvedArtifacts = ProjectUtils.getResolvedArtifacts(project);
+            return findLombokJar(resolvedArtifacts)
+                    .map(ResolvedArtifact::getFile)
+                    .orElse(null);
+        })));
     }
 
     /**
@@ -43,6 +62,7 @@ public abstract class JenaDelombokTask extends DefaultTask {
      * @return The source directory property.
      */
     @InputDirectory
+    @org.gradle.api.tasks.Optional
     public abstract DirectoryProperty getSourceDirectory();
 
     /**
@@ -67,18 +87,28 @@ public abstract class JenaDelombokTask extends DefaultTask {
     @Nested
     public abstract ProjectModel getLombokArtifact();
 
+    @InputFile
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    @org.gradle.api.tasks.Optional
+    public abstract RegularFileProperty getLombokJarFile();
+
     @TaskAction
     public void delombok() {
         getLogger().lifecycle("Starting Jena Delombok execution...");
 
-        Set<ResolvedArtifact> resolvedArtifacts = ProjectUtils.getResolvedArtifacts(getProject());
-        Optional<ResolvedArtifact> lombokOptional = findLombokJar(resolvedArtifacts);
-
-        if (lombokOptional.isEmpty()) {
+        Boolean failIfNotFound = getFailIfNotFound().get();
+        if (!getLombokJarFile().isPresent() && failIfNotFound) {
             throw new GradleException(String.format("Lombok dependency not found in '%s'. Delombok failed.", ProjectUtils.COMPILE_CLASSPATH));
+        } else if (!getLombokJarFile().isPresent()) {
+            getLogger().warn("Lombok dependency not found in '{}'. Delombok skipped...", ProjectUtils.COMPILE_CLASSPATH);
+            return;
         }
 
-        File lombokJar = lombokOptional.get().getFile();
+        File lombokJar = getLombokJarFile().get().getAsFile();
+        if (!getSourceDirectory().isPresent()) {
+            getLogger().warn("Skipping task execution because source directory doesn't exist");
+            return;
+        }
         File sourceDirectory = getSourceDirectory().get().getAsFile();
 
         DelombokExecutor delombokExecutor = new DelombokExecutor(sourceDirectory, lombokJar, getOutputDirectorySuffix().get());

@@ -19,10 +19,9 @@ public class ProjectUtils {
     }
 
     public static Set<ResolvedArtifact> getResolvedArtifacts(Project project) {
-        Stream<ResolvedArtifact> artifactsSubprojects = project.getSubprojects().stream().flatMap(ProjectUtils::getResolvedArtifactStream);
         Stream<ResolvedArtifact> artifactsProject = getResolvedArtifactStream(project);
 
-        return Stream.concat(artifactsProject, artifactsSubprojects).collect(Collectors.toSet());
+        return artifactsProject.collect(Collectors.toSet());
     }
 
     private static Stream<ResolvedArtifact> getResolvedArtifactStream(Project project) {
