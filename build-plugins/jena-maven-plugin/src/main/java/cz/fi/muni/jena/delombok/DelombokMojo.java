@@ -42,7 +42,7 @@ public class DelombokMojo extends AbstractMojo {
     /**
      * If the maven should fail when the lombok jar is not found
      */
-    @Parameter(property = "jena.delombok.failIfNotFound", defaultValue = "true")
+    @Parameter(property = "jena.delombok.failIfNotFound", defaultValue = "false")
     private boolean failIfNotFound;
 
     /**
