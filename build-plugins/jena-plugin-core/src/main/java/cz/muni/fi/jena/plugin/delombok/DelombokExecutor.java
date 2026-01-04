@@ -50,7 +50,8 @@ public class DelombokExecutor {
     public void execute() throws DelombokExecutorException {
         String sourceDirectory = sourceDirectoryFile.getAbsolutePath();
         if (!sourceDirectoryFile.isDirectory()) {
-            throw new DelombokExecutorException(String.format("The 'sourceDirectory' property %s is not a directory!", sourceDirectory));
+            LOGGER.error("The 'sourceDirectory' property {} is not a directory!", sourceDirectory);
+            return;
         }
 
         String outputDirectory = sourceDirectoryFile.getName() + "-" + outputDirectorySuffix;
