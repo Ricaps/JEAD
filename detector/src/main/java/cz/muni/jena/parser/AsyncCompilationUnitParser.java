@@ -15,34 +15,41 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class AsyncCompilationUnitParser
-{
+public class AsyncCompilationUnitParser {
+    public static final String DELOMBOK_SUFFIX = "-delombok";
     private final Path path;
     private final TypeSolver typeSolver;
 
     public AsyncCompilationUnitParser(
             Path path,
             Supplier<List<TypeSolver>> typeSolversSupplier
-    )
-    {
+    ) {
         this.path = path;
         List<TypeSolver> typeSolvers = typeSolversSupplier.get();
         this.typeSolver = new CombinedTypeSolver(typeSolvers);
         logTypeSolvers(path, typeSolvers);
     }
 
-    private void logTypeSolvers(Path path, List<TypeSolver> typeSolvers)
-    {
+    public AsyncCompilationUnitParser(String path) {
+        this(FileSystems.getDefault().getPath(path));
+    }
+
+    public AsyncCompilationUnitParser(Path path) {
+        this(path, new TypeSolverSupplier(path));
+    }
+
+    private void logTypeSolvers(Path path, List<TypeSolver> typeSolvers) {
         Logger logger = LoggerFactory.getLogger(TypeSolverSupplier.class);
         long jarTypeSolversCount = typeSolvers.stream()
                 .filter(JarTypeSolver.class::isInstance)
                 .count();
-        if (jarTypeSolversCount == 0L)
-        {
+        if (jarTypeSolversCount == 0L) {
             logger.atError().log(
                     String.format(
                             """
@@ -51,48 +58,73 @@ public class AsyncCompilationUnitParser
                                     """,
                             path.toAbsolutePath() + File.separator + "target" + File.separator + "dependency"
                     ));
-        } else
-        {
+        } else {
             logger.atInfo().log(String.format("We found %s dependency Jars.", jarTypeSolversCount));
         }
     }
 
-    public AsyncCompilationUnitParser(String path)
-    {
-        this(FileSystems.getDefault().getPath(path));
-    }
-
-    public AsyncCompilationUnitParser(Path path)
-    {
-        this(path, new TypeSolverSupplier(path));
-    }
-
-    public void processCompilationUnits(SourceRoot.Callback callback)
-    {
+    public void processCompilationUnits(SourceRoot.Callback callback) {
         ParserConfiguration parserConfig = new ParserConfiguration();
         JavaSymbolSolver symbolResolver = new JavaSymbolSolver(typeSolver);
         parserConfig.setSymbolResolver(symbolResolver);
         ProjectRoot projectRoot = new SymbolSolverCollectionStrategy(parserConfig).collect(path);
+        List<SourceRoot> sourceRoots = getFilteredSourceRoot(projectRoot);
         Logger logger = LoggerFactory.getLogger(AsyncCompilationUnitParser.class);
         logger.atInfo().log(
                 "We will analyze following modules: "
                         + System.lineSeparator()
-                        + projectRoot.getSourceRoots()
+                        + sourceRoots
                         .stream()
                         .map(SourceRoot::getRoot)
                         .map(Path::toAbsolutePath)
                         .map(Path::toString)
                         .collect(Collectors.joining(System.lineSeparator()))
         );
-        for (SourceRoot sourceRoot : projectRoot.getSourceRoots())
-        {
-            try
-            {
+        for (SourceRoot sourceRoot : sourceRoots) {
+            try {
                 sourceRoot.parseParallelized(callback);
-            } catch (IOException ignored)
-            {
+            } catch (IOException ignored) {
                 logger.atWarn().log("We weren't able to parse following module: " + sourceRoot.getRoot().toAbsolutePath());
             }
         }
+    }
+
+    /**
+     * Since jena-maven-plugin (gradle plugin) creates delomboked folder with (-delombok) suffix, we have to filter out
+     * original source codes. <br>
+     * This method iterates through all source roots and filters out original paths to the source roots which has its delomboked "copy".
+     * @param projectRoot project root
+     * @return filtered source roots
+     */
+    private List<SourceRoot> getFilteredSourceRoot(ProjectRoot projectRoot) {
+        List<Path> delombokedOriginalRoots = new ArrayList<>();
+
+        for (SourceRoot sourceRoot : projectRoot.getSourceRoots()) {
+            Optional<Path> delombokPathOpt = getDelombokPath(sourceRoot.getRoot());
+
+            delombokPathOpt.ifPresent(delombokPath -> {
+                String delombokPathWithoutSuffix = delombokPath.toString().replace(DELOMBOK_SUFFIX, "");
+                delombokedOriginalRoots.add(Path.of(delombokPathWithoutSuffix));
+            });
+        }
+
+        return projectRoot.getSourceRoots().stream()
+                .filter(sourceRoot -> !delombokedOriginalRoots.contains(sourceRoot.getRoot()))
+                .toList();
+    }
+
+    private Optional<Path> getDelombokPath(Path sourceRoot) {
+        Path currentPath = sourceRoot;
+
+        while (currentPath != null) {
+            Path fileName = currentPath.getFileName();
+            if (fileName != null && fileName.toString().endsWith(DELOMBOK_SUFFIX)) {
+                return Optional.of(sourceRoot);
+            }
+
+            currentPath = currentPath.getParent();
+        }
+
+        return Optional.empty();
     }
 }

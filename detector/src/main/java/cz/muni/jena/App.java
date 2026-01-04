@@ -1,5 +1,6 @@
 package cz.muni.jena;
 
+import cz.muni.jena.configuration.prepare_plugin.PreparePluginConfig;
 import cz.muni.jena.inference.config.InferenceConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,12 +14,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableAsync
 @EnableTransactionManagement
 @ConfigurationPropertiesScan
-@EnableConfigurationProperties(InferenceConfiguration.class)
+@EnableConfigurationProperties({InferenceConfiguration.class, PreparePluginConfig.class})
 @CommandScan
-public class App
-{
-    public static void main(String[] args)
-    {
+public class App {
+    public static void main(String[] args) {
         SpringApplication.run(App.class, args);
     }
 }

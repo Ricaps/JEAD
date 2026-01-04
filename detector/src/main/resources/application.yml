@@ -51,3 +51,17 @@ inference:
         threshold: 1
         issue-type: GOD_DI_CLASS
 
+prepare-plugin:
+  maven-plugin:
+    group-id: "cz.muni.fi.jena"
+    artifact-id: "jena-maven-plugin"
+    version: @project.version@
+  gradle-plugin:
+    group-id: "cz.muni.fi.jena"
+    artifact-id: "jena-gradle-plugin"
+    version: @project.version@
+    plugin-id: "jena-gradle-plugin"
+  repository:
+    id: jena-github
+    # Repository pull token - it's safe to have it here until the GitHub repo is made public
+    url: https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3

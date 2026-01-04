@@ -6,44 +6,72 @@ It creates a database so Jena has where to store anti-pattern and metadata.
 After running the database you can run Jena using the main method.
 ### Project preparation
 Before using detectIssues command on project make use it has its dependencies exposed in target/dependency.
-For maven project use this plugin:
-```maven
+For maven project use this plugin (replace `current-jena-version` by the actual used versio of Jena):
+```xml
 <plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-dependency-plugin</artifactId>
-    <version>3.3.0</version>
+    <groupId>cz.muni.fi.jena</groupId>
+    <artifactId>jena-maven-plugin</artifactId>
+    <version>current-jena-version</version>
     <executions>
-        <execution>
-            <id>copy-dependencies</id>
-            <phase>package</phase>
-            <goals>
-                <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-                <outputDirectory>
-                Absolute path to project/target/dependency for example: 
-                D:/EnterpriseProjects/apollo/apollo-1.9.0//target/dependency
-                </outputDirectory>
-            </configuration>
-        </execution>
+      <execution>
+        <id>copy-dependencies</id>
+        <phase>package</phase>
+        <goals>
+          <goal>copy-dependencies</goal>
+        </goals>
+      </execution>
+      <execution>
+        <id>delombok</id>
+        <phase>package</phase>
+        <goals>
+          <goal>delombok</goal>
+        </goals>
+      </execution>
     </executions>
 </plugin>
 ```
-For Gradle use these tasks:
-```maven
-task copyDeps(type: Copy) {
-    from(sourceSets.main.runtimeClasspath)
-    into('target/dependency')
+You might need to add also plugin repository definition:
+```xml
+<pluginRepositories>
+    <pluginRepository>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <id>jena-github</id>
+      <url>https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3</url>
+    </pluginRepository>
+  </pluginRepositories>
+```
+
+For Gradle use these tasks (replace `<current-jena-version>` with actual Jena version used):
+```groovy
+buildscript {
+    repositories {
+        mavenLocal()
+        maven {
+            name = "jena-github"
+            url = uri('https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3')
+
+        }
+    }
+
+    dependencies {
+        classpath("cz.muni.fi.jena:jena-gradle-plugin:<current-jena-version>") {
+            changing = true
+        }
+    }
+    configurations.classpath {
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
 }
 
-task copyFlatDependencies(type: Copy) {
-    into 'target/dependency'
-    from {
-        subprojects.findAll { it.getSubprojects().isEmpty() }.
-                collect { it.configurations.runtimeClasspath }
-    }
-    duplicatesStrategy(DuplicatesStrategy.INCLUDE)
-}
+apply plugin: 'jena-gradle-plugin'
+
+compileJava.finalizedBy delombok
+compileJava.finalizedBy copyDependencies
 ```
 Jena's test require the dependencies of [antipatterns](../antipatterns), [AuthorizationServer](../AuthorizationServer),
 and [PowerMockUsage](../PowerMockUsage) to be exposed. You can ensure that happens by running Maven package on those modules.

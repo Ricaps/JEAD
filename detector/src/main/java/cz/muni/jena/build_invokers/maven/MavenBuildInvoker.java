@@ -11,16 +11,16 @@ import java.nio.file.Path;
 import java.util.List;
 
 @Component
-public class MavenInvoker extends AbstractBuildInvoker {
+public class MavenBuildInvoker extends AbstractBuildInvoker {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MavenInvoker.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MavenBuildInvoker.class);
     private static final String POM_XML = "pom.xml";
 
     @Override
     protected void run(@Nonnull Path path) {
         InvocationRequest invocationRequest = new DefaultInvocationRequest();
         invocationRequest.setPomFile(path.toFile());
-        invocationRequest.addArgs(List.of("clean", "install", "dependency:copy-dependencies", "-DskipTests", "-fae"));
+        invocationRequest.addArgs(List.of("clean", "package", "-DskipTests", "-fae"));
         invocationRequest.setQuiet(true);
 
         Invoker invoker = new DefaultInvoker();

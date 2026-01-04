@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'java-gradle-plugin'
+    id 'maven-publish'
+}
+
+group = 'cz.muni.fi.jena'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+def jenaV3RepoUrl = "https://maven.pkg.github.com/Ricaps/JenaV3"
+
+repositories {
+    mavenCentral()
+
+    maven {
+        name = "GitHub"
+        url = uri(jenaV3RepoUrl)
+        credentials {
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
+    mavenLocal()
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHub"
+            url = uri(jenaV3RepoUrl)
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+        mavenLocal()
+    }
+}
+
+gradlePlugin {
+    plugins {
+        jenaPlugin {
+            id = 'jena-gradle-plugin'
+            implementationClass = 'cz.muni.fi.jena.JenaGradlePlugin'
+        }
+    }
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation("cz.muni.fi.jena:jena-plugin-core:$version")
+}
+
+test {
+    useJUnitPlatform()
+}
