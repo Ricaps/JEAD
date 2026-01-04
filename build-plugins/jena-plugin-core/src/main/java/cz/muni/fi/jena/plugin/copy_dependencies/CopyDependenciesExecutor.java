@@ -55,6 +55,7 @@ public class CopyDependenciesExecutor {
         AtomicInteger count = new AtomicInteger();
         for (File artifact : artifacts) {
             try {
+                LOGGER.info("Copying dependency {}", artifact.getName());
                 Path newPath = Files.copy(artifact.toPath(), outputFolder.resolve(artifact.getName()), StandardCopyOption.REPLACE_EXISTING);
                 count.addAndGet(1);
                 LOGGER.info("Copied dependency {} to path {}", artifact.getName(), newPath);

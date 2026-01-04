@@ -76,6 +76,7 @@ class JenaDelombokTaskTest extends AbstractJenaGradleTaskTest {
     void testLombokJarNotFound() throws IOException {
         String taskArguments = String.format("%s {\n" +
                 "   lombokArtifact.artifactId = 'test' \n" +
+                "   failIfNotFound = true\n" +
                 "}\n", JenaGradlePlugin.DELOMBOK_TASK);
 
         String buildScript = getBuildScript(taskArguments);

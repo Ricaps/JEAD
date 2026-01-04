@@ -12,8 +12,9 @@ buildscript {
     }
 }
 
-apply plugin: '${plugin.pluginId}'
+allprojects {
+    apply plugin: '${plugin.pluginId}'
 
-compileJava.finalizedBy delombok
-compileJava.finalizedBy copyDependencies
+    jenaDelombok.dependsOn compileJava
+}
 // End of jena build script

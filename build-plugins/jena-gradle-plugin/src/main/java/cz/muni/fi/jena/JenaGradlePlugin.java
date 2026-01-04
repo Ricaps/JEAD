@@ -8,8 +8,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class JenaGradlePlugin implements Plugin<Project> {
 
-    public static final String DELOMBOK_TASK = "delombok";
-    public static final String COPY_DEPENDENCIES_TASK = "copyDependencies";
+    public static final String DELOMBOK_TASK = "jenaDelombok";
+    public static final String COPY_DEPENDENCIES_TASK = "jenaCopyDependencies";
 
     @Override
     public void apply(@NotNull Project target) {
