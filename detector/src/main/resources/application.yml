@@ -52,10 +52,15 @@ inference:
         issue-type: GOD_DI_CLASS
 
 prepare-plugin:
-  artifact:
+  maven-plugin:
     group-id: "cz.muni.fi.jena"
     artifact-id: "jena-maven-plugin"
     version: @project.version@
+  gradle-plugin:
+    group-id: "cz.muni.fi.jena"
+    artifact-id: "jena-gradle-plugin"
+    version: @project.version@
+    plugin-id: "jena-gradle-plugin"
   repository:
     id: jena-github
     # Repository pull token - it's safe to have it here until the GitHub repo is made public

@@ -1,0 +1,8 @@
+repositories {
+    mavenLocal()
+    maven {
+        name = "${repository.id}"
+        url = uri('${repository.url}')
+            ${repository.credentials}
+    }
+}

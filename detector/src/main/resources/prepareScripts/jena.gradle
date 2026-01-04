@@ -1,0 +1,19 @@
+// Jena build script
+
+buildscript {
+        ${plugin.repository}
+    dependencies {
+        classpath("${plugin.groupId}:${plugin.artifactId}:${plugin.version}") {
+            changing = true
+        }
+    }
+    configurations.classpath {
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+}
+
+apply plugin: '${plugin.pluginId}'
+
+compileJava.finalizedBy delombok
+compileJava.finalizedBy copyDependencies
+// End of jena build script

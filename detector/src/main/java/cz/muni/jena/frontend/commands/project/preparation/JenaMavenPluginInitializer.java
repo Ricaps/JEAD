@@ -51,13 +51,13 @@ public class JenaMavenPluginInitializer {
      * @param filesToVisit files to check for missing maven-jena-plugin
      */
     public void addPluginsToPomsMissingThem(PomAndGradleFiles filesToVisit) {
-        PreparePluginConfig.Artifact artifactConfig = preparePluginConfig.artifact();
+        PreparePluginConfig.MavenPlugin mavenPluginConfig = preparePluginConfig.mavenPlugin();
 
         for (String mavenFile : filesToVisit.mavenFiles()) {
             try {
                 Model mavenModel = parsePomXmlFileToMavenPomModel(mavenFile);
 
-                addJenaPlugin(mavenFile, artifactConfig, mavenModel);
+                addJenaPlugin(mavenFile, mavenPluginConfig, mavenModel);
                 addJenaPluginRepository(mavenFile, mavenModel);
                 addSettingsFile(mavenFile);
 
@@ -70,7 +70,7 @@ public class JenaMavenPluginInitializer {
         }
     }
 
-    private void addJenaPlugin(String mavenFile, PreparePluginConfig.Artifact artifactConfig, Model mavenModel) {
+    private void addJenaPlugin(String mavenFile, PreparePluginConfig.MavenPlugin mavenPluginConfig, Model mavenModel) {
         Build build = Optional.ofNullable(mavenModel.getBuild())
                 .orElse(new Build());
 
@@ -78,9 +78,9 @@ public class JenaMavenPluginInitializer {
         pluginOptional.ifPresent(plugin -> LOGGER.atInfo().log("{} already contains the plugin.", mavenFile));
 
         Plugin plugin = pluginOptional.orElse(new Plugin());
-        plugin.setGroupId(artifactConfig.groupId());
-        plugin.setArtifactId(artifactConfig.artifactId());
-        plugin.setVersion(artifactConfig.version());
+        plugin.setGroupId(mavenPluginConfig.groupId());
+        plugin.setArtifactId(mavenPluginConfig.artifactId());
+        plugin.setVersion(mavenPluginConfig.version());
 
         addExecution(COPY_DEPENDENCIES_GOAL, plugin);
         addExecution(DELOMBOK_GOAL, plugin);
@@ -162,8 +162,8 @@ public class JenaMavenPluginInitializer {
     private Optional<Plugin> getExistingPlugin(Build build) {
         return build.getPlugins().stream()
                 .filter(
-                        plugin -> preparePluginConfig.artifact().groupId().equals(plugin.getGroupId())
-                                && preparePluginConfig.artifact().artifactId().equals(plugin.getArtifactId())
+                        plugin -> preparePluginConfig.mavenPlugin().groupId().equals(plugin.getGroupId())
+                                && preparePluginConfig.mavenPlugin().artifactId().equals(plugin.getArtifactId())
                 ).findFirst();
     }
 

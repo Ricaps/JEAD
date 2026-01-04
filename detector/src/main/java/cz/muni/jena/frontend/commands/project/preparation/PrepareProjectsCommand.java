@@ -2,14 +2,12 @@ package cz.muni.jena.frontend.commands.project.preparation;
 
 import cz.muni.jena.build_invokers.ProjectBuildService;
 import jakarta.annotation.Nonnull;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -23,21 +21,6 @@ import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 public class PrepareProjectsCommand
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(PrepareProjectsCommand.class);
-    private static final String GRADLE_TASKS = """
-            task copyDeps(type: Copy) {
-                from(sourceSets.main.runtimeClasspath)
-                into('target/dependency')
-            }
-                        
-            task copyFlatDependencies(type: Copy) {
-                into 'target/dependency'
-                from {
-                    subprojects.findAll { it.getSubprojects().isEmpty() }.
-                            collect { it.configurations.runtimeClasspath }
-                }
-                duplicatesStrategy(DuplicatesStrategy.INCLUDE)
-            }
-            """;
     private static final String PREPARE_PROJECTS_DESCRIPTION = "Adds plugin to all Maven projects in directory and tasks" +
             " to all Gradle project in the directory.";
     private static final String DIRECTORY_PARAMETER_DESCRIPTION = "Absolute path to directory containing projects";
@@ -45,10 +28,12 @@ public class PrepareProjectsCommand
 
     private final ProjectBuildService projectBuildService;
     private final JenaMavenPluginInitializer jenaMavenPluginInitializer;
+    private final JenaGradlePluginInitializer jenaGradlePluginInitializer;
 
-    public PrepareProjectsCommand(ProjectBuildService projectBuildService, JenaMavenPluginInitializer jenaMavenPluginInitializer) {
+    public PrepareProjectsCommand(ProjectBuildService projectBuildService, JenaMavenPluginInitializer jenaMavenPluginInitializer, JenaGradlePluginInitializer jenaGradlePluginInitializer) {
         this.projectBuildService = projectBuildService;
         this.jenaMavenPluginInitializer = jenaMavenPluginInitializer;
+        this.jenaGradlePluginInitializer = jenaGradlePluginInitializer;
     }
 
     @Command(command = "prepareProjects", description = PREPARE_PROJECTS_DESCRIPTION)
@@ -72,7 +57,7 @@ public class PrepareProjectsCommand
                         filesToVisit.mavenFiles().stream()
                 )
                 .collect(Collectors.joining(System.lineSeparator())));
-        addTaskToGradleFiles(filesToVisit);
+        jenaGradlePluginInitializer.addTaskToGradleFiles(filesToVisit);
         jenaMavenPluginInitializer.addPluginsToPomsMissingThem(filesToVisit);
 
         if (buildProjects) {
@@ -80,31 +65,6 @@ public class PrepareProjectsCommand
         }
 
         return "The projects in directory: " + directory + "should now have the plugins and tasks needed.";
-    }
-
-    private void addTaskToGradleFiles(PomAndGradleFiles filesToVisit)
-    {
-        for (String gradleFile : filesToVisit.gradleFiles())
-        {
-            try
-            {
-                if (!FileUtils.readFileToString(new File(gradleFile), StandardCharsets.UTF_8).contains(GRADLE_TASKS))
-                {
-                    Files.write(
-                            Paths.get(gradleFile),
-                            GRADLE_TASKS.getBytes(),
-                            StandardOpenOption.APPEND
-                    );
-                    LOGGER.atInfo().log("Gradle tasks were added to file: " + gradleFile);
-                } else
-                {
-                    LOGGER.atInfo().log(gradleFile + " already contains the gradle tasks.");
-                }
-            } catch (IOException e)
-            {
-                LOGGER.atWarn().log("Jena was unable to access file: " + gradleFile);
-            }
-        }
     }
 
     private PomAndGradleFiles listFilesUsingFilesList(String dir) throws IOException
