@@ -39,8 +39,6 @@ class MultiServiceModel(InferenceModel):
         super().__init__(model_root_path)
         self.tokenizer: Optional[Callable[[Any], Any]] = None
         self.session: Optional[InferenceSession] = None
-        self.umap: Optional[UMAP] = None
-        self.hdbscan: Optional[HDBSCAN] = None
         self._access_lock = asyncio.Lock()
         self.__logger = logging.getLogger(self.__class__.__name__)
 
@@ -49,27 +47,11 @@ class MultiServiceModel(InferenceModel):
         async with self._access_lock:
             self.tokenizer = AutoTokenizer.from_pretrained(path)
             self.session = load_onnx(path.joinpath("model.onnx"))
-            self.umap = UMAP(
-                n_neighbors=5,
-                min_dist=0.0,
-                n_components=15,
-                metric="euclidean",
-                random_state=42,
-                init="random",
-            )
-            self.hdbscan = HDBSCAN(
-                min_samples=1,
-                min_cluster_size=3,
-                metric="euclidean",
-                allow_single_cluster=True,
-            )
 
     async def on_unload(self):
         async with self._access_lock:
             self.tokenizer = None
             self.session = None
-            self.umap = None
-            self.hdbscan = None
 
     async def execute(
         self, data: ModelInferenceRequestBatch
@@ -80,6 +62,15 @@ class MultiServiceModel(InferenceModel):
 
         results: list[ModelInferenceResult] = []
         for identifier, methods in mapped_batch:
+            if len(methods) < 10:
+                results.append(
+                    ModelInferenceResult(
+                        id=identifier,
+                        label_evaluation=[LabelEvaluation(label="clean", score=1)],
+                    )
+                )
+                continue
+
             async with self._access_lock:
                 inputs = self.tokenizer(
                     methods,
@@ -89,10 +80,11 @@ class MultiServiceModel(InferenceModel):
                     max_length=512,
                 )
                 raw_results = self.session.run(None, {k: v for k, v in inputs.items()})
-                embeddings = await self._get_mean_pooled_embeddings(inputs, raw_results)
-                embeddings = self._normalize_embeddings(embeddings)
-                embeddings = self._dimensional_reduction(embeddings)
-                clusters_count = self._get_number_of_clusters(embeddings)
+
+            embeddings = await self._get_mean_pooled_embeddings(inputs, raw_results)
+            embeddings = self._normalize_embeddings(embeddings)
+            embeddings = self._dimensional_reduction(embeddings)
+            clusters_count = self._get_number_of_clusters(embeddings)
 
             if clusters_count <= 2:
                 label_evaluation = LabelEvaluation(label="clean", score=1)
@@ -133,11 +125,34 @@ class MultiServiceModel(InferenceModel):
     def get_model_input(request: InputRequest) -> list[str]:
         return list(map(lambda method: method.signature, request.methods))
 
-    def _dimensional_reduction(self, embeddings: np.ndarray):
-        return self.umap.fit_transform(embeddings)
+    @staticmethod
+    def _dimensional_reduction(embeddings: np.ndarray):
+        n_samples = embeddings.shape[0]
+        if n_samples <= 2:
+            return embeddings
 
-    def _get_number_of_clusters(self, embeddings: np.ndarray) -> int:
-        labels = self.hdbscan.fit_predict(embeddings)
+        n_neighbors = 5
+        if n_samples <= n_neighbors:
+            n_neighbors = n_samples - 1
+
+        umap = UMAP(
+            n_neighbors=n_neighbors,
+            min_dist=0.0,
+            n_components=15,
+            metric="euclidean",
+            init="random",
+        )
+        return umap.fit_transform(embeddings)
+
+    @staticmethod
+    def _get_number_of_clusters(embeddings: np.ndarray) -> int:
+        hdbscan = HDBSCAN(
+            min_samples=1,
+            min_cluster_size=3,
+            metric="euclidean",
+            allow_single_cluster=True,
+        )
+        labels = hdbscan.fit_predict(embeddings)
         unique_labels = set(labels)
         labels_count = len(unique_labels) - (1 if -1 in unique_labels else 0)
 
