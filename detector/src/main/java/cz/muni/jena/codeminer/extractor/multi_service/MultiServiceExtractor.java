@@ -9,6 +9,7 @@ import cz.muni.jena.codeminer.extractor.god_di.metrics.LackOfCohesionOfMethodsMe
 import cz.muni.jena.codeminer.extractor.multi_service.model.MultiServiceMethods;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.frontend.commands.commands.CommandSettingsMap;
+import cz.muni.jena.issue.language.elements.NodeWithAnnotation;
 import cz.muni.jena.util.NodeUtil;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +30,11 @@ public class MultiServiceExtractor extends BaseCodeExtractor<MultiServiceMethods
 
     @Override
     public Stream<MultiServiceMethods> extract(ClassOrInterfaceDeclaration classOrInterface, Configuration configuration, CommandSettingsMap commandSettingsMap) {
+        NodeWithAnnotation<ClassOrInterfaceDeclaration> nodeWithAnnotation = new NodeWithAnnotation<>(classOrInterface);
+        if (!nodeWithAnnotation.hasAnyOfTheseAnnotations(configuration.diConfiguration().beanAnnotations())) {
+            return Stream.of();
+        }
+
         int cohesion = lcomCalculator.extractMetric(classOrInterface, configuration);
 
         return Stream.of(classOrInterface).map(classOrInterfaceDeclaration -> {

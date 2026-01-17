@@ -5,7 +5,7 @@ from aiopath import AsyncPath
 from typing import Optional, Any, Callable
 import logging
 
-from onnxruntime import InferenceSession, get_available_providers, preload_dlls
+from onnxruntime import InferenceSession
 from pydantic import BaseModel
 
 from inference_server.ml_models.inference_model import InferenceModel
@@ -21,6 +21,7 @@ from transformers import (
 )
 
 from inference_server.model.validation import validate_model_and_get
+from inference_server.util.onnx_util import load_onnx
 
 
 class InputRequest(BaseModel):
@@ -93,12 +94,7 @@ class CommentsModel(InferenceModel):
             self.session = None
 
     async def on_load(self):
-        self.__logger.info(f"Available providers: {get_available_providers()}")
-        preload_dlls()
         path = self._model_root_path.joinpath(CommentsModel.SUBFOLDER_NAME)
         async with self._access_lock:
             self.tokenizer = AutoTokenizer.from_pretrained(path)
-            self.session = InferenceSession(
-                path.joinpath("model.onnx"),
-                providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
-            )
+            self.session = load_onnx(path.joinpath("model.onnx"))
