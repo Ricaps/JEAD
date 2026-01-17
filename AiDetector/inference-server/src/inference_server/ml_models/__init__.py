@@ -7,5 +7,5 @@ model_type_registry = {
     "comments-model": CommentsModel,
     "god-di-model": GodDiModel,
     "test-model": TestModel,
-    "multiservice-model": MultiServiceModel,
+    "multi-service-model": MultiServiceModel,
 }
