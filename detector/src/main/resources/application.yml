@@ -30,6 +30,10 @@ inference:
       model-name: god-di-model
       batch-size: 30
       batch-period: 100
+    - &multi-service-model
+      model-name: multi-service-model
+      batch-size: 30
+      batch-period: 100
 
   detectors:
   - detector-name: technical-debt
@@ -50,6 +54,14 @@ inference:
       - label-name: "god_di"
         threshold: 1
         issue-type: GOD_DI_CLASS
+
+  - detector-name: multi-service
+    extractor: multi-service
+    model: *multi-service-model
+    evaluations:
+      - label-name: "multi_service"
+        threshold: 1
+        issue-type: MULTI_SERVICE
 
 prepare-plugin:
   maven-plugin:

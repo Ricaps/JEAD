@@ -87,7 +87,7 @@ class GodDiModel(InferenceModel):
             self.session = None
 
     async def on_load(self):
-        path = self._model_root_path.joinpath(GodDiModel.SUBFOLDER_NAME).path.joinpath(
+        path = self._model_root_path.joinpath(GodDiModel.SUBFOLDER_NAME).joinpath(
             "model.onnx"
         )
         async with self._access_lock:
