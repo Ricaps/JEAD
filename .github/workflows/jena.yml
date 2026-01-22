@@ -12,6 +12,7 @@ on:
 
 env:
   M2_CACHE_KEY: m2_cache
+  BUILD_PLUGINS_DIRECTORY: ./build-plugins
 
 jobs:
   build-and-publish-maven:
@@ -36,17 +37,17 @@ jobs:
           .github/scripts/calculate-version.sh
 
       - name: Set the plugins version
+        working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}
         run: ../mvnw --batch-mode versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
 
       - name: Run integration tests & install
-        working-directory: ./build-plugins
+        working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}
         run: ../mvnw --batch-mode install
       
       - name: Publish jena-plugin-core & jena-maven-plugin
         if: startsWith(github.ref, 'refs/tag/v')
-        working-directory: ./build-plugins
-        run: |
-          ../mvnw --batch-mode deploy -DskipTests
+        working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}
+        run: ../mvnw --batch-mode deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -88,18 +89,18 @@ jobs:
           .github/scripts/calculate-version.sh
 
       - name: Setup Gradle Wrapper
-        working-directory: ./build-plugins/jena-gradle-plugin
+        working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}/jena-gradle-plugin
         run: chmod +x ./gradlew
 
       - name: Run tests
-        working-directory: ./build-plugins/jena-gradle-plugin
+        working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}/jena-gradle-plugin
         run: ./gradlew test -Pversion=${{ env.VERSION }} --no-daemon
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish jena-gradle-plugin
         if: startsWith(github.ref, 'refs/tag/v')
-        working-directory: ./build-plugins/jena-gradle-plugin
+        working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}/jena-gradle-plugin
         run: |
           ./gradlew publish -x test -Pversion=${{ env.VERSION }} --no-daemon
           ./gradlew publishToMavenLocal -x test -Pversion=${{ env.VERSION }} --no-daemon
