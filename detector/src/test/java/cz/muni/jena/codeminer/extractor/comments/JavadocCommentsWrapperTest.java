@@ -1,17 +1,17 @@
 package cz.muni.jena.codeminer.extractor.comments;
 
-import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.javadoc.Javadoc;
 import com.github.javaparser.javadoc.JavadocBlockTag;
 import cz.muni.jena.codeminer.extractor.comments.model.Comment;
+import cz.muni.jena.test_data.JavadocCommentsTestClass;
 import cz.muni.jena.util.NodeUtil;
+import cz.muni.jena.utils.ParserTest;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class JavadocCommentsWrapperTest {
 
     public static final String FULLY_QUALIFIED_NAME = "Some qualified name";
-    private static final Path CLASS_PATH = Path.of("src/test/java/cz/muni/jena/test_data/JavadocCommentsTestClass.java");
     private static final Set<JavadocBlockTag.Type> filteredTags = Set.of(JavadocBlockTag.Type.AUTHOR, JavadocBlockTag.Type.UNKNOWN);
     private static final String DUMMY_METHOD = "dummyMethod";
     private static final String FORMAT_METHOD = "formatMethodComment";
@@ -36,8 +35,8 @@ class JavadocCommentsWrapperTest {
     private Integer dummyMethodStartLine;
 
     @BeforeEach
-    void setup() throws IOException {
-        CompilationUnit compilationUnit = StaticJavaParser.parse(CLASS_PATH);
+    void setup() {
+        ClassOrInterfaceDeclaration compilationUnit = ParserTest.getParsedClass(JavadocCommentsTestClass.class);
         List<com.github.javaparser.ast.comments.Comment> allContainedComments = compilationUnit.getAllContainedComments();
         dummyMethodCommentsWrapper = new JavadocCommentsWrapper(FULLY_QUALIFIED_NAME, getJavadocOfMethod(DUMMY_METHOD, allContainedComments));
         formatMethodCommentsWrapper = new JavadocCommentsWrapper(FULLY_QUALIFIED_NAME, getJavadocOfMethod(FORMAT_METHOD, allContainedComments));

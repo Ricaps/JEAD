@@ -1,13 +1,12 @@
 package cz.muni.jena.codeminer.extractor.comments;
 
-import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import cz.muni.jena.codeminer.extractor.comments.model.Comment;
+import cz.muni.jena.test_data.LineCommentsParserTestClass;
+import cz.muni.jena.utils.ParserTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class LineCommentsWrapperTest {
 
-    private static final String TEST_CLASS_PATH = "src/test/java/cz/muni/jena/test_data/LineCommentsParserTestClass.java";
     private static final String A_LOT_OF_SPACES_COMMENT = "a lot of spaces";
     private static final String SIMILARITY_MATCHER_COMMENT = "public EditDistance<?> similarityMatcher()";
     private List<com.github.javaparser.ast.comments.Comment> allContainedComments;
@@ -26,8 +24,8 @@ class LineCommentsWrapperTest {
 
 
     @BeforeEach
-    void setup() throws IOException {
-        CompilationUnit compilationUnit = StaticJavaParser.parse(Path.of(TEST_CLASS_PATH));
+    void setup(){
+        ClassOrInterfaceDeclaration compilationUnit = ParserTest.getParsedClass(LineCommentsParserTestClass.class);
 
         allContainedComments = compilationUnit.getAllContainedComments();
         allContainedComments.sort(CommentUtils.getLineSortComparator());

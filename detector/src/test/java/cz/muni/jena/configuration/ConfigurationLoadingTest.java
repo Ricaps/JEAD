@@ -10,8 +10,12 @@ import cz.muni.jena.configuration.security.EncryptionAlgorithm;
 import cz.muni.jena.configuration.security.SecurityConfiguration;
 import cz.muni.jena.configuration.security.TokenLifetimeSettings;
 import cz.muni.jena.configuration.service_layer.ServiceLayerConfiguration;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +26,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 
 class ConfigurationLoadingTest {
-    private static final String TEST_CONFIGURATION_PATH = "./src/test/java/cz/muni/jena/configuration/testConfiguration";
+    private static String TEST_CONFIGURATION_PATH;
+
+    @BeforeAll
+    public static void setup() throws URISyntaxException {
+        URL resourceUrl = ConfigurationLoadingTest.class.getResource("/testConfiguration");
+
+        if (resourceUrl == null) {
+            throw new IllegalStateException("Cannot find resource testConfiguration");
+        }
+
+        TEST_CONFIGURATION_PATH = Paths.get(resourceUrl.toURI()).toString();
+    }
 
     @Test
     void jsonToAnnotationTest() {
