@@ -77,6 +77,7 @@ jobs:
         id: restore-cache
         uses: actions/cache/restore@v5.0.2
         with:
+          path: ~/.m2
           key: ${{ env.M2_CACHE_KEY }}-${{ github.sha }}
 
       - name: Calculate Version
@@ -102,6 +103,13 @@ jobs:
           ./gradlew publishToMavenLocal -x test -Pversion=${{ env.VERSION }} --no-daemon
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Maven local
+        id: cache
+        uses: actions/cache/save@v5.0.2
+        with:
+          path: ~/.m2
+          key: ${{ env.M2_CACHE_KEY }}-${{ github.sha }}
 
   build-jena:
     needs:
