@@ -5,6 +5,8 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+version = '1.0-SNAPSHOT'
+
 repositories {
     mavenCentral()
     mavenLocal()
@@ -28,7 +30,7 @@ buildscript {
 }
 
     dependencies {
-        classpath("cz.muni.fi.jena:jena-gradle-plugin:1.0-SNAPSHOT") {
+        classpath("cz.muni.fi.jena:jena-gradle-plugin:$version") {
             changing = true
         }
     }

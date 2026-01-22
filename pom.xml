@@ -33,4 +33,12 @@
         <maven.compiler.target>17</maven.compiler.target>
         <java.version>17</java.version>
     </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub JenaV3 Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/Ricaps/JenaV3</url>
+        </repository>
+    </distributionManagement>
 </project>
