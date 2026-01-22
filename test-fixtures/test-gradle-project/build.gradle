@@ -5,7 +5,6 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -20,14 +19,15 @@ dependencies {
 // Jena build script
 
 buildscript {
-        repositories {
-    mavenLocal()
-    maven {
-        name = "jena-github"
-        url = uri('https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3')
-            
+    println "Using Jena plugin version: $version"
+
+    repositories {
+        mavenLocal()
+        maven {
+            name = "jena-github"
+            url = uri('https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3')
+        }
     }
-}
 
     dependencies {
         classpath("cz.muni.fi.jena:jena-gradle-plugin:$version") {

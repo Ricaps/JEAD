@@ -56,6 +56,7 @@
                             <executable>./gradlew</executable>
                             <arguments>
                                 <argument>clean</argument>
+                                <argument>-Pversion=${project.version}</argument>
                             </arguments>
                         </configuration>
                     </execution>
