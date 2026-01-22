@@ -35,7 +35,7 @@ jobs:
         uses: actions/cache@v5.0.2
         with:
           path: ~/.m2
-          key: ${{ env.M2_CACHE_KEY }}-${{ github.job }}
+          key: ${{ env.M2_CACHE_KEY }}-${{ github.run_id }}-${{ github.job }}
           restore-keys: ${{ env.M2_CACHE_KEY }}
           
       - name: Calculate Version
@@ -52,7 +52,7 @@ jobs:
         run: ../mvnw --batch-mode install
       
       - name: Publish jena-plugin-core & jena-maven-plugin
-        if: startsWith(github.ref, 'refs/tag/v')
+        if: startsWith(github.ref, 'refs/tags/v')
         working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}
         run: ../mvnw --batch-mode deploy -DskipTests
         env:
@@ -79,7 +79,7 @@ jobs:
         uses: actions/cache@v5.0.2
         with:
           path: ~/.m2
-          key: ${{ env.M2_CACHE_KEY }}-${{ github.job }}
+          key: ${{ env.M2_CACHE_KEY }}-${{ github.run_id }}-${{ github.job }}
           restore-keys: ${{ env.M2_CACHE_KEY }}
 
       - name: Calculate Version
@@ -102,7 +102,7 @@ jobs:
         run: ./gradlew publishToMavenLocal -x test -Pversion=${{ env.VERSION }} --no-daemon
 
       - name: Publish jena-gradle-plugin
-        if: startsWith(github.ref, 'refs/tag/v')
+        if: startsWith(github.ref, 'refs/tags/v')
         working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}/jena-gradle-plugin
         run: |
           ./gradlew publish -x test -Pversion=${{ env.VERSION }} --no-daemon
@@ -138,7 +138,7 @@ jobs:
       uses: actions/cache@v5.0.2
       with:
         path: ~/.m2
-        key: ${{ env.M2_CACHE_KEY }}-${{ github.job }}
+        key: ${{ env.M2_CACHE_KEY }}-${{ github.run_id }}-${{ github.job }}
         restore-keys: ${{ env.M2_CACHE_KEY }}
 
     - name: Setup wrapper
