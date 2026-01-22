@@ -35,11 +35,7 @@ jobs:
           chmod +x .github/scripts/calculate-version.sh
           .github/scripts/calculate-version.sh
 
-      - name: Run integration tests
-        working-directory: ./build-plugins
-        run: ../mvnw --batch-mode verify
-
-      - name: Install to Maven local
+      - name: Run integration tests & install
         working-directory: ./build-plugins
         run: ../mvnw --batch-mode install
       
@@ -54,10 +50,10 @@ jobs:
 
       - name: Cache Maven local
         id: cache
-        uses: actions/cache@v5.0.2
+        uses: actions/cache/save@v5.0.2
         with:
           path: ~/.m2
-          key: ${{ env.M2_CACHE_KEY }}
+          key: ${{ env.M2_CACHE_KEY }}-${{ github.sha }}
         
 
   build-and-publish-gradle:
@@ -79,9 +75,9 @@ jobs:
 
       - name: Restore Cache Maven local
         id: restore-cache
-        uses: actions/cache@v5.0.2
+        uses: actions/cache/restore@v5.0.2
         with:
-          key: ${{ env.M2_CACHE_KEY }}
+          key: ${{ env.M2_CACHE_KEY }}-${{ github.sha }}
 
       - name: Calculate Version
         run: |
@@ -134,9 +130,9 @@ jobs:
 
     - name: Restore Cache Maven local
       id: restore-cache
-      uses: actions/cache@v5.0.2
+      uses: actions/cache/restore@v5.0.2
       with:
-        key: ${{ env.M2_CACHE_KEY }}
+        key: ${{ env.M2_CACHE_KEY }}-${{ github.sha }}
 
     - name: Setup wrapper
       run: chmod +x mvnw
