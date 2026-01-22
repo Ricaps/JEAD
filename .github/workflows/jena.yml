@@ -11,7 +11,7 @@ on:
       - master
 
 env:
-  M2_CACHE_KEY: m2_cache
+  M2_CACHE_KEY: m2-${{ github.sha }}
   BUILD_PLUGINS_DIRECTORY: ./build-plugins
 
 jobs:
@@ -31,6 +31,13 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Cache Maven local
+        uses: actions/cache@v5.0.2
+        with:
+          path: ~/.m2
+          key: ${{ env.M2_CACHE_KEY }}-hashFiles('**/pom.xml')
+          restore-keys: ${{ env.M2_CACHE_KEY }}
+          
       - name: Calculate Version
         run: |
           chmod +x .github/scripts/calculate-version.sh
@@ -49,15 +56,7 @@ jobs:
         working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}
         run: ../mvnw --batch-mode deploy -DskipTests
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Cache Maven local
-        id: cache
-        uses: actions/cache/save@v5.0.2
-        with:
-          path: ~/.m2
-          key: ${{ env.M2_CACHE_KEY }}-${{ github.sha }}
-        
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        
 
   build-and-publish-gradle:
     needs: build-and-publish-maven
@@ -76,12 +75,12 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Restore Cache Maven local
-        id: restore-cache
-        uses: actions/cache/restore@v5.0.2
+      - name: Cache Maven local
+        uses: actions/cache@v5.0.2
         with:
           path: ~/.m2
-          key: ${{ env.M2_CACHE_KEY }}-${{ github.sha }}
+          key: ${{ env.M2_CACHE_KEY }}-hashFiles('**/pom.xml')
+          restore-keys: ${{ env.M2_CACHE_KEY }}
 
       - name: Calculate Version
         run: |
@@ -106,14 +105,7 @@ jobs:
           ./gradlew publishToMavenLocal -x test -Pversion=${{ env.VERSION }} --no-daemon
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Cache Maven local
-        id: cache
-        uses: actions/cache/save@v5.0.2
-        with:
-          path: ~/.m2
-          key: ${{ env.M2_CACHE_KEY }}-${{ github.sha }}
-
+          
   build-jena:
     needs:
       - build-and-publish-maven
@@ -139,11 +131,12 @@ jobs:
         distribution: 'oracle'
         cache: maven
 
-    - name: Restore Cache Maven local
-      id: restore-cache
-      uses: actions/cache/restore@v5.0.2
+    - name: Cache Maven local
+      uses: actions/cache@v5.0.2
       with:
-        key: ${{ env.M2_CACHE_KEY }}-${{ github.sha }}
+        path: ~/.m2
+        key: ${{ env.M2_CACHE_KEY }}-hashFiles('**/pom.xml')
+        restore-keys: ${{ env.M2_CACHE_KEY }}
 
     - name: Setup wrapper
       run: chmod +x mvnw
