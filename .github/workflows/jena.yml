@@ -11,7 +11,7 @@ on:
       - master
 
 env:
-  - M2_CACHE_KEY: m2_cache
+  M2_CACHE_KEY: m2_cache
 
 jobs:
   build-and-publish-maven:
