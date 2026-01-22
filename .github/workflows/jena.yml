@@ -35,7 +35,7 @@ jobs:
         uses: actions/cache@v5.0.2
         with:
           path: ~/.m2
-          key: ${{ env.M2_CACHE_KEY }}-${{ github.run_id }}
+          key: ${{ env.M2_CACHE_KEY }}-${{ github.job }}
           restore-keys: ${{ env.M2_CACHE_KEY }}
           
       - name: Calculate Version
@@ -79,7 +79,7 @@ jobs:
         uses: actions/cache@v5.0.2
         with:
           path: ~/.m2
-          key: ${{ env.M2_CACHE_KEY }}-${{ github.run_id }}
+          key: ${{ env.M2_CACHE_KEY }}-${{ github.job }}
           restore-keys: ${{ env.M2_CACHE_KEY }}
 
       - name: Calculate Version
@@ -138,7 +138,7 @@ jobs:
       uses: actions/cache@v5.0.2
       with:
         path: ~/.m2
-        key: ${{ env.M2_CACHE_KEY }}-${{ github.run_id }}
+        key: ${{ env.M2_CACHE_KEY }}-${{ github.job }}
         restore-keys: ${{ env.M2_CACHE_KEY }}
 
     - name: Setup wrapper
