@@ -35,7 +35,7 @@ jobs:
         uses: actions/cache@v5.0.2
         with:
           path: ~/.m2
-          key: ${{ env.M2_CACHE_KEY }}-${{ hashFiles('**/pom.xml') }}
+          key: ${{ env.M2_CACHE_KEY }}-${{ github.run_id }}
           restore-keys: ${{ env.M2_CACHE_KEY }}
           
       - name: Calculate Version
@@ -79,7 +79,7 @@ jobs:
         uses: actions/cache@v5.0.2
         with:
           path: ~/.m2
-          key: ${{ env.M2_CACHE_KEY }}-${{ hashFiles('**/pom.xml') }}
+          key: ${{ env.M2_CACHE_KEY }}-${{ github.run_id }}
           restore-keys: ${{ env.M2_CACHE_KEY }}
 
       - name: Calculate Version
@@ -97,12 +97,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Publish to Maven Local
+        working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}/jena-gradle-plugin
+        run: ./gradlew publishToMavenLocal -x test -Pversion=${{ env.VERSION }} --no-daemon
+
       - name: Publish jena-gradle-plugin
         if: startsWith(github.ref, 'refs/tag/v')
         working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}/jena-gradle-plugin
         run: |
           ./gradlew publish -x test -Pversion=${{ env.VERSION }} --no-daemon
-          ./gradlew publishToMavenLocal -x test -Pversion=${{ env.VERSION }} --no-daemon
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
@@ -135,7 +138,7 @@ jobs:
       uses: actions/cache@v5.0.2
       with:
         path: ~/.m2
-        key: ${{ env.M2_CACHE_KEY }}-${{ hashFiles('**/pom.xml') }}
+        key: ${{ env.M2_CACHE_KEY }}-${{ github.run_id }}
         restore-keys: ${{ env.M2_CACHE_KEY }}
 
     - name: Setup wrapper
