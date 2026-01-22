@@ -11,12 +11,11 @@ import java.io.File;
 import java.util.List;
 
 import static cz.muni.jena.Preconditions.verifyCorrectWorkingDirectory;
+import static cz.muni.jena.utils.TestFixtures.ANTIPATTERNS_PROJECT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ExposedSensitiveInformationDetectorTest
 {
-    private static final String ANTIPATTERNS_PROJECT = ".." + File.separator + "antipatterns";
-
     @Test
     void configurationLocationTest()
     {
@@ -45,8 +44,7 @@ class ExposedSensitiveInformationDetectorTest
                                 10,
                                 String.join(
                                         File.separator,
-                                        "..",
-                                        "antipatterns",
+                                        ANTIPATTERNS_PROJECT,
                                         "src",
                                         "main",
                                         "resources",
@@ -58,8 +56,7 @@ class ExposedSensitiveInformationDetectorTest
                                 11,
                                 String.join(
                                         File.separator,
-                                        "..",
-                                        "antipatterns",
+                                        ANTIPATTERNS_PROJECT,
                                         "src",
                                         "main",
                                         "resources",

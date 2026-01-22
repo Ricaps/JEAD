@@ -1,0 +1,47 @@
+apply plugin: 'java'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
+}
+
+// Jena build script
+
+buildscript {
+    println "Using Jena plugin version: $version"
+
+    repositories {
+        mavenLocal()
+        maven {
+            name = "jena-github"
+            url = uri('https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3')
+        }
+    }
+
+    dependencies {
+        classpath("cz.muni.fi.jena:jena-gradle-plugin:$version") {
+            changing = true
+        }
+    }
+    configurations.classpath {
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+}
+
+allprojects {
+    apply plugin: 'jena-gradle-plugin'
+
+    jenaDelombok.dependsOn compileJava
+}
+// End of jena build script

@@ -6,7 +6,7 @@ import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.IssueDetectorTester;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import static cz.muni.jena.utils.TestFixtures.POWER_MOCK_USAGE_PROJECT;
 
 class InappropriateMockingDetectorTest extends IssueDetectorTester
 {
@@ -48,7 +48,7 @@ class InappropriateMockingDetectorTest extends IssueDetectorTester
                 },
                 new InappropriateMethodMockingDetector(),
                 Configuration.readConfiguration(),
-                ".." + File.separator + "PowerMockUsage"
+                POWER_MOCK_USAGE_PROJECT
         );
     }
 }

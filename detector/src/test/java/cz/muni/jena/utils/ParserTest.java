@@ -17,7 +17,7 @@ import java.util.Optional;
 public class ParserTest {
 
     public static final Path PROJECT_ROOT_PATH = Path.of(System.getProperty("user.dir"));
-    public static final Path TEST_SOURCES_ROOT_PATH = Path.of("src/test/java").toAbsolutePath();
+    public static final Path TEST_SOURCES_ROOT_PATH = PROJECT_ROOT_PATH.resolve("src/test/java").toAbsolutePath();
 
     private ParserTest() {
         super();
@@ -25,7 +25,6 @@ public class ParserTest {
 
     public static ClassOrInterfaceDeclaration getParsedClass(Class<?> clazz) {
         Preconditions.verifyCorrectWorkingDirectory();
-
         ProjectRoot projectRoot = getProjectRoot();
 
         SourceRoot sourceRoot = projectRoot

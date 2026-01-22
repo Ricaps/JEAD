@@ -11,7 +11,6 @@ import cz.muni.jena.issue.detectors.compilation_unit.dependency.DIIssueDetector;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
 import cz.muni.jena.parser.IssueDetectorCallback;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,12 +18,12 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static cz.muni.jena.Preconditions.verifyCorrectWorkingDirectory;
+import static cz.muni.jena.utils.TestFixtures.ANTIPATTERNS_PROJECT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 public class IssueDetectorTester
 {
-    private static final String ANTIPATTERNS_PROJECT = ".." + File.separator + "antipatterns";
 
     public void verifyDetectorFindsIssues(Issue[] issuesExpected, DIIssueDetector detector, DIConfiguration configuration)
     {

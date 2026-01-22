@@ -3,7 +3,7 @@ services:
     environment:
       PORT: 5002
     extends:
-      file: AiDetector/inference-server/compose.cpu.yaml
+      file: ai-detector/inference-server/compose.cpu.yaml
       service: inference-server-cpu
     ports:
       - "5002:5002"
