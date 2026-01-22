@@ -42,7 +42,7 @@
                             <arguments>
                                 <argument>build</argument>
                                 <argument>jenaCopyDependencies</argument>
-                                <argument>-Dversion=${project.version}</argument>
+                                <argument>-Pversion=${project.version}</argument>
                             </arguments>
                         </configuration>
                     </execution>
