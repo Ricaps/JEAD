@@ -35,6 +35,9 @@ jobs:
           chmod +x .github/scripts/calculate-version.sh
           .github/scripts/calculate-version.sh
 
+      - name: Set the plugins version
+        run: ../mvnw --batch-mode versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
+
       - name: Run integration tests & install
         working-directory: ./build-plugins
         run: ../mvnw --batch-mode install
@@ -43,7 +46,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tag/v')
         working-directory: ./build-plugins
         run: |
-          ../mvnw --batch-mode versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
           ../mvnw --batch-mode deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
