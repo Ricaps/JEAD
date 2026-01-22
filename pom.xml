@@ -9,15 +9,28 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
+        <module>test-fixtures</module>
         <module>detector</module>
-        <module>antipatterns</module>
-        <module>PowerMockUsage</module>
-        <module>AuthorizationServer</module>
         <module>build-plugins</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>with-test-fixtures</id>
+            <activation>
+                <property>
+                    <name>!skipTests</name>
+                </property>
+            </activation>
+            <modules>
+                <module>test-fixtures</module>
+            </modules>
+        </profile>
+    </profiles>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <java.version>17</java.version>
     </properties>
 </project>

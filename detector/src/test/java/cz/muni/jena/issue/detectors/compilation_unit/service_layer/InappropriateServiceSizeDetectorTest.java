@@ -8,12 +8,10 @@ import cz.muni.jena.issue.detectors.IssueDetectorTester;
 import cz.muni.jena.issue.detectors.compilation_unit.IssueDetector;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import static cz.muni.jena.utils.TestFixtures.ANTIPATTERNS_PROJECT;
 
 class InappropriateServiceSizeDetectorTest extends IssueDetectorTester
 {
-    private static final String ANTIPATTERNS_PROJECT = ".." + File.separator + "antipatterns";
-
     @Test
     void inappropriateServiceSizeDetectorTest()
     {

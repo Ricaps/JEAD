@@ -10,7 +10,7 @@ env:
   ADDRESS: 0.0.0.0
   PORT: 8080
   MODELS_ROOT: dummy-path
-  PROJECT_PATH: ./AiDetector/inference-server
+  PROJECT_PATH: ./ai-detector/inference-server
   POETRY_VERSION: 2.2.1
   PYTHON_VERSION: 3.13
 

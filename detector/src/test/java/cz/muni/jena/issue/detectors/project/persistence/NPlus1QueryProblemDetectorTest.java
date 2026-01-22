@@ -8,16 +8,14 @@ import cz.muni.jena.issue.detectors.project.NPlus1QueryProblemDetector;
 import cz.muni.jena.issue.detectors.project.ProjectIssueDetector;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.util.List;
 
 import static cz.muni.jena.Preconditions.verifyCorrectWorkingDirectory;
+import static cz.muni.jena.utils.TestFixtures.ANTIPATTERNS_PROJECT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class NPlus1QueryProblemDetectorTest extends IssueDetectorTester
 {
-    private static final String ANTIPATTERNS_PROJECT = ".." + File.separator + "antipatterns";
-
     @Test
     void nPlus1QueryProblemDetectorTest()
     {

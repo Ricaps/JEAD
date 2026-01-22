@@ -11,7 +11,7 @@ import java.util.*;
 
 public class FolderDependenciesFinder implements DependenciesFinder {
 
-    private static final PathMatcher TARGET_DEPENDENCY_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**/target/dependency/**.jar");
+    private static final PathMatcher TARGET_DEPENDENCY_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**/target/dependencies/**.jar");
 
     @Override
     public List<JarTypeSolver> findJarTypeSolvers(String projectPath) {

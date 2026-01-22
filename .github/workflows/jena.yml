@@ -30,12 +30,11 @@ jobs:
         java-version: '17'
         distribution: 'oracle'
         cache: maven
+    - name: Setup wrapper
+      run: chmod +x mvnw
+
     - name: Build Maven projects
       run: mvn -B package --file pom.xml -DskipTests
-
-    - name: Build TestGradle project
-      working-directory: ./TestGradleProject
-      run: ./gradlew build --no-daemon && ./gradlew copyDeps
 
     - name: Run unit tests
       working-directory: ./detector

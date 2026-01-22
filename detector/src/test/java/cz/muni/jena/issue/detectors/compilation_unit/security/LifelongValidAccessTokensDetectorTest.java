@@ -8,11 +8,10 @@ import cz.muni.jena.issue.detectors.compilation_unit.IssueDetector;
 import cz.muni.jena.issue.detectors.compilation_unit.security.token_lifetime.LifelongValidAccessTokensDetector;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import static cz.muni.jena.utils.TestFixtures.AUTHORIZATION_SERVER_PROJECT;
 
 class LifelongValidAccessTokensDetectorTest extends IssueDetectorTester
 {
-    private static final String AUTHORIZATION_SERVER_PROJECT = ".." + File.separator + "AuthorizationServer";
 
     @Test
     void lifelongValidAccessTokensDetectorTest()

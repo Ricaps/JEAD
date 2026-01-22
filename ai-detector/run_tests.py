@@ -1,5 +1,6 @@
 import unittest
 
+
 def run_unittests(test_path=".", pattern="test_*.py", verbosity=2):
     """
     Discover and run unittests in the given directory.
@@ -14,7 +15,6 @@ def run_unittests(test_path=".", pattern="test_*.py", verbosity=2):
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
     return runner.run(suite)
-
 
 
 if __name__ == "__main__":
