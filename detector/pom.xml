@@ -12,8 +12,6 @@
     <artifactId>detector</artifactId>
     <properties>
         <mockito.version>5.2.0</mockito.version>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
         <grpc.version>1.74.0</grpc.version>
         <spring.grpc.version>0.11.0</spring.grpc.version>
         <protobuf-java.version>4.31.1</protobuf-java.version>
