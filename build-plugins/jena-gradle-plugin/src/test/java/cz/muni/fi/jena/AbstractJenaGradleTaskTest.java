@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public abstract class AbstractJenaGradleTaskTest {
 
+    public static final String JAVA_11_COMPATIBLE_GRADLE = "8.14.3";
     @TempDir
     protected File testProjectDir;
 
@@ -30,13 +31,20 @@ public abstract class AbstractJenaGradleTaskTest {
 
     protected void setupSources(String buildScript) throws IOException {
         Files.writeString(settingsFile.toPath(), "rootProject.name = 'test-project'");
-        Files.writeString(buildFile.toPath(), buildScript);
+
+        String withJavaVersion = "java {\n" +
+                "    sourceCompatibility = JavaVersion.VERSION_11\n" +
+                "    targetCompatibility = JavaVersion.VERSION_11\n" +
+                "}\n";
+
+        Files.writeString(buildFile.toPath(), buildScript + "\n" + withJavaVersion);
     }
 
     protected BuildResult runTask(String taskName) {
         return GradleRunner.create()
                 .withProjectDir(testProjectDir)
                 .withPluginClasspath()
+                .withGradleVersion(JAVA_11_COMPATIBLE_GRADLE)
                 .withArguments(taskName, "--stacktrace")
                 .build();
     }
@@ -44,6 +52,7 @@ public abstract class AbstractJenaGradleTaskTest {
     protected BuildResult runTaskAndFail(String taskName) {
         return GradleRunner.create()
                 .withProjectDir(testProjectDir)
+                .withGradleVersion(JAVA_11_COMPATIBLE_GRADLE)
                 .withPluginClasspath()
                 .withArguments(taskName, "--stacktrace")
                 .buildAndFail();
