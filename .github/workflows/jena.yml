@@ -31,6 +31,11 @@ jobs:
           distribution: 'oracle'
           cache: maven
 
+      - name: Setup permissions for Maven & Gradle Wrappers
+        run: |
+          find . -type f -name mvnw -exec chmod +x {} +
+          find . -type f -name gradlew -exec chmod +x {} +
+
       - name: Cache Maven local
         uses: actions/cache@v5.0.2
         with:
@@ -89,8 +94,10 @@ jobs:
         key: ${{ env.M2_CACHE_KEY }}-${{ github.run_id }}-${{ github.job }}
         restore-keys: ${{ env.M2_CACHE_KEY }}
 
-    - name: Setup wrapper
-      run: chmod +x mvnw
+    - name: Setup permissions for Maven & Gradle Wrappers
+      run: |
+        find . -type f -name mvnw -exec chmod +x {} +
+        find . -type f -name gradlew -exec chmod +x {} +
 
     - name: Set Versions of project
       run: ./mvnw --batch-mode versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
