@@ -58,7 +58,7 @@ jobs:
         run: ../mvnw --batch-mode install
       
       - name: Publish jena-plugin-core & plugins
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
         working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}
         run: ../mvnw --batch-mode deploy -DskipTests
         env:
