@@ -1,9 +1,9 @@
 package cz.muni.jena.codeminer.outputformatter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SequenceWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SequenceWriter;
 
 import java.io.IOException;
 import java.io.OutputStream;

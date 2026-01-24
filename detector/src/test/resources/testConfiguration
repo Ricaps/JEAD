@@ -49,7 +49,7 @@
         "configurationFileRegex" : "app",
         "tokenLifetimeSettings" : {
             "maxTokenLifetime" : 1,
-            "unit" : "SECONDS"
+            "unit" : "Seconds"
         },
         "encryptionAlgorithms" : [
             {

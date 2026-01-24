@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableConfigurationProperties({InferenceConfiguration.class, PreparePluginConfig.class})
 @CommandScan
 public class App {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(App.class, args);
     }
 }

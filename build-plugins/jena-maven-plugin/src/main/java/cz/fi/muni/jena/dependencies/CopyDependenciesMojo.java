@@ -22,7 +22,7 @@ public class CopyDependenciesMojo
     /**
      * Target path where to copy .jar dependencies of the project
      */
-    @Parameter(property = "jena.dependenciesFolder", defaultValue = "${project.basedir}/target/dependency")
+    @Parameter(property = "jena.dependenciesFolder", defaultValue = "${project.basedir}/target/dependencies")
     private String outputFolder;
 
     @Parameter(property = "project", readonly = true)

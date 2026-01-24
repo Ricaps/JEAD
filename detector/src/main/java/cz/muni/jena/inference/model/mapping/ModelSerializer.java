@@ -1,10 +1,10 @@
 package cz.muni.jena.inference.model.mapping;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.muni.jena.inference.dto.BaseDto;
 import cz.muni.jena.inference.model.EvaluationModel;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 
@@ -38,7 +38,7 @@ public class ModelSerializer {
         BaseDto dto = mapper.toDto(evaluationModel);
         try {
             return objectMapper.writeValueAsString(dto);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Cannot map %s class to dto!".formatted(evaluationModel.getClass().getName()), e);
         }
     }

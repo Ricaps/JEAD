@@ -9,7 +9,6 @@
     </parent>
     <groupId>com.example</groupId>
     <artifactId>authorization-server</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <name>AuthorizationServer</name>
     <description>AuthorizationServer</description>
     <dependencies>
@@ -42,9 +41,9 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.3.0</version>
+                <groupId>cz.muni.fi.jena</groupId>
+                <artifactId>jena-maven-plugin</artifactId>
+                <version>${project.version}</version>
                 <executions>
                     <execution>
                         <id>copy-dependencies</id>
@@ -52,9 +51,6 @@
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>
-                        <configuration>
-                            <outputDirectory>target/dependencies</outputDirectory>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
