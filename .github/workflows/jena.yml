@@ -107,11 +107,10 @@ jobs:
       run: ./mvnw -B package -pl ${{ env.JENA_STAGE_PROJECTS }} -amd -DskipTests
 
     - name: Run unit tests
-      working-directory: ./detector
-      run: ../mvnw --batch-mode test -pl ${{ env.JENA_STAGE_PROJECTS }} -amd
+      run: ./mvnw --batch-mode test -pl detector -amd
 
     - name: Run integration tests
-      run: ../mvnw --batch-mode verify -pl detector -amd -DskipUnitTests
+      run: ./mvnw --batch-mode verify -pl detector -amd -DskipUnitTests
 
     - name: Publish surefire results
       if: success() || failure()
