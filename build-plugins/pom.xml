@@ -10,6 +10,7 @@
     <modules>
         <module>jena-plugin-core</module>
         <module>jena-maven-plugin</module>
+        <module>jena-gradle-plugin</module>
     </modules>
 
     <properties>
