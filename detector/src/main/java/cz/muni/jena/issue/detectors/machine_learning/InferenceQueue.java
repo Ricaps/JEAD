@@ -26,7 +26,7 @@ public class InferenceQueue<T extends EvaluationModel> {
 
     private final BlockingQueue<InferenceItem<T>> sendQueue;
     private final List<IssueWithLazyMeta> results = Collections.synchronizedList(new ArrayList<>());
-    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().factory());
     private final InferenceService inferenceService;
     private final ModelConfiguration modelConfiguration;
 

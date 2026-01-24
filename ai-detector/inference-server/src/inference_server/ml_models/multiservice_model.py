@@ -151,6 +151,7 @@ class MultiServiceModel(InferenceModel):
             min_cluster_size=3,
             metric="euclidean",
             allow_single_cluster=True,
+            copy=False,
         )
         labels = hdbscan.fit_predict(embeddings)
         unique_labels = set(labels)
