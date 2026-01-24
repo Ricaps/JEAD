@@ -13,6 +13,7 @@ on:
 env:
   M2_CACHE_KEY: m2-${{ github.sha }}
   BUILD_PLUGINS_DIRECTORY: ./build-plugins
+  JENA_STAGE_PROJECTS: test-fixtures,detector
 
 jobs:
   build-and-publish-jena-plugins:
@@ -103,15 +104,14 @@ jobs:
       run: ./mvnw --batch-mode versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
 
     - name: Build Maven projects
-      run: ./mvnw -B package --file pom.xml -DskipTests
+      run: ./mvnw -B package -pl ${{ env.JENA_STAGE_PROJECTS }} -amd -DskipTests
 
     - name: Run unit tests
       working-directory: ./detector
-      run: ../mvnw --batch-mode test
+      run: ../mvnw --batch-mode test -pl ${{ env.JENA_STAGE_PROJECTS }} -amd
 
     - name: Run integration tests
-      working-directory: ./detector
-      run: ../mvnw --batch-mode verify -DskipUnitTests
+      run: ../mvnw --batch-mode verify -pl detector -amd -DskipUnitTests
 
     - name: Publish surefire results
       if: success() || failure()
