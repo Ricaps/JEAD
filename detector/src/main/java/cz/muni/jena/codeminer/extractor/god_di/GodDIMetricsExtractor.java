@@ -1,6 +1,5 @@
 package cz.muni.jena.codeminer.extractor.god_di;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.resolution.declarations.ResolvedAnnotationDeclaration;
@@ -15,6 +14,7 @@ import cz.muni.jena.frontend.commands.commands.CommandSettingsMap;
 import cz.muni.jena.issue.language.elements.ResolvableNode;
 import cz.muni.jena.util.NodeUtil;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.inject.Inject;
 import java.util.List;

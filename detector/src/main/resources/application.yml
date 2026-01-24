@@ -18,6 +18,12 @@ spring:
       channels:
         inference-server:
           address: localhost:8081
+  shell:
+    interactive:
+      enabled: true
+  threads:
+    virtual:
+      enabled: true
 
 inference:
   enabled: true

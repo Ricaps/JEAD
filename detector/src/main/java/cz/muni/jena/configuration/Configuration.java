@@ -1,16 +1,19 @@
 package cz.muni.jena.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
 import cz.muni.jena.configuration.di.DIConfiguration;
 import cz.muni.jena.configuration.mocking.MockingConfiguration;
 import cz.muni.jena.configuration.persistence.PersistenceConfiguration;
 import cz.muni.jena.configuration.security.SecurityConfiguration;
 import cz.muni.jena.configuration.service_layer.ServiceLayerConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectReader;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public record Configuration(
@@ -21,6 +24,8 @@ public record Configuration(
         PersistenceConfiguration persistenceConfiguration
 )
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Configuration.class);
+
     public static Optional<Configuration> readConfiguration(String path)
     {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -28,8 +33,9 @@ public record Configuration(
         try
         {
             return Optional.of(configurationReader.readValue(new File(path)));
-        } catch (IOException e)
+        } catch (JacksonException e)
         {
+            LOGGER.error("Failed to load configuration!", e);
             return Optional.empty();
         }
     }
@@ -41,8 +47,8 @@ public record Configuration(
             URL configurationFileURL = getConfigurationURL();
             ObjectMapper objectMapper = new ObjectMapper();
             ObjectReader configurationReader = objectMapper.readerFor(Configuration.class);
-            return configurationReader.readValue(configurationFileURL);
-        } catch (IOException e)
+            return configurationReader.readValue(Path.of(configurationFileURL.getPath()));
+        } catch (JacksonException e)
         {
             throw new IllegalStateException(
                     "Configuration couldn't be loaded, please check if they are in correct format.", e

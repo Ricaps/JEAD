@@ -56,7 +56,7 @@ public class AsyncCompilationUnitParser {
                                     We failed to find any dependency Jars in %s.
                                     Without dependency Jars Jena will likely not function properly.
                                     """,
-                            path.toAbsolutePath() + File.separator + "target" + File.separator + "dependency"
+                            path.toAbsolutePath() + File.separator + "target" + File.separator + "dependencies"
                     ));
         } else {
             logger.atInfo().log(String.format("We found %s dependency Jars.", jarTypeSolversCount));

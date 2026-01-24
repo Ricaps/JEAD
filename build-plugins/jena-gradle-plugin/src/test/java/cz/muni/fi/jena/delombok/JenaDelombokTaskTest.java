@@ -26,7 +26,7 @@ class JenaDelombokTaskTest extends AbstractJenaGradleTaskTest {
                 "    mavenCentral()\n" +
                 "}\n" +
                 "dependencies {\n" +
-                "    compileOnly 'org.projectlombok:lombok:1.18.30'\n" +
+                "    compileOnly 'org.projectlombok:lombok:1.18.42'\n" +
                 "}\n";
 
         if (delombokArguments != null) {

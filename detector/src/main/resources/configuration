@@ -69,7 +69,7 @@
         "configurationFileRegex" : "(?<!target[\\\\\/]classes[\\\\\/])(application.ya?ml|application.properties)",
         "tokenLifetimeSettings" : {
             "maxTokenLifetime" : 2,
-            "unit" : "HOURS"
+            "unit" : "Hours"
         },
         "encryptionAlgorithms" : [
             {

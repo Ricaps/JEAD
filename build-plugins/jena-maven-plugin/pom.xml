@@ -10,11 +10,8 @@
     <artifactId>jena-maven-plugin</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
-
     <name>jena-maven-plugin Maven Plugin</name>
-
     <url>https://github.com/Ricaps/JenaV3</url>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven-api.version>3.9.11</maven-api.version>
@@ -22,6 +19,7 @@
         <maven-invoker-plugin.version>3.8.1</maven-invoker-plugin.version>
         <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
         <skipTests>false</skipTests>
+        <groovy.version>5.0.3</groovy.version>
     </properties>
 
     <dependencies>
@@ -84,14 +82,30 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
+                    <release>${maven.compiler.release}</release>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-invoker-plugin</artifactId>
                 <version>${maven-invoker-plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.groovy</groupId>
+                        <artifactId>groovy</artifactId>
+                        <version>${groovy.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.groovy</groupId>
+                        <artifactId>groovy-json</artifactId>
+                        <version>${groovy.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.groovy</groupId>
+                        <artifactId>groovy-xml</artifactId>
+                        <version>${groovy.version}</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <debug>true</debug>
                     <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
@@ -105,6 +119,11 @@
                         <goal>clean</goal>
                         <goal>test-compile</goal>
                     </goals>
+                    <properties>
+                        <maven.compiler.source>${maven.compiler.source}</maven.compiler.source>
+                        <maven.compiler.target>${maven.compiler.target}</maven.compiler.target>
+                        <maven.compiler.release>${maven.compiler.release}</maven.compiler.release>
+                    </properties>
                 </configuration>
                 <executions>
                     <execution>

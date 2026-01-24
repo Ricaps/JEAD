@@ -1,7 +1,5 @@
 package cz.muni.jena.inference;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.muni.jena.codeminer.extractor.comments.model.Comment;
 import cz.muni.jena.codeminer.extractor.comments.CommentType;
 import cz.muni.jena.codeminer.extractor.comments.model.CommentsMapper;
@@ -16,6 +14,8 @@ import io.grpc.StatusException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.UUID;
@@ -131,7 +131,7 @@ class InferenceServiceTest {
     private String serialize(Comment comment) {
         try {
             return objectMapper.writeValueAsString(commentsMapper.toDto(comment));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new RuntimeException(e);
         }
     }
