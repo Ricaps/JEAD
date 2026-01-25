@@ -10,6 +10,8 @@ from inference_server.model.inference_model import (
     ModelInferenceResultBatch,
 )
 
+MODEL_ROOT_PATH = "./tests/resources/model_root/existing-model"
+
 
 class DummyInferenceModel(InferenceModel):
     async def on_load(self): ...
@@ -24,25 +26,24 @@ class TestModelDefinition(IsolatedAsyncioTestCase):
     async def test_load_model(self):
         model_definition = self._create_dummy_definition()
         await model_definition.load_model()
-        model = model_definition._model_reference()
 
-        self.assertIsInstance(model, DummyInferenceModel)
+        self.assertTrue(model_definition.is_loaded())
 
         # the instance is the same after calling load_model() twice
         await model_definition.load_model()
-        self.assertEqual(model, model_definition._model_reference())
+        self.assertTrue(model_definition.is_loaded())
 
     async def test_unload_model(self):
         model_definition = self._create_dummy_definition()
-        self.assertIsNone(model_definition._model_reference)
+        self.assertFalse(model_definition.is_loaded())
 
         await model_definition.load_model()
 
-        self.assertIsNotNone(model_definition._model_reference())
+        self.assertTrue(model_definition.is_loaded())
 
         await model_definition.unload_model()
-        self.assertIsNone(model_definition._model_reference)
+        self.assertFalse(model_definition.is_loaded())
 
     @staticmethod
     def _create_dummy_definition():
-        return ModelDefinition(AsyncPath("random-path"), DummyInferenceModel)
+        return ModelDefinition(AsyncPath(MODEL_ROOT_PATH))

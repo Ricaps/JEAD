@@ -137,4 +137,4 @@ class TestInferenceService(IsolatedAsyncioTestCase):
 
     @staticmethod
     def _createDummyStorage():
-        return ModelStorage(Mock(), Mock())
+        return ModelStorage(Mock())
