@@ -4,16 +4,14 @@ from enum import Enum
 import json
 import logging
 import struct
-import subprocess
 import threading
 import time
-from pathlib import Path
-from threading import Thread
+import socket
 from typing import Optional, Any, IO, AnyStr
 
-from aiopath import AsyncPath
 from pydantic import BaseModel
 
+from inference_server.configuration.model_config import Model
 from inference_server.exception.model import WorkerStatusException
 
 
@@ -55,7 +53,7 @@ class Response(BaseModel):
 
 class WorkerStatus(Enum):
     RUNNING = 1
-    SHUTTING_DOWN = 2
+    DISCONNECTING = 2
     LOADING = 3
     INACTIVE = 4
 
@@ -64,14 +62,12 @@ class ModelWorkerManager:
     VENV_FOLDER = ".venv"
     WORKER_FILE = "worker.py"
 
-    def __init__(self, worker_dir: AsyncPath):
-        self.__worker_dir: AsyncPath = worker_dir
-        self.__model_name: str = worker_dir.name
+    def __init__(self, config: Model, name: str, host: str):
+        self.__config: Model = config
+        self.__model_name: str = name
+        self.__host: str = host
         self.__reader: Optional[asyncio.StreamReader] = None
         self.__writer: Optional[asyncio.StreamWriter] = None
-        self.__process: Optional[subprocess.Popen[str]] = None
-        self._stdout_thread: Optional[Thread] = None
-        self._stderr_thread: Optional[Thread] = None
         self.__reader_task: Optional[asyncio.Task] = None
         self.__pending_requests: dict[str, asyncio.Future] = {}
         self.__processing_finished = asyncio.Event()
@@ -83,8 +79,6 @@ class ModelWorkerManager:
 
     @staticmethod
     def _get_port():
-        import socket
-
         sock = socket.socket()
         sock.bind(("", 0))
         port = sock.getsockname()[1]
@@ -92,12 +86,15 @@ class ModelWorkerManager:
 
         return port
 
-    async def _connect_and_wait(self, host, port, timeout=10):
+    async def _connect_and_wait(self, timeout=10):
         timeout_time = time.time() + timeout
 
         while time.time() < timeout_time:
             try:
-                reader, writer = await asyncio.open_connection(host, port)
+                reader, writer = await asyncio.open_connection(
+                    self.__host, self.__config.port
+                )
+
                 self.__reader = reader
                 self.__writer = writer
                 self.__reader_task = asyncio.get_running_loop().create_task(
@@ -110,46 +107,21 @@ class ModelWorkerManager:
 
         raise TimeoutError("Worker was not loaded properly!")
 
-    async def start_process(self):
+    async def start_connection(self):
         if self._status != WorkerStatus.INACTIVE:
             raise WorkerStatusException("Worker cannot be started when running!")
 
         self._status = WorkerStatus.LOADING
-        port = self._get_port()
-
-        host = "localhost"
-        venv_path = self.__worker_dir / self.VENV_FOLDER
-        python_bin = venv_path / "bin" / "python3"
-
-        if not await venv_path.exists():
-            self.__logger.warning(f"Starting '{self.__model_name}' without its .venv!")
-            python_bin = Path("python3")
-
-        self.__logger.info(f"Starting model process at path {self.__worker_dir}")
-        self.__process = subprocess.Popen(
-            [
-                str(python_bin),
-                "src/inference_server/module_worker/socket_worker.py",
-                str(self.__worker_dir / self.WORKER_FILE),
-                host,
-                str(port),
-            ],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-
-        await self._connect_and_wait(host, port)
-        self._status = WorkerStatus.RUNNING
-
-        self._stdout_thread = await self._create_out_thread(self.__process.stdout)
-        self._stdout_thread.start()
-
-        self._stderr_thread = await self._create_out_thread(self.__process.stderr)
-        self._stderr_thread.start()
-
-        self.__logger.info(f"Model process at {self.__worker_dir} started!")
+        try:
+            await self._connect_and_wait()
+            self._status = WorkerStatus.RUNNING
+            self.__logger.info(f"Model {self.__model_name} connected!")
+        except TimeoutError:
+            self.__logger.error(f"Model {self.__model_name} connection timeout!")
+            self._status = WorkerStatus.INACTIVE
+            raise WorkerStatusException(
+                f"Failed to connect to the model worker {self.__model_name}!"
+            )
 
     async def _create_out_thread(self, out: IO[AnyStr]):
         return threading.Thread(target=self._forward_stream, args=(out,), daemon=True)
@@ -179,10 +151,14 @@ class ModelWorkerManager:
                 future = self.__pending_requests.pop(message_id)
                 future.set_result(response)
 
+                if len(self.__pending_requests) == 0:
+                    self.__processing_finished.set()
+
                 if self._status == WorkerStatus.INACTIVE:
                     break
 
-        except asyncio.IncompleteReadError:
+        except asyncio.IncompleteReadError as e:
+            self.__logger.error("Connection was closed!", e)
             self.__pending_requests.clear()
             self.__processing_finished.set()
             self.__logger.error("The connection was closed!")
@@ -206,28 +182,19 @@ class ModelWorkerManager:
         return await asyncio.wait_for(future, timeout=30.0)
 
     async def shutdown(self):
-        self.__logger.info(f"Shutting down model process at {self.__worker_dir}")
+        self.__logger.info(f"Disconnecting model {self.__model_name}")
 
-        self._status = WorkerStatus.SHUTTING_DOWN
-        response = await self.__send_internal(
-            Message(command=WorkerCommand.SHUTDOWN, data={})
-        )
-
+        self._status = WorkerStatus.DISCONNECTING
         await asyncio.wait_for(self.__processing_finished.wait(), timeout=10.0)
 
-        if response.success:
-            self.__writer.close()
-            await self.__writer.wait_closed()
-            self.__process.wait(timeout=5)
+        self.__writer.close()
+        await self.__writer.wait_closed()
 
-            self._status = WorkerStatus.INACTIVE
+        self._status = WorkerStatus.INACTIVE
 
-            self._stdout_thread.join(timeout=5)
-            self._stderr_thread.join(timeout=5)
-
-            await asyncio.wait_for(self.__reader_task, timeout=10.0)
-            self.__reader_task.cancel()
-            self.__logger.info(f"Model process at {self.__worker_dir} shutdown!")
+        await asyncio.wait_for(self.__reader_task, timeout=10.0)
+        self.__reader_task.cancel()
+        self.__logger.info(f"Model {self.__model_name} disconnected!")
 
     def _forward_stream(self, stream: IO[AnyStr]):
         for line in iter(stream.readline, ""):

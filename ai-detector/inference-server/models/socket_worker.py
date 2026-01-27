@@ -4,10 +4,43 @@ import struct
 import sys
 from pathlib import Path
 from typing import Optional
+from importlib import util
 
-from inference_server.module_worker.load_worker import create_worker
 
 shutdown_event = asyncio.Event()
+
+WORKER_CLASS = "MLWorker"
+
+LOAD_METHOD = "load"
+UNLOAD_METHOD = "unload"
+EXECUTE_METHOD = "execute"
+
+
+def _load_worker_module(path: Path):
+    script = util.spec_from_file_location("worker_module", path)
+    module = util.module_from_spec(script)
+    sys.modules["worker_module"] = module
+    script.loader.exec_module(module)
+
+    return module
+
+
+def create_worker(path: Path):
+    module = _load_worker_module(path)
+
+    if not hasattr(module, WORKER_CLASS):
+        raise NameError(f"The worker is missing class {WORKER_CLASS} at {path}")
+
+    worker = module.MLWorker()
+    for method_name in (LOAD_METHOD, UNLOAD_METHOD, EXECUTE_METHOD):
+        if not hasattr(worker, method_name):
+            raise NameError(
+                f"The class {WORKER_CLASS} doesn't have method {method_name}"
+            )
+
+    worker.load()
+
+    return worker
 
 
 async def recv_msg(reader: asyncio.StreamReader) -> Optional[bytes]:
@@ -19,11 +52,13 @@ async def recv_msg(reader: asyncio.StreamReader) -> Optional[bytes]:
 
 
 async def send(writer: asyncio.StreamWriter, message):
+    print("Sending response")
     message = json.dumps(message).encode()
     payload = struct.pack("!I", len(message)) + message
 
     writer.write(payload)
     await writer.drain()
+    print("Sending response")
 
 
 def compose_response(message_id: str, success=True, error=None, data=None):
@@ -87,8 +122,8 @@ async def handle(reader: asyncio.StreamReader, writer: asyncio.StreamWriter, wor
                     ),
                 )
 
-    except (asyncio.IncompleteReadError, ConnectionResetError):
-        pass
+    except (asyncio.IncompleteReadError, ConnectionResetError) as e:
+        print(e)
 
     finally:
         writer.close()
@@ -110,6 +145,8 @@ async def start_server(worker_path: Path, host: str, port: int):
 
 
 if __name__ == "__main__":
+    print("Starting...")
+
     path = sys.argv[1]
     host = sys.argv[2]
     port = sys.argv[3]
@@ -117,7 +154,7 @@ if __name__ == "__main__":
     asyncio.run(
         start_server(
             Path(path),
-            "localhost",
+            host,
             int(port),
         )
     )
