@@ -100,9 +100,9 @@ class ModelStorage(ShutdownAware):
             if model is None:
                 continue
 
-            worker_file = file / ModelWorkerManager.WORKER_FILE
-            req_path = file / ModelWorkerManager.REQUIREMENTS_FILE
-            for checked_file in (worker_file, req_path):
+            _, _, _, req_path, worker_path = self.get_paths(file)
+
+            for checked_file in (worker_path, req_path):
                 if not await checked_file.exists():
                     self._logger.warning(
                         f"Model folder '{file}' doesn't include {checked_file}!"
@@ -130,7 +130,7 @@ class ModelStorage(ShutdownAware):
                 await model.unload_model()
 
     async def ensure_venv(self, file: AsyncPath) -> bool:
-        venv_path, python_path, pip_path, req_path = self.get_paths(file)
+        venv_path, python_path, pip_path, req_path, _ = self.get_paths(file)
 
         if await venv_path.exists():
             if await python_path.exists() and await pip_path.exists():
@@ -180,7 +180,7 @@ class ModelStorage(ShutdownAware):
         return True
 
     async def install_requirements(self, file_path: AsyncPath) -> bool:
-        _, _, pip_path, req_path = self.get_paths(file_path)
+        _, _, pip_path, req_path, _ = self.get_paths(file_path)
 
         self._logger.info(f"Installing requirements for model at '{file_path}'...")
 
@@ -218,5 +218,6 @@ class ModelStorage(ShutdownAware):
         python_path = venv_path / "bin" / "python3"
         pip_path = venv_path / "bin" / "pip"
         req_path = model_path / ModelWorkerManager.REQUIREMENTS_FILE
+        worker_path = model_path / ModelWorkerManager.WORKER_FILE
 
-        return venv_path, python_path, pip_path, req_path
+        return venv_path, python_path, pip_path, req_path, worker_path
