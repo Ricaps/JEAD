@@ -4,6 +4,7 @@ from typing import Final, Optional
 from aiopath import AsyncPath
 
 from inference_server.business.shutdown_aware import ShutdownAware
+from inference_server.exception.model import ModelInferenceException
 from inference_server.ml_models.inference_model import (
     InferenceModelExecutable,
 )
@@ -14,7 +15,8 @@ from inference_server.model.inference_model import (
 )
 from inference_server.module_worker.model_worker_manager import (
     ModelWorkerManager,
-    Command,
+    Message,
+    WorkerCommand,
 )
 
 
@@ -32,7 +34,7 @@ class ModelDefinition(InferenceModelExecutable):
             return
 
         await self.__model_manager.start_process()
-        await self.__model_manager.send(Command(command="load", data={}))
+        await self.__model_manager.send(Message(command=WorkerCommand.LOAD, data={}))
         self.__logger.info("Model %s loaded", self.name)
 
     async def unload_model(self):
@@ -46,10 +48,10 @@ class ModelDefinition(InferenceModelExecutable):
             await self.load_model()
 
         response = await self.__model_manager.send(
-            Command(command="inference", data=data)
+            Message(command=WorkerCommand.INFERENCE, data=data)
         )
         if not response.success:
-            return None
+            raise ModelInferenceException(response.error)
 
         return response.data
 

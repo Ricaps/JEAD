@@ -26,6 +26,13 @@ async def send(writer: asyncio.StreamWriter, message):
     await writer.drain()
 
 
+def compose_response(message_id: str, success=True, error=None, data=None):
+    if data is None:
+        data = {}
+
+    return {"message_id": message_id, "success": success, "error": error, "data": data}
+
+
 async def handle(reader: asyncio.StreamReader, writer: asyncio.StreamWriter, worker):
     try:
         while True:
@@ -34,24 +41,51 @@ async def handle(reader: asyncio.StreamReader, writer: asyncio.StreamWriter, wor
             json_message = json.loads(message)
 
             print(json_message)
-            if json_message["command"] == "shutdown":
+            if "message_id" not in json_message:
+                raise RuntimeError("Socket message must have an `id` attribute!")
+
+            message_id = json_message["message_id"]
+            if "message" not in json_message:
+                await send(
+                    writer,
+                    compose_response(
+                        message_id, success=False, error="No data in request!"
+                    ),
+                )
+                continue
+            message = json_message["message"]
+
+            if message["command"] == "shutdown":
                 worker.unload()
-                await send(writer, {"success": True, "data": {}})
+                await send(writer, compose_response(message_id, success=True))
 
                 shutdown_event.set()
                 break
 
-            elif json_message["command"] == "inference":
-                model_response = worker.execute(json_message["data"])
+            elif message["command"] == "inference":
+                try:
+                    model_response = worker.execute(message["data"])
+                    await send(
+                        writer,
+                        compose_response(message_id, success=True, data=model_response),
+                    )
+                except Exception as e:
+                    await send(
+                        writer,
+                        compose_response(message_id, success=False, error=str(e)),
+                    )
 
-                await send(writer, {"success": True, "data": model_response})
-
-            elif json_message["command"] == "load":
+            elif message["command"] == "load":
                 worker.load()
-                await send(writer, {"success": True, "data": {}})
+                await send(writer, compose_response(message_id, success=True))
 
             else:
-                await send(writer, {"success": False, "data": {}})
+                await send(
+                    writer,
+                    compose_response(
+                        message_id, success=False, error="Unknown command!"
+                    ),
+                )
 
     except (asyncio.IncompleteReadError, ConnectionResetError):
         pass
