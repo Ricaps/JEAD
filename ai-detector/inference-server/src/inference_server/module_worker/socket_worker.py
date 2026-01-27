@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from inference_server.module_worker.load_worker import create_worker
+from load_worker import create_worker
 
 shutdown_event = asyncio.Event()
 

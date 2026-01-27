@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import urllib.request
+import venv
 from typing import Final, Optional
 from aiopath import AsyncPath
 
@@ -98,6 +100,23 @@ class ModelStorage(ShutdownAware):
             if model is None:
                 continue
 
+            worker_file = file / ModelWorkerManager.WORKER_FILE
+            req_path = file / ModelWorkerManager.REQUIREMENTS_FILE
+            for checked_file in (worker_file, req_path):
+                if not await checked_file.exists():
+                    self._logger.warning(
+                        f"Model folder '{file}' doesn't include {checked_file}!"
+                    )
+                    continue
+
+            result = await self.ensure_venv(file)
+            if not result:
+                continue
+
+            result = await self.install_requirements(file)
+            if not result:
+                continue
+
             self._logger.info("Found model %s in %s", model.name, str(file))
             async with self.__model_holder_lock:
                 self.__model_holder[model.name] = model
@@ -109,3 +128,95 @@ class ModelStorage(ShutdownAware):
         async with self.__model_holder_lock:
             for model_name, model in self.__model_holder.items():
                 await model.unload_model()
+
+    async def ensure_venv(self, file: AsyncPath) -> bool:
+        venv_path, python_path, pip_path, req_path = self.get_paths(file)
+
+        if await venv_path.exists():
+            if await python_path.exists() and await pip_path.exists():
+                return True
+
+            self._logger.warning(
+                f"Model folder '{file}' already include .venv folder, but it's not correctly installed!"
+            )
+
+        try:
+            await asyncio.to_thread(venv.create, (str(venv_path)), with_pip=False)
+        except Exception as e:
+            self._logger.error(
+                f"Failed to create virtual environment for model at '{file}': {e}"
+            )
+            return False
+
+        try:
+            get_pip_url = "https://bootstrap.pypa.io/get-pip.py"
+            get_pip_path = venv_path / "get-pip.py"
+
+            self._logger.info(f"Downloading get-pip.py for model at '{file}'")
+            await asyncio.to_thread(
+                urllib.request.urlretrieve, get_pip_url, str(get_pip_path)
+            )
+
+            process = await asyncio.create_subprocess_exec(
+                str(python_path),
+                str(get_pip_path),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await process.communicate()
+
+            if process.returncode != 0:
+                self._logger.error(
+                    f"Failed to install pip for model at '{file}': {stderr.decode()}"
+                )
+                return False
+
+            await get_pip_path.unlink()
+
+        except Exception as e:
+            self._logger.error(f"Failed to install pip for model at '{file}': {e}")
+            return False
+
+        return True
+
+    async def install_requirements(self, file_path: AsyncPath) -> bool:
+        _, _, pip_path, req_path = self.get_paths(file_path)
+
+        self._logger.info(f"Installing requirements for model at '{file_path}'...")
+
+        process = await asyncio.create_subprocess_exec(
+            str(pip_path),
+            "install",
+            "-r",
+            str(req_path),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+
+        async for line in process.stdout:
+            line_str = line.decode().rstrip()
+            if line_str:
+                self._logger.info(f"[pip] {line_str}")
+
+        await process.wait()
+
+        if process.returncode != 0:
+            self._logger.error(
+                f"Failed to install requirements for model at '{file_path}'. Exit code: {process.returncode}"
+            )
+            return False
+
+        self._logger.info(
+            f"Successfully installed requirements for model at '{file_path}'"
+        )
+
+        return True
+
+    @staticmethod
+    def get_paths(model_path: AsyncPath):
+        venv_path = model_path / ModelWorkerManager.VENV_FOLDER
+        python_path = venv_path / "bin" / "python3"
+        pip_path = venv_path / "bin" / "pip"
+        req_path = model_path / ModelWorkerManager.REQUIREMENTS_FILE
+
+        return venv_path, python_path, pip_path, req_path

@@ -63,6 +63,7 @@ class WorkerStatus(Enum):
 class ModelWorkerManager:
     VENV_FOLDER = ".venv"
     WORKER_FILE = "worker.py"
+    REQUIREMENTS_FILE = "requirements.txt"
 
     def __init__(self, worker_dir: AsyncPath):
         self.__worker_dir: AsyncPath = worker_dir
@@ -92,7 +93,7 @@ class ModelWorkerManager:
 
         return port
 
-    async def _connect_and_wait(self, host, port, timeout=10):
+    async def _connect_and_wait(self, host, port, timeout=120):
         timeout_time = time.time() + timeout
 
         while time.time() < timeout_time:
@@ -140,14 +141,14 @@ class ModelWorkerManager:
             text=True,
         )
 
-        await self._connect_and_wait(host, port)
-        self._status = WorkerStatus.RUNNING
-
         self._stdout_thread = await self._create_out_thread(self.__process.stdout)
         self._stdout_thread.start()
 
         self._stderr_thread = await self._create_out_thread(self.__process.stderr)
         self._stderr_thread.start()
+
+        await self._connect_and_wait(host, port)
+        self._status = WorkerStatus.RUNNING
 
         self.__logger.info(f"Model process at {self.__worker_dir} started!")
 
