@@ -1,0 +1,25 @@
+services:
+  inference-server-cpu:
+    build:
+      context: .
+      args:
+        CPU_OR_GPU: cpu
+    ports:
+      - "8081:8080"
+    networks:
+      - inference-network
+    environment:
+      ADDRESS: 0.0.0.0
+      PORT: 8080
+      DOCKER_ENV: true
+
+  test-model:
+    image: test-model:latest
+    environment:
+      MODEL_PORT: 5432
+    networks:
+      - inference-network
+
+networks:
+  inference-network:
+    driver: bridge

@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/training/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/github-miner/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/inference-server/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/inference-server" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.13 (ai-detector)" jdkType="Python SDK" />

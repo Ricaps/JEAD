@@ -23,10 +23,10 @@ from inference_server.module_worker.model_worker_manager import (
 
 
 class ModelDefinition(InferenceModelExecutable):
-    def __init__(self, model_name: str, config: Model, host: str):
+    def __init__(self, model_name: str, config: Model, server_config: ServerConfig):
         self.__model_name: str = model_name
         self.__config: Model = config
-        self.__model_manager = ModelWorkerManager(config, model_name, host)
+        self.__model_manager = ModelWorkerManager(config, model_name, server_config)
         self.__logger = logging.getLogger(self.__class__.__name__)
 
     def is_loaded(self) -> bool:
@@ -86,9 +86,7 @@ class ModelStorage(ShutdownAware):
         async with self.__model_holder_lock:
             for name, model in config.models.items():
                 self._logger.info("Found model definition: %s", name)
-                definition = ModelDefinition(
-                    name, model, self._server_config.models_host
-                )
+                definition = ModelDefinition(name, model, self._server_config)
                 self.__model_holder[name] = definition
 
         if len(self.__model_holder.keys()) == 0:

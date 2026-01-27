@@ -1,8 +1,5 @@
 import socket
-import subprocess
-import sys
 from typing import Optional
-from unittest.async_case import IsolatedAsyncioTestCase
 
 import grpc.aio as grpc
 from grpc.aio import Server
@@ -21,6 +18,7 @@ from inference_server.model.inference_model import (
 from inference_server.proto import inference_pb2_grpc
 from inference_server.server.grpc_server import create_server
 from inference_server.proto.inference_pb2_grpc import InferenceServiceStub
+from util.integration_test import IntegrationTest
 
 
 class DummyModel(InferenceModel):
@@ -48,11 +46,8 @@ class DummyModel(InferenceModel):
         pass
 
 
-class AsyncGrpcTestCase(IsolatedAsyncioTestCase):
+class AsyncGrpcTestCase(IntegrationTest):
     ADDRESS = "localhost:55555"
-    EXISTING_MODEL_NAME = "existing-model"
-    SOCKET_WORKER_PATH = "models/socket_worker.py"
-    EXISTING_MODEL_WORKER = "tests/resources/existing_model/worker.py"
 
     @staticmethod
     def _get_port():
@@ -73,15 +68,7 @@ class AsyncGrpcTestCase(IsolatedAsyncioTestCase):
         await self.server.start()
 
         self.channel = grpc.insecure_channel(self.ADDRESS)
-        self.test_model_process = subprocess.Popen(
-            [
-                sys.executable,
-                AsyncGrpcTestCase.SOCKET_WORKER_PATH,
-                AsyncGrpcTestCase.EXISTING_MODEL_WORKER,
-                "localhost",
-                str(self._get_port()),
-            ]
-        )
+        await super().asyncSetUp()
 
     @staticmethod
     async def _add_services(grpc_server: Server, server_config: ServerConfig):
@@ -100,7 +87,7 @@ class AsyncGrpcTestCase(IsolatedAsyncioTestCase):
     async def asyncTearDown(self):
         await self.channel.close()
         await self.server.stop(None)
-        self.test_model_process.terminate()
+        await super().asyncTearDown()
 
     def get_stub(self) -> InferenceServiceStub:
         return InferenceServiceStub(self.channel)

@@ -12,10 +12,11 @@ dependencies = [
     "grpcio-tools (>=1.75.1,<2.0.0)",
     "grpcio-reflection (>=1.75.1,<2.0.0)",
     "pydantic-settings (>=2.11.0,<3.0.0)",
-    "transformers (>=4.56.2,<5.0.0)",
+#    "transformers (>=4.56.2,<5.0.0)",
     "grpc-interceptor (>=0.15.4,<0.16.0)",
     "aiopath (>=0.7.7,<0.8.0)",
-    "umap-learn (>=0.5.11,<0.6.0)",
+#    "umap-learn (>=0.5.11,<0.6.0)",
+"pyyaml (>=6.0.3,<7.0.0)"
 ]
 
 
@@ -31,10 +32,10 @@ dev = [
     "ruff (==0.13.2)"
 ]
 cpu = [
-    "onnxruntime (>=1.23.1,<2.0.0)"
+#    "onnxruntime (>=1.23.1,<2.0.0)"
 ]
 gpu = [
-    "onnxruntime-gpu[cuda,cudnn] (>=1.23.0,<2.0.0)"
+#    "onnxruntime-gpu[cuda,cudnn] (>=1.23.0,<2.0.0)"
 ]
 
 [tool.ruff]

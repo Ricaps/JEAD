@@ -16,6 +16,7 @@ ARG CPU_OR_GPU=gpu
 WORKDIR /usr/app
 COPY $INFERENCE_SERVER_DIR/pyproject.toml $INFERENCE_SERVER_DIR/poetry.lock ./
 COPY $INFERENCE_SERVER_DIR/scripts/ ./scripts/
+COPY $INFERENCE_SERVER_DIR/models ./models/
 RUN chmod +x ./scripts/generate-server.sh &&\
     chmod +x ./scripts/install.sh
 

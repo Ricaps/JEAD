@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import struct
 import sys
 from pathlib import Path
@@ -147,14 +148,23 @@ async def start_server(worker_path: Path, host: str, port: int):
 if __name__ == "__main__":
     print("Starting...")
 
-    path = sys.argv[1]
-    host = sys.argv[2]
-    port = sys.argv[3]
+    env_arguments = {
+        "worker-path": os.getenv("WORKER_PATH"),
+        "model-host": os.getenv("MODEL_HOST"),
+        "model-port": os.getenv("MODEL_PORT"),
+    }
+
+    arguments = sys.argv
+
+    for default_arg in env_arguments.keys():
+        for cmd_arg in arguments:
+            if cmd_arg.startswith(f"--{default_arg}="):
+                env_arguments[default_arg] = cmd_arg.split("=")[1]
 
     asyncio.run(
         start_server(
-            Path(path),
-            host,
-            int(port),
+            Path(env_arguments["worker-path"]),
+            env_arguments["model-host"],
+            int(env_arguments["model-port"]),
         )
     )

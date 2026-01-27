@@ -8,7 +8,7 @@ class ServerConfig(BaseSettings):
     address: str
     port: str
     model_config_path: str = "models/models.yaml"
-    models_host: str = "127.0.0.1"
+    docker_env: bool = False
 
 
 server_config = ServerConfig()

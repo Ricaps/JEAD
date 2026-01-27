@@ -1,5 +1,4 @@
 from typing import Optional
-from unittest.async_case import IsolatedAsyncioTestCase
 
 
 from inference_server.business.model_storage import ModelStorage, ModelDefinition
@@ -9,6 +8,7 @@ from inference_server.model.inference_model import (
     ModelInferenceRequestBatch,
     ModelInferenceResultBatch,
 )
+from util.integration_test import IntegrationTest
 
 
 class DummyInferenceModel(InferenceModel):
@@ -19,7 +19,7 @@ class DummyInferenceModel(InferenceModel):
     ) -> Optional[ModelInferenceResultBatch]: ...
 
 
-class TestModelStorage(IsolatedAsyncioTestCase):
+class TestModelStorage(IntegrationTest):
     EXISTING_MODEL_NAME = "existing-model"
     EXISTING_MODEL_NO_FOLDER_NAME = "existing-model-no-folder"
     EXISTING_MODEL_NO_REGISTRY_NAME = "existing-no-registry"

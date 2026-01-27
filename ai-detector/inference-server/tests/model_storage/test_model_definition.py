@@ -1,14 +1,15 @@
 from typing import Optional
-from unittest.async_case import IsolatedAsyncioTestCase
 
 
 from inference_server.business.model_storage import ModelDefinition
+from inference_server.configuration.config import ServerConfig
 from inference_server.configuration.model_config import Model
 from inference_server.ml_models.inference_model import InferenceModel
 from inference_server.model.inference_model import (
     ModelInferenceRequestBatch,
     ModelInferenceResultBatch,
 )
+from util.integration_test import IntegrationTest
 
 
 class DummyInferenceModel(InferenceModel):
@@ -20,7 +21,7 @@ class DummyInferenceModel(InferenceModel):
     ) -> Optional[ModelInferenceResultBatch]: ...
 
 
-class TestModelDefinition(IsolatedAsyncioTestCase):
+class TestModelDefinition(IntegrationTest):
     async def test_load_model(self):
         model_definition = self._create_dummy_definition()
         await model_definition.load_model()
@@ -46,6 +47,6 @@ class TestModelDefinition(IsolatedAsyncioTestCase):
     def _create_dummy_definition():
         return ModelDefinition(
             model_name="existing-model",
-            config=Model(port=5432),
-            host="localhost",
+            config=Model(host="localhost", port=5555),
+            server_config=ServerConfig(),
         )

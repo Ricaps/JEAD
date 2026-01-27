@@ -11,6 +11,7 @@ from typing import Optional, Any, IO, AnyStr
 
 from pydantic import BaseModel
 
+from inference_server.configuration.config import ServerConfig
 from inference_server.configuration.model_config import Model
 from inference_server.exception.model import WorkerStatusException
 
@@ -62,10 +63,10 @@ class ModelWorkerManager:
     VENV_FOLDER = ".venv"
     WORKER_FILE = "worker.py"
 
-    def __init__(self, config: Model, name: str, host: str):
+    def __init__(self, config: Model, name: str, server_config: ServerConfig):
         self.__config: Model = config
         self.__model_name: str = name
-        self.__host: str = host
+        self.__server_config: ServerConfig = server_config
         self.__reader: Optional[asyncio.StreamReader] = None
         self.__writer: Optional[asyncio.StreamWriter] = None
         self.__reader_task: Optional[asyncio.Task] = None
@@ -89,11 +90,12 @@ class ModelWorkerManager:
     async def _connect_and_wait(self, timeout=10):
         timeout_time = time.time() + timeout
 
+        host = self.__config.host if self.__server_config.docker_env else "localhost"
+        port = self.__config.port
+        self.__logger.info("Connecting to model worker at %s:%d", host, port)
         while time.time() < timeout_time:
             try:
-                reader, writer = await asyncio.open_connection(
-                    self.__host, self.__config.port
-                )
+                reader, writer = await asyncio.open_connection(host, port)
 
                 self.__reader = reader
                 self.__writer = writer
