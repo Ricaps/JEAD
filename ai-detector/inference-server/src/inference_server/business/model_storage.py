@@ -23,9 +23,9 @@ from inference_server.module_worker.model_worker_manager import (
 
 
 class ModelDefinition(InferenceModelExecutable):
-    def __init__(self, model_path: AsyncPath):
+    def __init__(self, model_root: AsyncPath, model_path: AsyncPath):
         self.__model_path: Final[AsyncPath] = model_path
-        self.__model_manager = ModelWorkerManager(model_path)
+        self.__model_manager = ModelWorkerManager(model_root, model_path)
         self.__logger = logging.getLogger(self.__class__.__name__)
 
     def is_loaded(self) -> bool:
@@ -75,7 +75,9 @@ class ModelStorage(ShutdownAware):
     def get_model(self, model_name: str) -> Optional[ModelDefinition]:
         return self.__model_holder.get(model_name)
 
-    async def __load_model(self, model_folder: AsyncPath) -> Optional[ModelDefinition]:
+    async def __load_model(
+        self, model_root: AsyncPath, model_folder: AsyncPath
+    ) -> Optional[ModelDefinition]:
         for file_name in (ModelWorkerManager.WORKER_FILE,):
             file_path = model_folder / file_name
             exists = await file_path.exists()
@@ -86,35 +88,33 @@ class ModelStorage(ShutdownAware):
                 )
                 return None
 
-        return ModelDefinition(model_folder)
+        return ModelDefinition(model_root, model_folder)
 
     async def load_models(self):
         models_root = AsyncPath(self._server_config.models_root)
         self._logger.info("Looking for models in %s directory", models_root)
 
+        result = await self.ensure_venv(models_root)
+        if not result:
+            return
+
+        result = await self._install_requirements(models_root)
+        if not result:
+            return
+
         async for file in models_root.iterdir():
             if await file.is_file():
                 continue
 
-            model = await self.__load_model(file)
+            worker_path = file / ModelWorkerManager.WORKER_FILE
+            if not await worker_path.exists():
+                self._logger.warning(
+                    f"Model folder '{file}' doesn't include {worker_path}!"
+                )
+                continue
+
+            model = await self.__load_model(models_root, file)
             if model is None:
-                continue
-
-            _, _, _, req_path, worker_path = self.get_paths(file)
-
-            for checked_file in (worker_path, req_path):
-                if not await checked_file.exists():
-                    self._logger.warning(
-                        f"Model folder '{file}' doesn't include {checked_file}!"
-                    )
-                    continue
-
-            result = await self.ensure_venv(file)
-            if not result:
-                continue
-
-            result = await self.install_requirements(file)
-            if not result:
                 continue
 
             self._logger.info("Found model %s in %s", model.name, str(file))
@@ -129,22 +129,37 @@ class ModelStorage(ShutdownAware):
             for model_name, model in self.__model_holder.items():
                 await model.unload_model()
 
-    async def ensure_venv(self, file: AsyncPath) -> bool:
-        venv_path, python_path, pip_path, req_path, _ = self.get_paths(file)
+    async def ensure_venv(self, model_root: AsyncPath) -> bool:
+        """
+        Ensure that a virtual environment exists for the model located at model_root.
+        If it doesn't exist, create it and install pip.
+        Pip is installed using the get-pip.py script fetched from the official source.
+
+        Args:
+            model_root: path to the model root directory.
+
+        Returns: True if the virtual environment exists or was created successfully, False otherwise.
+
+        """
+        venv_path, python_path, pip_path, req_path = self.get_paths(model_root)
 
         if await venv_path.exists():
             if await python_path.exists() and await pip_path.exists():
                 return True
 
             self._logger.warning(
-                f"Model folder '{file}' already include .venv folder, but it's not correctly installed!"
+                f"Model root '{model_root}' already include .venv folder, but it's not correctly installed!"
             )
+            # TODO: remove incorrect venv
 
+        self._logger.info(
+            f"Creating virtual environment for models root at '{model_root}'"
+        )
         try:
             await asyncio.to_thread(venv.create, (str(venv_path)), with_pip=False)
         except Exception as e:
             self._logger.error(
-                f"Failed to create virtual environment for model at '{file}': {e}"
+                f"Failed to create virtual environment for model at '{model_root}': {e}"
             )
             return False
 
@@ -152,7 +167,9 @@ class ModelStorage(ShutdownAware):
             get_pip_url = "https://bootstrap.pypa.io/get-pip.py"
             get_pip_path = venv_path / "get-pip.py"
 
-            self._logger.info(f"Downloading get-pip.py for model at '{file}'")
+            self._logger.info(
+                f"Downloading get-pip.py for models root at '{model_root}'"
+            )
             await asyncio.to_thread(
                 urllib.request.urlretrieve, get_pip_url, str(get_pip_path)
             )
@@ -167,22 +184,35 @@ class ModelStorage(ShutdownAware):
 
             if process.returncode != 0:
                 self._logger.error(
-                    f"Failed to install pip for model at '{file}': {stderr.decode()}"
+                    f"Failed to install pip for model root at '{model_root}': {stderr.decode()}"
                 )
                 return False
 
             await get_pip_path.unlink()
 
         except Exception as e:
-            self._logger.error(f"Failed to install pip for model at '{file}': {e}")
+            self._logger.error(
+                f"Failed to install pip for model root at '{model_root}': {e}"
+            )
             return False
 
         return True
 
-    async def install_requirements(self, file_path: AsyncPath) -> bool:
-        _, _, pip_path, req_path, _ = self.get_paths(file_path)
+    async def _install_requirements(self, model_root: AsyncPath) -> bool:
+        """
+        Install requirements for the model located at model_root.
+        It looks for the standard requirements.txt file in the model_root directory.
+        Args:
+            model_root: path to the model root directory.
 
-        self._logger.info(f"Installing requirements for model at '{file_path}'...")
+        Returns: True if installation was successful, False otherwise.
+
+        """
+        _, _, pip_path, req_path = self.get_paths(model_root)
+
+        self._logger.info(
+            f"Installing requirements for model root at '{model_root}'..."
+        )
 
         process = await asyncio.create_subprocess_exec(
             str(pip_path),
@@ -202,22 +232,21 @@ class ModelStorage(ShutdownAware):
 
         if process.returncode != 0:
             self._logger.error(
-                f"Failed to install requirements for model at '{file_path}'. Exit code: {process.returncode}"
+                f"Failed to install requirements for model at '{model_root}'. Exit code: {process.returncode}"
             )
             return False
 
         self._logger.info(
-            f"Successfully installed requirements for model at '{file_path}'"
+            f"Successfully installed requirements for model root at '{model_root}'"
         )
 
         return True
 
     @staticmethod
-    def get_paths(model_path: AsyncPath):
-        venv_path = model_path / ModelWorkerManager.VENV_FOLDER
+    def get_paths(model_root: AsyncPath):
+        venv_path = model_root / ModelWorkerManager.VENV_FOLDER
         python_path = venv_path / "bin" / "python3"
         pip_path = venv_path / "bin" / "pip"
-        req_path = model_path / ModelWorkerManager.REQUIREMENTS_FILE
-        worker_path = model_path / ModelWorkerManager.WORKER_FILE
+        req_path = model_root / ModelWorkerManager.REQUIREMENTS_FILE
 
-        return venv_path, python_path, pip_path, req_path, worker_path
+        return venv_path, python_path, pip_path, req_path

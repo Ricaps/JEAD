@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import struct
 import sys
 from pathlib import Path
@@ -8,6 +9,7 @@ from typing import Optional
 from load_worker import create_worker
 
 shutdown_event = asyncio.Event()
+logger = logging.getLogger("socket_worker")
 
 
 async def recv_msg(reader: asyncio.StreamReader) -> Optional[bytes]:

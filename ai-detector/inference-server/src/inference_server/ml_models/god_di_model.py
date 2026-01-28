@@ -55,6 +55,45 @@ class GodDiModel(InferenceModel):
     async def execute(
         self, data: ModelInferenceRequestBatch
     ) -> Optional[ModelInferenceResultBatch]:
+        """
+        Execute inference on God class / Data class detection using code metrics.
+
+        Expected data structure (Pydantic model):
+        ModelInferenceRequestBatch(
+            model_name="god-di-model",
+            contents=[
+                ModelInferenceRequest(
+                    id="unique-identifier",
+                    content='{"noom": 10, "nooa": 5, "nocm": 8, "LCOM5": 0.75, "cc": 15, "loc": 200}'
+                    # Note: content is a JSON string that will be parsed and validated
+                )
+            ]
+        )
+
+        After parsing content JSON string, it should contain these metrics:
+        {
+            "noom": int,  # Number of Methods
+            "nooa": int,  # Number of Attributes
+            "nocm": int,  # Number of Class Methods
+            "LCOM5": float,  # Lack of Cohesion of Methods 5
+            "cc": int,  # Cyclomatic Complexity
+            "loc": int  # Lines of Code
+        }
+
+        Returns:
+        ModelInferenceResultBatch(
+            contents=[
+                ModelInferenceResult(
+                    id="unique-identifier",
+                    label_evaluation=[
+                        LabelEvaluation(label="clean", score=0.85)
+                        # OR
+                        LabelEvaluation(label="god_di", score=0.92)
+                    ]
+                )
+            ]
+        )
+        """
         inputs = np.array(
             [GodDiModel.map_json_content(content) for content in data.contents],
             dtype=np.float32,
@@ -69,8 +108,9 @@ class GodDiModel(InferenceModel):
             result_id = data.contents[index].id
             self.__logger.info("Inferred: id: '%s', labels: %s", result_id, result)
 
+            # Convert to float() to ensure JSON serializable (NumPy types are not)
             label_evaluation = LabelEvaluation(
-                label=GodDiModel.labels[result], score=result
+                label=GodDiModel.labels[result], score=float(result)
             )
             results.append(
                 ModelInferenceResult(id=result_id, label_evaluation=[label_evaluation])

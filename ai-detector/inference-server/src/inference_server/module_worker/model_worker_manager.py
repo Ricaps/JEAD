@@ -14,7 +14,10 @@ from typing import Optional, Any, IO, AnyStr
 from aiopath import AsyncPath
 from pydantic import BaseModel
 
-from inference_server.exception.model import WorkerStatusException
+from inference_server.exception.model import (
+    WorkerStatusException,
+    WrongModelConfiguration,
+)
 
 
 class WorkerCommand(Enum):
@@ -65,7 +68,8 @@ class ModelWorkerManager:
     WORKER_FILE = "worker.py"
     REQUIREMENTS_FILE = "requirements.txt"
 
-    def __init__(self, worker_dir: AsyncPath):
+    def __init__(self, models_root: AsyncPath, worker_dir: AsyncPath):
+        self.__models_root = models_root
         self.__worker_dir: AsyncPath = worker_dir
         self.__model_name: str = worker_dir.name
         self.__reader: Optional[asyncio.StreamReader] = None
@@ -119,18 +123,21 @@ class ModelWorkerManager:
         port = self._get_port()
 
         host = "localhost"
-        venv_path = self.__worker_dir / self.VENV_FOLDER
+        venv_path = self.__models_root / self.VENV_FOLDER
         python_bin = venv_path / "bin" / "python3"
+        socket_worker_path = await AsyncPath(
+            "src/inference_server/module_worker/socket_worker.py"
+        ).absolute()
 
         if not await venv_path.exists():
-            self.__logger.warning(f"Starting '{self.__model_name}' without its .venv!")
+            self.__logger.warning(f"Starting '{self.__model_name}' without .venv!")
             python_bin = Path("python3")
 
         self.__logger.info(f"Starting model process at path {self.__worker_dir}")
         self.__process = subprocess.Popen(
             [
                 str(python_bin),
-                "src/inference_server/module_worker/socket_worker.py",
+                str(socket_worker_path),
                 str(self.__worker_dir / self.WORKER_FILE),
                 host,
                 str(port),
@@ -139,6 +146,7 @@ class ModelWorkerManager:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            cwd=str(self.__worker_dir),
         )
 
         self._stdout_thread = await self._create_out_thread(self.__process.stdout)
@@ -147,10 +155,17 @@ class ModelWorkerManager:
         self._stderr_thread = await self._create_out_thread(self.__process.stderr)
         self._stderr_thread.start()
 
-        await self._connect_and_wait(host, port)
-        self._status = WorkerStatus.RUNNING
+        try:
+            await self._connect_and_wait(host, port)
+            self._status = WorkerStatus.RUNNING
 
-        self.__logger.info(f"Model process at {self.__worker_dir} started!")
+            self.__logger.info(f"Model process at {self.__worker_dir} started!")
+        except TimeoutError as e:
+            self.__logger.error(
+                f"Model process at {self.__worker_dir} failed to start: {e}"
+            )
+            self._status = WorkerStatus.INACTIVE
+            raise WrongModelConfiguration("Failed to load the model worker!") from e
 
     async def _create_out_thread(self, out: IO[AnyStr]):
         return threading.Thread(target=self._forward_stream, args=(out,), daemon=True)
