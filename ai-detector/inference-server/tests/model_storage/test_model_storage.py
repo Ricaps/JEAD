@@ -55,7 +55,7 @@ class TestModelStorage(IsolatedAsyncioTestCase):
     @staticmethod
     def _createDummyStorage():
         config = ServerConfig(
-            address="0.0.0.0", port="8888", models_root="./tests/resources/model_root"
+            address="0.0.0.0", port="8888", models_root="tests/resources/model_root"
         )
 
         return ModelStorage(config)

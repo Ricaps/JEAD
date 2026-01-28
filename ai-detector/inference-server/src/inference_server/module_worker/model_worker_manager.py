@@ -125,6 +125,8 @@ class ModelWorkerManager:
         host = "localhost"
         venv_path = self.__models_root / self.VENV_FOLDER
         python_bin = venv_path / "bin" / "python3"
+        python_bin = await python_bin.absolute()
+
         socket_worker_path = await AsyncPath(
             "src/inference_server/module_worker/socket_worker.py"
         ).absolute()
@@ -138,7 +140,7 @@ class ModelWorkerManager:
             [
                 str(python_bin),
                 str(socket_worker_path),
-                str(self.__worker_dir / self.WORKER_FILE),
+                str(self.WORKER_FILE),
                 host,
                 str(port),
             ],

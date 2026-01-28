@@ -46,4 +46,6 @@ class TestModelDefinition(IsolatedAsyncioTestCase):
 
     @staticmethod
     def _create_dummy_definition():
-        return ModelDefinition(AsyncPath(MODEL_ROOT_PATH))
+        return ModelDefinition(
+            AsyncPath("tests/resources/model_root"), AsyncPath(MODEL_ROOT_PATH)
+        )

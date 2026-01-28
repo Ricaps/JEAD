@@ -102,22 +102,25 @@ class ModelStorage(ShutdownAware):
         if not result:
             return
 
-        async for file in models_root.iterdir():
-            if await file.is_file():
+        async for folder in models_root.iterdir():
+            if folder.name == ModelWorkerManager.VENV_FOLDER:
                 continue
 
-            worker_path = file / ModelWorkerManager.WORKER_FILE
+            if await folder.is_file():
+                continue
+
+            worker_path = folder / ModelWorkerManager.WORKER_FILE
             if not await worker_path.exists():
                 self._logger.warning(
-                    f"Model folder '{file}' doesn't include {worker_path}!"
+                    f"Model folder '{folder}' doesn't include {worker_path}!"
                 )
                 continue
 
-            model = await self.__load_model(models_root, file)
+            model = await self.__load_model(models_root, folder)
             if model is None:
                 continue
 
-            self._logger.info("Found model %s in %s", model.name, str(file))
+            self._logger.info("Found model %s in %s", model.name, str(folder))
             async with self.__model_holder_lock:
                 self.__model_holder[model.name] = model
 
