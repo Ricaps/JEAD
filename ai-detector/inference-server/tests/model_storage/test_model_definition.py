@@ -4,13 +4,15 @@ from unittest.async_case import IsolatedAsyncioTestCase
 from aiopath import AsyncPath
 
 from inference_server.business.model_storage import ModelDefinition
+from inference_server.configuration.config import ServerConfig
 from inference_server.ml_models.inference_model import InferenceModel
 from inference_server.model.inference_model import (
     ModelInferenceRequestBatch,
     ModelInferenceResultBatch,
 )
 
-MODEL_ROOT_PATH = "./tests/resources/model_root/existing-model"
+MODEL_ROOT_PATH = AsyncPath("./tests/resources/model_root")
+MODEL_PATH = MODEL_ROOT_PATH / "existing-model"
 
 
 class DummyInferenceModel(InferenceModel):
@@ -47,5 +49,10 @@ class TestModelDefinition(IsolatedAsyncioTestCase):
     @staticmethod
     def _create_dummy_definition():
         return ModelDefinition(
-            AsyncPath("tests/resources/model_root"), AsyncPath(MODEL_ROOT_PATH)
+            AsyncPath(MODEL_PATH),
+            ServerConfig(
+                address="0.0.0.0",
+                port="8080",
+                models_root="",
+            ),
         )
