@@ -8,6 +8,7 @@ class ServerConfig(BaseSettings):
     address: str
     port: str
     models_root: str
+    models_venv_dir_name: str = ".venv"
 
 
 server_config = ServerConfig()

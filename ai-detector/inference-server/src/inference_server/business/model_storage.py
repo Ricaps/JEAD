@@ -23,9 +23,9 @@ from inference_server.module_worker.model_worker_manager import (
 
 
 class ModelDefinition(InferenceModelExecutable):
-    def __init__(self, model_root: AsyncPath, model_path: AsyncPath):
+    def __init__(self, model_path: AsyncPath, server_config: ServerConfig):
         self.__model_path: Final[AsyncPath] = model_path
-        self.__model_manager = ModelWorkerManager(model_root, model_path)
+        self.__model_manager = ModelWorkerManager(model_path, server_config)
         self.__logger = logging.getLogger(self.__class__.__name__)
 
     def is_loaded(self) -> bool:
@@ -63,6 +63,9 @@ class ModelDefinition(InferenceModelExecutable):
 
 
 class ModelStorage(ShutdownAware):
+    PIP_SCRIPT_URL = "https://bootstrap.pypa.io/get-pip.py"
+    PIP_SCRIPT_NAME = "get-pip.py"
+
     def __init__(
         self,
         server_config: ServerConfig,
@@ -75,9 +78,7 @@ class ModelStorage(ShutdownAware):
     def get_model(self, model_name: str) -> Optional[ModelDefinition]:
         return self.__model_holder.get(model_name)
 
-    async def __load_model(
-        self, model_root: AsyncPath, model_folder: AsyncPath
-    ) -> Optional[ModelDefinition]:
+    async def __load_model(self, model_folder: AsyncPath) -> Optional[ModelDefinition]:
         for file_name in (ModelWorkerManager.WORKER_FILE,):
             file_path = model_folder / file_name
             exists = await file_path.exists()
@@ -88,7 +89,7 @@ class ModelStorage(ShutdownAware):
                 )
                 return None
 
-        return ModelDefinition(model_root, model_folder)
+        return ModelDefinition(model_folder, self._server_config)
 
     async def load_models(self):
         models_root = AsyncPath(self._server_config.models_root)
@@ -103,7 +104,7 @@ class ModelStorage(ShutdownAware):
             return
 
         async for folder in models_root.iterdir():
-            if folder.name == ModelWorkerManager.VENV_FOLDER:
+            if folder.name == self._server_config.models_venv_dir_name:
                 continue
 
             if await folder.is_file():
@@ -111,12 +112,12 @@ class ModelStorage(ShutdownAware):
 
             worker_path = folder / ModelWorkerManager.WORKER_FILE
             if not await worker_path.exists():
-                self._logger.warning(
+                self._logger.debug(
                     f"Model folder '{folder}' doesn't include {worker_path}!"
                 )
                 continue
 
-            model = await self.__load_model(models_root, folder)
+            model = await self.__load_model(folder)
             if model is None:
                 continue
 
@@ -167,8 +168,8 @@ class ModelStorage(ShutdownAware):
             return False
 
         try:
-            get_pip_url = "https://bootstrap.pypa.io/get-pip.py"
-            get_pip_path = venv_path / "get-pip.py"
+            get_pip_url = ModelStorage.PIP_SCRIPT_URL
+            get_pip_path = venv_path / ModelStorage.PIP_SCRIPT_NAME
 
             self._logger.info(
                 f"Downloading get-pip.py for models root at '{model_root}'"
@@ -245,9 +246,8 @@ class ModelStorage(ShutdownAware):
 
         return True
 
-    @staticmethod
-    def get_paths(model_root: AsyncPath):
-        venv_path = model_root / ModelWorkerManager.VENV_FOLDER
+    def get_paths(self, model_root: AsyncPath):
+        venv_path = model_root / self._server_config.models_venv_dir_name
         python_path = venv_path / "bin" / "python3"
         pip_path = venv_path / "bin" / "pip"
         req_path = model_root / ModelWorkerManager.REQUIREMENTS_FILE

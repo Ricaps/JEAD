@@ -14,6 +14,7 @@ from typing import Optional, Any, IO, AnyStr
 from aiopath import AsyncPath
 from pydantic import BaseModel
 
+from inference_server.configuration.config import ServerConfig
 from inference_server.exception.model import (
     WorkerStatusException,
     WrongModelConfiguration,
@@ -64,12 +65,12 @@ class WorkerStatus(Enum):
 
 
 class ModelWorkerManager:
-    VENV_FOLDER = ".venv"
     WORKER_FILE = "worker.py"
     REQUIREMENTS_FILE = "requirements.txt"
 
-    def __init__(self, models_root: AsyncPath, worker_dir: AsyncPath):
-        self.__models_root = models_root
+    def __init__(self, worker_dir: AsyncPath, server_config: ServerConfig):
+        self.__models_root: AsyncPath = AsyncPath(server_config.models_root)
+        self.__venv_folder: AsyncPath = AsyncPath(server_config.models_venv_dir_name)
         self.__worker_dir: AsyncPath = worker_dir
         self.__model_name: str = worker_dir.name
         self.__reader: Optional[asyncio.StreamReader] = None
@@ -111,6 +112,11 @@ class ModelWorkerManager:
 
                 return
             except OSError:
+                process_status_code = self.__process.poll()
+                if process_status_code is not None:
+                    raise TimeoutError(
+                        f"Worker process exited with code {process_status_code}!"
+                    )
                 await asyncio.sleep(0.2)
 
         raise TimeoutError("Worker was not loaded properly!")
@@ -123,7 +129,7 @@ class ModelWorkerManager:
         port = self._get_port()
 
         host = "localhost"
-        venv_path = self.__models_root / self.VENV_FOLDER
+        venv_path = self.__models_root / self.__venv_folder
         python_bin = venv_path / "bin" / "python3"
         python_bin = await python_bin.absolute()
 
