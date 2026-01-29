@@ -33,14 +33,14 @@ public class CommentUtils {
     }
 
     static Optional<Integer> getRelativeJavadocLineNumber(Javadoc javadoc, String javadocTagText) {
-        String[] javadocTextSplit = javadoc.toText().split("\n");
+        String[] javadocLinesSplit = javadoc.toText().split("\n");
 
-        return getRelativeJavadocLineNumber(javadocTextSplit, javadocTagText);
+        return getRelativeJavadocLineNumber(javadocLinesSplit, javadocTagText);
     }
 
-    static Optional<Integer> getRelativeJavadocLineNumber(String[] javadocTextSplit, String javadocTagText) {
-        for (int i = 0; i < javadocTagText.length(); i++) {
-            String line = javadocTextSplit[i];
+    static Optional<Integer> getRelativeJavadocLineNumber(String[] javadocLinesSplit, String javadocTagText) {
+        for (int i = 0; i < javadocLinesSplit.length; i++) {
+            String line = javadocLinesSplit[i];
 
             if (line.contains(javadocTagText)) {
                 return Optional.of(i);
