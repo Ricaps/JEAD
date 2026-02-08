@@ -51,7 +51,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>cz.muni.fi</groupId>
+                <groupId>cz.muni.fi.jead</groupId>
                 <artifactId>jead-maven-plugin</artifactId>
                 <version>${project.version}</version>
                 <executions>
