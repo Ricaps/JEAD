@@ -23,3 +23,13 @@ class ModelNotLoadedException(BaseServerException):
 class ContentNotValidException(BaseServerException):
     def __init__(self, message: str):
         super().__init__(StatusCode.INVALID_ARGUMENT, message)
+
+
+class WorkerStatusException(BaseServerException):
+    def __init__(self, message: str):
+        super().__init__(StatusCode.FAILED_PRECONDITION, message)
+
+
+class ModelInferenceException(BaseServerException):
+    def __init__(self, message: str):
+        super().__init__(StatusCode.INTERNAL, message)

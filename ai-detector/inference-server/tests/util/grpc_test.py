@@ -64,7 +64,6 @@ class AsyncGrpcTestCase(IsolatedAsyncioTestCase):
     async def _add_services(grpc_server: Server, server_config: ServerConfig):
         model_storage = ModelStorage(
             server_config=server_config,
-            model_type_registry={AsyncGrpcTestCase.EXISTING_MODEL_NAME: DummyModel},
         )
         await model_storage.load_models()
 

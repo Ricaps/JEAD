@@ -15,9 +15,45 @@ _TEST_LABEL_3 = "test_label_3"
 
 
 class TestModel(InferenceModel):
+    """
+    Test model for development and testing purposes.
+    Returns different labels based on content string.
+    """
+
     async def execute(
         self, data: ModelInferenceRequestBatch
     ) -> Optional[ModelInferenceResultBatch]:
+        """
+        Execute test inference - returns labels based on content string patterns.
+
+        Expected data structure (Pydantic model):
+        ModelInferenceRequestBatch(
+            model_name="test-model",
+            contents=[
+                ModelInferenceRequest(
+                    id="unique-identifier",
+                    content="any string content"
+                    # If content contains "return-label-1" -> returns label_1 with high score
+                    # If content contains "return-label-2" -> returns label_2 with high score
+                    # Otherwise -> returns equal scores for all labels
+                )
+            ]
+        )
+
+        Returns:
+        ModelInferenceResultBatch(
+            contents=[
+                ModelInferenceResult(
+                    id="unique-identifier",
+                    label_evaluation=[
+                        LabelEvaluation(label="test_label_1", score=0.944314),
+                        LabelEvaluation(label="test_label_2", score=0.0334),
+                        LabelEvaluation(label="test_label_3", score=0.0334)
+                    ]
+                )
+            ]
+        )
+        """
         mapped_content = list(
             map(
                 lambda element: ModelInferenceResult(

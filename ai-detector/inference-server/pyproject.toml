@@ -3,7 +3,7 @@ name = "inference-server"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Martin Prochazka",email = "pro.nitram@gmail.com"}
+    { name = "Martin Prochazka", email = "pro.nitram@gmail.com" }
 ]
 readme = "README.md"
 requires-python = ">=3.13,<4.0"
@@ -12,15 +12,12 @@ dependencies = [
     "grpcio-tools (>=1.75.1,<2.0.0)",
     "grpcio-reflection (>=1.75.1,<2.0.0)",
     "pydantic-settings (>=2.11.0,<3.0.0)",
-    "transformers (>=4.56.2,<5.0.0)",
     "grpc-interceptor (>=0.15.4,<0.16.0)",
     "aiopath (>=0.7.7,<0.8.0)",
-    "umap-learn (>=0.5.11,<0.6.0)",
 ]
 
-
 [tool.poetry]
-packages = [{include = "inference_server", from = "src"}]
+packages = [{ include = "inference_server", from = "src" }]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -29,12 +26,6 @@ build-backend = "poetry.core.masonry.api"
 [dependency-groups]
 dev = [
     "ruff (==0.13.2)"
-]
-cpu = [
-    "onnxruntime (>=1.23.1,<2.0.0)"
-]
-gpu = [
-    "onnxruntime-gpu[cuda,cudnn] (>=1.23.0,<2.0.0)"
 ]
 
 [tool.ruff]

@@ -4,11 +4,15 @@ from unittest.async_case import IsolatedAsyncioTestCase
 from aiopath import AsyncPath
 
 from inference_server.business.model_storage import ModelDefinition
+from inference_server.configuration.config import ServerConfig
 from inference_server.ml_models.inference_model import InferenceModel
 from inference_server.model.inference_model import (
     ModelInferenceRequestBatch,
     ModelInferenceResultBatch,
 )
+
+MODEL_ROOT_PATH = AsyncPath("./tests/resources/model_root")
+MODEL_PATH = MODEL_ROOT_PATH / "existing-model"
 
 
 class DummyInferenceModel(InferenceModel):
@@ -24,25 +28,31 @@ class TestModelDefinition(IsolatedAsyncioTestCase):
     async def test_load_model(self):
         model_definition = self._create_dummy_definition()
         await model_definition.load_model()
-        model = model_definition._model_reference()
 
-        self.assertIsInstance(model, DummyInferenceModel)
+        self.assertTrue(model_definition.is_loaded())
 
         # the instance is the same after calling load_model() twice
         await model_definition.load_model()
-        self.assertEqual(model, model_definition._model_reference())
+        self.assertTrue(model_definition.is_loaded())
 
     async def test_unload_model(self):
         model_definition = self._create_dummy_definition()
-        self.assertIsNone(model_definition._model_reference)
+        self.assertFalse(model_definition.is_loaded())
 
         await model_definition.load_model()
 
-        self.assertIsNotNone(model_definition._model_reference())
+        self.assertTrue(model_definition.is_loaded())
 
         await model_definition.unload_model()
-        self.assertIsNone(model_definition._model_reference)
+        self.assertFalse(model_definition.is_loaded())
 
     @staticmethod
     def _create_dummy_definition():
-        return ModelDefinition(AsyncPath("random-path"), DummyInferenceModel)
+        return ModelDefinition(
+            AsyncPath(MODEL_PATH),
+            ServerConfig(
+                address="0.0.0.0",
+                port="8080",
+                models_root="",
+            ),
+        )

@@ -19,5 +19,5 @@ def dict_to_grpc(model: dict[str, Any], grpc_message: type[MessageType]) -> Mess
     return ParseDict(model, grpc_message)
 
 
-def model_to_grpc(model: BaseModel, grpc_message: type[MessageType]) -> MessageType:
-    return ParseDict(model.model_dump(), grpc_message())
+def model_to_grpc(model: Any, grpc_message: type[MessageType]) -> MessageType:
+    return ParseDict(model, grpc_message())

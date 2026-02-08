@@ -48,7 +48,7 @@ public class InferenceService {
                 )
                 .collect(Collectors.toSet());
 
-        LOGGER.info("Sending request with len {}", inferenceItemCollection.size());
+        LOGGER.info("Sending request with len {} to model {}", inferenceItemCollection.size(), modelName);
         InferenceRequest inferenceRequest = inferenceMapper.mapContentsToRequest(contents, modelName);
 
         InferenceResponse response = runRequest(inferenceRequest);
