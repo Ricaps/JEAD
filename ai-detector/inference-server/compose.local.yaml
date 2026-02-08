@@ -1,7 +1,7 @@
 services:
   inference-server-cpu:
-    image: ricaps/jead:latest
-    pull_policy: always
+    build:
+      context: .
     ports:
       - "8090:8080"
     environment:
