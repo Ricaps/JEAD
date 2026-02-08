@@ -3,11 +3,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.example</groupId>
+        <groupId>cz.muni.fi.jead</groupId>
         <artifactId>test-fixtures</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <groupId>com.example</groupId>
     <artifactId>authorization-server</artifactId>
     <name>AuthorizationServer</name>
     <description>AuthorizationServer</description>
@@ -52,8 +51,8 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>cz.muni.fi.jena</groupId>
-                <artifactId>jena-maven-plugin</artifactId>
+                <groupId>cz.muni.fi.jead</groupId>
+                <artifactId>jead-maven-plugin</artifactId>
                 <version>${project.version}</version>
                 <executions>
                     <execution>

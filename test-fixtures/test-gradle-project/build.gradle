@@ -24,13 +24,13 @@ buildscript {
     repositories {
         mavenLocal()
         maven {
-            name = "jena-github"
-            url = uri('https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3')
+            name = "jead-github"
+            url = uri('https://x-access-token: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@maven.pkg.github.com/Ricaps/Jead')
         }
     }
 
     dependencies {
-        classpath("cz.muni.fi.jena:jena-gradle-plugin:$version") {
+        classpath("cz.muni.fi.jead:jead-gradle-plugin:$version") {
             changing = true
         }
     }
@@ -40,8 +40,8 @@ buildscript {
 }
 
 allprojects {
-    apply plugin: 'jena-gradle-plugin'
+    apply plugin: 'jead-gradle-plugin'
 
-    jenaDelombok.dependsOn compileJava
+    jeadDelombok.dependsOn compileJava
 }
 // End of jena build script

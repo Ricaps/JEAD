@@ -2,15 +2,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cz.muni.fi.jena</groupId>
-    <artifactId>jena-build-plugins-parent</artifactId>
+    <groupId>cz.muni.fi.jead</groupId>
+    <artifactId>build-plugins-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
-        <module>jena-plugin-core</module>
-        <module>jena-maven-plugin</module>
-        <module>jena-gradle-plugin</module>
+        <module>jead-plugin-core</module>
+        <module>jead-maven-plugin</module>
+        <module>jead-gradle-plugin</module>
     </modules>
 
     <properties>
@@ -31,8 +31,8 @@
     <distributionManagement>
         <repository>
             <id>github</id>
-            <name>GitHub JenaV3 Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/Ricaps/JenaV3</url>
+            <name>GitHub Jead Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/Ricaps/Jead</url>
         </repository>
     </distributionManagement>
 </project>
