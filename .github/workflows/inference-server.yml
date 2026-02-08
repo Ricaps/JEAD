@@ -2,6 +2,8 @@ name: Python Inference Server tests
 on:
   push:
     branches: [ "master" ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ "master" ]
 
@@ -67,5 +69,5 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ai-detector/inference-server
-          push: true
-          tags: ricaps/jead:${{ env.VERSION }}
+          push: ${{ startsWith(github.ref, 'refs/tags/v')}}
+          tags: ricaps/jead:${{ env.VERSION }},ricaps/jead:latest
