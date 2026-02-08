@@ -15,6 +15,7 @@ env:
   PROJECT_PATH: ./ai-detector/inference-server
   POETRY_VERSION: 2.2.1
   PYTHON_VERSION: 3.13
+  DOCKER_PROJECT_NAME: ${{ vars.DOCKERHUB_USERNAME }}/jead
 
 jobs:
   inference-server:
@@ -69,5 +70,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ai-detector/inference-server
-          push: ${{ startsWith(github.ref, 'refs/tags/v')}}
-          tags: ricaps/jead:${{ env.VERSION }},ricaps/jead:latest
+          push: true
+          cache-from: type=registry,ref=${{ env.DOCKER_PROJECT_NAME }}:${{ env.VERSION }}
+          cache-to: type=registry,ref=${{ env.DOCKER_PROJECT_NAME }}:${{ env.VERSION }}
+          tags: |
+            ${{ env.DOCKER_PROJECT_NAME }}:${{ env.VERSION }}
+            ${{ github.event_name != 'pull_request' && format('{0}:latest', env.DOCKER_PROJECT_NAME) || '' }}
