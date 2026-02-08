@@ -2,6 +2,8 @@ name: Python Inference Server tests
 on:
   push:
     branches: [ "master" ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ "master" ]
 
@@ -13,6 +15,7 @@ env:
   PROJECT_PATH: ./ai-detector/inference-server
   POETRY_VERSION: 2.2.1
   PYTHON_VERSION: 3.13
+  DOCKER_PROJECT_NAME: ${{ vars.DOCKERHUB_USERNAME }}/jead
 
 jobs:
   inference-server:
@@ -44,3 +47,30 @@ jobs:
       - name: Running linter
         working-directory: ${{ env.PROJECT_PATH }}
         run: poetry run ruff check
+
+  build-docker:
+    runs-on: ubuntu-latest
+    needs: inference-server
+    steps:
+      - uses: actions/checkout@v4
+      - name: Calculate Version
+        run: |
+          chmod +x .github/scripts/calculate-version.sh
+          .github/scripts/calculate-version.sh
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ai-detector/inference-server
+          push: true
+          cache-from: type=registry,ref=${{ env.DOCKER_PROJECT_NAME }}:${{ env.VERSION }}-buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_PROJECT_NAME }}:${{ env.VERSION }}-buildcache,mode=max
+          tags: ${{ env.DOCKER_PROJECT_NAME }}:${{ env.VERSION }},${{ github.event_name != 'pull_request' && format('{0}:latest', env.DOCKER_PROJECT_NAME) || '' }}

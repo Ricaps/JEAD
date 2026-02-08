@@ -1,0 +1,17 @@
+services:
+  inference-server-cpu:
+    build:
+      context: .
+    ports:
+      - "8090:8080"
+    environment:
+      ADDRESS: 0.0.0.0
+      PORT: 8080
+      MODELS_ROOT: /usr/models
+      PIP_CACHE_DIR: /root/.cache/pip
+    volumes:
+      - "${MODELS_ROOT_HOST}:/usr/models"
+      - pip-cache:/root/.cache/pip
+
+volumes:
+  pip-cache:
