@@ -1,10 +1,15 @@
 services:
   db:
-    extends:
-      service: db
-      file: compose.base.yml
+    image: postgres:17-alpine3.23
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: detector
+      POSTGRES_USER: root
+      POSTGRES_DB: antipatternDetector
     ports:
       - "5431:5432"
+    volumes:
+      - dbVolume:/var/lib/postgresql/data
 volumes:
   dbVolume:
     driver: local

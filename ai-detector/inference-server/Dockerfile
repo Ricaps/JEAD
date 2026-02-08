@@ -11,15 +11,12 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_CACHE_DIR=/tmp/poetry_cache
 
 ARG INFERENCE_SERVER_DIR=.
-ARG CPU_OR_GPU=gpu
 
 WORKDIR /usr/app
 COPY $INFERENCE_SERVER_DIR/pyproject.toml $INFERENCE_SERVER_DIR/poetry.lock ./
 COPY $INFERENCE_SERVER_DIR/scripts/ ./scripts/
-RUN chmod +x ./scripts/generate-server.sh &&\
-    chmod +x ./scripts/install.sh
-
-RUN ./scripts/install.sh $CPU_OR_GPU && rm -rf $POETRY_CACHE_DIR
+RUN chmod +x ./scripts/generate-server.sh
+RUN poetry install --no-root && rm -rf $POETRY_CACHE_DIR
 
 COPY $INFERENCE_SERVER_DIR/src ./src/
 RUN touch README.md
