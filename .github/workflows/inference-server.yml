@@ -71,6 +71,6 @@ jobs:
         with:
           context: ai-detector/inference-server
           push: true
-          cache-from: type=registry,ref=${{ env.DOCKER_PROJECT_NAME }}:${{ env.VERSION }}
-          cache-to: type=registry,ref=${{ env.DOCKER_PROJECT_NAME }}:${{ env.VERSION }}
+          cache-from: type=registry,ref=${{ env.DOCKER_PROJECT_NAME }}:${{ env.VERSION }}-buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_PROJECT_NAME }}:${{ env.VERSION }}-buildcache,mode=max
           tags: ${{ env.DOCKER_PROJECT_NAME }}:${{ env.VERSION }},${{ github.event_name != 'pull_request' && format('{0}:latest', env.DOCKER_PROJECT_NAME) || '' }}
