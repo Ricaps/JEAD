@@ -7,7 +7,7 @@
         <artifactId>build-plugins-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>jead-gradle-plugin</artifactId>
+    <artifactId>jead-gradle-plugin-wrapper</artifactId>
     <name>jead-gradle-plugin Maven Wrapper</name>
     <description>Maven Wrapper for building Jena Gradle plugin using Gradle</description>
     <packaging>pom</packaging>
