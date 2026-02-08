@@ -6,27 +6,29 @@ It creates a database so Jena has where to store anti-pattern and metadata.
 After running the database you can run Jena using the main method.
 ### Project preparation
 Before using detectIssues command on project make use it has its dependencies exposed in target/dependency.
-For maven project use this plugin (replace `current-jena-version` by the actual used versio of Jena):
+For maven project use this plugin (replace `current-jead-version` by the actual used versio of Jead):
+
 ```xml
+
 <plugin>
-    <groupId>cz.muni.fi.jena</groupId>
-    <artifactId>jena-maven-plugin</artifactId>
-    <version>current-jena-version</version>
+    <groupId>cz.muni.fi.jead</groupId>
+    <artifactId>jead-maven-plugin</artifactId>
+    <version>current-jead-version</version>
     <executions>
-      <execution>
-        <id>copy-dependencies</id>
-        <phase>package</phase>
-        <goals>
-          <goal>copy-dependencies</goal>
-        </goals>
-      </execution>
-      <execution>
-        <id>delombok</id>
-        <phase>package</phase>
-        <goals>
-          <goal>delombok</goal>
-        </goals>
-      </execution>
+        <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals>
+                <goal>copy-dependencies</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>delombok</id>
+            <phase>package</phase>
+            <goals>
+                <goal>delombok</goal>
+            </goals>
+        </execution>
     </executions>
 </plugin>
 ```
@@ -40,26 +42,26 @@ You might need to add also plugin repository definition:
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
-      <id>jena-github</id>
-      <url>https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3</url>
+      <id>jead-github</id>
+      <url>https://x-access-token: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@maven.pkg.github.com/Ricaps/Jead</url>
     </pluginRepository>
   </pluginRepositories>
 ```
 
-For Gradle use these tasks (replace `<current-jena-version>` with actual Jena version used):
+For Gradle use these tasks (replace `<current-jead-version>` with actual Jead version used):
 ```groovy
 buildscript {
     repositories {
         mavenLocal()
         maven {
-            name = "jena-github"
-            url = uri('https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3')
+            name = "jead-github"
+            url = uri('https://x-access-token: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@maven.pkg.github.com/Ricaps/Jead')
 
         }
     }
 
     dependencies {
-        classpath("cz.muni.fi.jena:jena-gradle-plugin:<current-jena-version>") {
+        classpath("cz.muni.fi.jead:jead-gradle-plugin:<current-jead-version>") {
             changing = true
         }
     }
@@ -68,7 +70,7 @@ buildscript {
     }
 }
 
-apply plugin: 'jena-gradle-plugin'
+apply plugin: 'jead-gradle-plugin'
 
 compileJava.finalizedBy delombok
 compileJava.finalizedBy copyDependencies

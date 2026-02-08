@@ -15,6 +15,6 @@ buildscript {
 allprojects {
     apply plugin: '${plugin.pluginId}'
 
-    jenaDelombok.dependsOn compileJava
+    jeadDelombok.dependsOn compileJava
 }
-// End of jena build script
+// End of jead build script

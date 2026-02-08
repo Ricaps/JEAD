@@ -27,13 +27,13 @@ public class PrepareProjectsCommand
     public static final String BUILD_PROJECTS_DESCRIPTION = "Automatically build target project to expose the dependencies";
 
     private final ProjectBuildService projectBuildService;
-    private final JenaMavenPluginInitializer jenaMavenPluginInitializer;
-    private final JenaGradlePluginInitializer jenaGradlePluginInitializer;
+    private final JeadMavenPluginInitializer jeadMavenPluginInitializer;
+    private final JeadGradlePluginInitializer jeadGradlePluginInitializer;
 
-    public PrepareProjectsCommand(ProjectBuildService projectBuildService, JenaMavenPluginInitializer jenaMavenPluginInitializer, JenaGradlePluginInitializer jenaGradlePluginInitializer) {
+    public PrepareProjectsCommand(ProjectBuildService projectBuildService, JeadMavenPluginInitializer jeadMavenPluginInitializer, JeadGradlePluginInitializer jeadGradlePluginInitializer) {
         this.projectBuildService = projectBuildService;
-        this.jenaMavenPluginInitializer = jenaMavenPluginInitializer;
-        this.jenaGradlePluginInitializer = jenaGradlePluginInitializer;
+        this.jeadMavenPluginInitializer = jeadMavenPluginInitializer;
+        this.jeadGradlePluginInitializer = jeadGradlePluginInitializer;
     }
 
     @Command(command = "prepareProjects", description = PREPARE_PROJECTS_DESCRIPTION)
@@ -57,8 +57,8 @@ public class PrepareProjectsCommand
                         filesToVisit.mavenFiles().stream()
                 )
                 .collect(Collectors.joining(System.lineSeparator())));
-        jenaGradlePluginInitializer.addTaskToGradleFiles(filesToVisit);
-        jenaMavenPluginInitializer.addPluginsToPomsMissingThem(filesToVisit);
+        jeadGradlePluginInitializer.addTaskToGradleFiles(filesToVisit);
+        jeadMavenPluginInitializer.addPluginsToPomsMissingThem(filesToVisit);
 
         if (buildProjects) {
             projectBuildService.runBuilds(Path.of(directory));

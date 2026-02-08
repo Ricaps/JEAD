@@ -1,5 +1,5 @@
 [project]
-name = "jena-v3-aidetector-training"
+name = "jead-v3-aidetector-training"
 version = "0.1.0"
 description = ""
 authors = [

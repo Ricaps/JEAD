@@ -1,0 +1,65 @@
+plugins {
+    id 'java'
+    id 'java-gradle-plugin'
+    id 'maven-publish'
+}
+
+group = 'cz.muni.fi.jead'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+def jeadRepoUrl = "https://maven.pkg.github.com/Ricaps/Jead"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+
+    maven {
+        name = "GitHub"
+        url = uri(jeadRepoUrl)
+        credentials {
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
+
+publishing {
+    repositories {
+        mavenLocal()
+        maven {
+            name = "GitHub"
+            url = uri(jeadRepoUrl)
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+
+gradlePlugin {
+    plugins {
+        jeadPlugin {
+            id = 'jead-gradle-plugin'
+            implementationClass = 'cz.muni.fi.jead.JeadGradlePlugin'
+        }
+    }
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation("cz.muni.fi.jead:jead-plugin-core:$version")
+}
+
+test {
+    useJUnitPlatform()
+}

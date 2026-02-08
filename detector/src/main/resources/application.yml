@@ -71,15 +71,15 @@ inference:
 
 prepare-plugin:
   maven-plugin:
-    group-id: "cz.muni.fi.jena"
-    artifact-id: "jena-maven-plugin"
+    group-id: "cz.muni.fi.jead"
+    artifact-id: "jead-maven-plugin"
     version: @project.version@
   gradle-plugin:
-    group-id: "cz.muni.fi.jena"
-    artifact-id: "jena-gradle-plugin"
+    group-id: "cz.muni.fi.jead"
+    artifact-id: "jead-gradle-plugin"
     version: @project.version@
-    plugin-id: "jena-gradle-plugin"
+    plugin-id: "jead-gradle-plugin"
   repository:
-    id: jena-github
+    id: jead-github
     # Repository pull token - it's safe to have it here until the GitHub repo is made public
-    url: https://x-access-token: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@maven.pkg.github.com/Ricaps/JenaV3
+    url: https://x-access-token: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@maven.pkg.github.com/Ricaps/Jead
