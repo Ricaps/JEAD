@@ -11,9 +11,9 @@ on:
       - master
 
 env:
-  M2_CACHE_KEY: m2-${{ github.sha }}
+  M2_CACHE_KEY: m2-${{ github.ref }}
   BUILD_PLUGINS_DIRECTORY: ./build-plugins
-  JEAD_STAGE_PROJECTS: test-fixtures,detector
+  JEAD_STAGE_PROJECTS: test-fixtures,detector,assembly
 
 jobs:
   build-and-publish-jead-plugins:
@@ -43,7 +43,7 @@ jobs:
           path: ~/.m2
           key: ${{ env.M2_CACHE_KEY }}-${{ github.run_id }}-${{ github.job }}
           restore-keys: ${{ env.M2_CACHE_KEY }}
-          
+
       - name: Calculate Version
         run: |
           chmod +x .github/scripts/calculate-version.sh
@@ -53,16 +53,16 @@ jobs:
         working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}
         run: ../mvnw --batch-mode versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
 
-      - name: Run integration tests & install
+      - name: Run tests & Install plugins to local repository
         working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}
         run: ../mvnw --batch-mode install
-      
+
       - name: Publish jead-plugin-core & plugins
         if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'pull_request'
         working-directory: ${{ env.BUILD_PLUGINS_DIRECTORY }}
         run: ../mvnw --batch-mode deploy -DskipTests
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-jead:
     needs:
@@ -123,6 +123,27 @@ jobs:
       uses: scacap/action-surefire-report@v1
       with:
         report_paths: '**/target/failsafe-reports/TEST-*.xml'
+
+    - name: Build distribution assembly
+      run: ./mvnw --batch-mode package -pl assembly -amd -DskipTests
+
+    - name: Upload distribution assembly as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: jead-${{ env.VERSION }}-${{ github.sha }}
+        path: assembly/target/jead-${{ env.VERSION }}-assembly.zip
+        retention-days: 90
+        if-no-files-found: error
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: assembly/target/jead-${{ env.VERSION }}-assembly.zip
+        draft: false
+        prerelease: ${{ contains(env.VERSION, 'SNAPSHOT') || contains(env.VERSION, 'alpha') || contains(env.VERSION, 'beta') || contains(env.VERSION, 'rc') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Update dependency graph
       uses: advanced-security/maven-dependency-submission-action@v3
