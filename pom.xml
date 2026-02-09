@@ -12,6 +12,7 @@
         <module>build-plugins</module>
         <module>test-fixtures</module>
         <module>detector</module>
+        <module>assembly</module>
     </modules>
 
     <profiles>
@@ -32,6 +33,7 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <java.version>25</java.version>
+        <maven-assembly-plugin.version>3.8.0</maven-assembly-plugin.version>
     </properties>
 
     <distributionManagement>
