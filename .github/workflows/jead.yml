@@ -137,10 +137,9 @@ jobs:
 
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: assembly/target/jead-${{ env.VERSION }}-assembly.zip
-        draft: false
         prerelease: ${{ contains(env.VERSION, 'SNAPSHOT') || contains(env.VERSION, 'alpha') || contains(env.VERSION, 'beta') || contains(env.VERSION, 'rc') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
