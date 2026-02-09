@@ -13,7 +13,7 @@ on:
 env:
   M2_CACHE_KEY: m2-${{ github.sha }}
   BUILD_PLUGINS_DIRECTORY: ./build-plugins
-  JEAD_STAGE_PROJECTS: test-fixtures,detector
+  JEAD_STAGE_PROJECTS: detector
 
 jobs:
   build-and-publish-jead-plugins:
@@ -103,15 +103,14 @@ jobs:
     - name: Set Versions of project
       run: ./mvnw --batch-mode versions:set -DnewVersion=${{ env.VERSION }} -DgenerateBackupPoms=false
 
+    - name: Build Maven projects
+      run: ./mvnw --batch-mode install -pl ${{ env.JEAD_STAGE_PROJECTS }} -am -DskipTests
 
     - name: Run unit tests
-      run: ./mvnw --batch-mode test -pl ${{ env.JEAD_STAGE_PROJECTS }} -amd
+      run: ./mvnw --batch-mode test -pl ${{ env.JEAD_STAGE_PROJECTS }}
 
     - name: Run integration tests
-      run: ./mvnw --batch-mode verify -pl ${{ env.JEAD_STAGE_PROJECTS }} -amd -DskipUnitTests
-
-    - name: Build Maven projects
-      run: ./mvnw --batch-mode install -pl ${{ env.JEAD_STAGE_PROJECTS }} -amd -DskipTests
+      run: ./mvnw --batch-mode verify -pl ${{ env.JEAD_STAGE_PROJECTS }} -DskipUnitTests
 
     - name: Publish surefire results
       if: success() || failure()
@@ -126,7 +125,7 @@ jobs:
         report_paths: '**/target/failsafe-reports/TEST-*.xml'
 
     - name: Build distribution assembly
-      run: ./mvnw --batch-mode package -pl assembly -DskipTests
+      run: ./mvnw --batch-mode package -pl assembly -am -DskipTests
 
     - name: Upload distribution assembly as artifact
       uses: actions/upload-artifact@v4

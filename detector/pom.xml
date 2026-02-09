@@ -191,6 +191,30 @@
             <version>${jackson-databind.version}</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>cz.muni.fi.jead</groupId>
+            <artifactId>antipatterns</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>cz.muni.fi.jead</groupId>
+            <artifactId>authorization-server</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>cz.muni.fi.jead</groupId>
+            <artifactId>power-mock-usage</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>cz.muni.fi.jead</groupId>
+            <artifactId>test-gradle-project-wrapper</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
