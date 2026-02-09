@@ -6,7 +6,7 @@
     </formats>
     <files>
         <file>
-            <source>${project.parent.basedir}/detector/target/detector-${project.version}.jar</source>
+            <source>${project.parent.basedir}/detector/target/detector-${project.version}-exec.jar</source>
             <destName>detector.jar</destName>
         </file>
         <file>

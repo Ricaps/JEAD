@@ -11,7 +11,7 @@ on:
       - master
 
 env:
-  M2_CACHE_KEY: m2-${{ github.ref }}
+  M2_CACHE_KEY: m2-${{ github.sha }}
   BUILD_PLUGINS_DIRECTORY: ./build-plugins
   JEAD_STAGE_PROJECTS: test-fixtures,detector,assembly
 
