@@ -1,0 +1,30 @@
+services:
+  inference-server:
+    image: ricaps/jead:@project.version@
+    ports:
+      - "8081:8080"
+    environment:
+      ADDRESS: 0.0.0.0
+      PORT: 8080
+      MODELS_ROOT: /usr/models
+      PIP_CACHE_DIR: /root/.cache/pip
+    volumes:
+      - "${MODELS_ROOT_HOST}:/usr/models"
+      - pip-cache:/root/.cache/pip
+
+  database:
+    image: postgres:17-alpine3.23
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: detector
+      POSTGRES_USER: root
+      POSTGRES_DB: antipatternDetector
+    ports:
+      - "5431:5432"
+    volumes:
+      - dbVolume:/var/lib/postgresql/data
+
+volumes:
+  pip-cache:
+  dbVolume:
+    driver: local
