@@ -16,14 +16,6 @@
     <name>JEAD Distribution Assembly</name>
     <description>Creates the distributable ZIP package with all JEAD components</description>
 
-    <dependencies>
-        <dependency>
-            <groupId>cz.muni.fi.jead</groupId>
-            <artifactId>detector</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
-
     <build>
         <plugins>
             <plugin>

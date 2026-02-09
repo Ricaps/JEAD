@@ -111,7 +111,7 @@ jobs:
       run: ./mvnw --batch-mode verify -pl ${{ env.JEAD_STAGE_PROJECTS }} -amd -DskipUnitTests
 
     - name: Build Maven projects
-      run: ./mvnw -B install -pl ${{ env.JEAD_STAGE_PROJECTS }} -amd -DskipTests
+      run: ./mvnw --batch-mode install -pl ${{ env.JEAD_STAGE_PROJECTS }} -amd -DskipTests
 
     - name: Publish surefire results
       if: success() || failure()
@@ -126,7 +126,7 @@ jobs:
         report_paths: '**/target/failsafe-reports/TEST-*.xml'
 
     - name: Build distribution assembly
-      run: ./mvnw --batch-mode package -pl assembly -amd -DskipTests
+      run: ./mvnw --batch-mode package -pl assembly -DskipTests
 
     - name: Upload distribution assembly as artifact
       uses: actions/upload-artifact@v4
