@@ -55,6 +55,7 @@ public record MachineLearningDetectorCallback(MachineLearningDetector machineLea
                             return true;
                         }
 
+                        // If evaluation predicate is defined, filter out detectors which shouldn't be run for this configuration
                         return detectorConfig.evaluations().stream().anyMatch(config -> evaluationPredicate.test(config.issueType().getCategory()));
                     }).toList();
 

@@ -5,7 +5,7 @@ from typing import Any
 import logging
 import json
 
-from onnxruntime import InferenceSession
+from onnxruntime import InferenceSession, preload_dlls
 
 
 class MLWorker:
@@ -13,6 +13,7 @@ class MLWorker:
     labels = {0: "clean", 1: "god_di"}
 
     def __init__(self):
+        preload_dlls(directory="")
         subfolder = Path(MLWorker.SUBFOLDER_NAME)
         self.session = InferenceSession(
             subfolder.joinpath("model.onnx"),

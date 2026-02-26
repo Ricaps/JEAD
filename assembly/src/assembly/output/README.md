@@ -78,6 +78,41 @@ View server logs:
 docker compose logs -f inference-server
 ```
 
+#### Using NVIDIA GPU (compose.gpu.yaml)
+
+If you want the inference server container to access an NVIDIA GPU, the distribution includes `compose.gpu.yaml` which adds the required device mapping (it sets `devices: - "nvidia.com/gpu=all"`). 
+The `compose.gpu.yaml` has to be used as an extension to the base `compose.yaml` when starting the services, it cannot be used on its own.
+
+Prerequisites:
+- NVIDIA drivers installed on the host (verify with `nvidia-smi` on the host).
+- NVIDIA Container Toolkit (a.k.a. nvidia-docker) configured so Docker can expose GPUs to containers. See the official docs: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
+- A recent Docker Engine that supports the NVIDIA Container Toolkit. Restart the Docker daemon after installing the toolkit.
+
+Quick verification that Docker can see the GPU (runs an official NVIDIA test image):
+
+```bash
+docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
+```
+
+Start the GPU-enabled compose in the following way:
+
+```bash
+docker compose -f compose.yaml -f compose.gpu.yaml up -d
+```
+
+Verify GPU usage:
+- Check running containers:
+
+```bash
+docker compose ps
+```
+
+- To verify a container can see the GPU you can run the Nvidia test image shown above. If your inference server image contains `nvidia-smi` you may also exec into it:
+
+```bash
+docker exec -it <inference-server-container-name> nvidia-smi
+```
+
 ### 3. Configure the Detector (Optional)
 
 Edit `config/application.yml` if you need to customize:

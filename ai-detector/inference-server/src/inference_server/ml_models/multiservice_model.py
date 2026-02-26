@@ -5,7 +5,7 @@ import json
 import numpy as np
 import logging
 
-from onnxruntime import InferenceSession
+from onnxruntime import InferenceSession, preload_dlls
 from sklearn.cluster import HDBSCAN
 from transformers import AutoTokenizer
 from umap import UMAP
@@ -15,6 +15,7 @@ class MLWorker:
     SUBFOLDER_NAME = "onnx"
 
     def __init__(self):
+        preload_dlls(directory="")
         subfolder = Path(MLWorker.SUBFOLDER_NAME)
         self.tokenizer: Optional[Callable[[Any], Any]] = AutoTokenizer.from_pretrained(
             subfolder

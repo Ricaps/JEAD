@@ -67,6 +67,7 @@ class WorkerStatus(Enum):
 class ModelWorkerManager:
     WORKER_FILE = "worker.py"
     REQUIREMENTS_FILE = "requirements.txt"
+    REQUIREMENTS_GPU_FILE = "requirements.gpu.txt"
 
     def __init__(self, worker_dir: AsyncPath, server_config: ServerConfig):
         self.__models_root: AsyncPath = AsyncPath(server_config.models_root)
