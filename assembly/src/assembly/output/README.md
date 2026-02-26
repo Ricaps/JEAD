@@ -44,15 +44,18 @@ This distribution contains:
 
 ## Setup
 
-### 1. Configure Models Path
+### 1. Configure Models Path and GPU
 
-Before starting, you need to specify where AI models are stored on your host machine. Edit the `.env` file and update the path:
+Before starting, you need to configure the `.env` file. Open it and set the following variables:
 
 ```bash
 MODELS_ROOT_HOST=/path/to/your/models
+USE_GPU=false
 ```
 
-Replace `/path/to/your/models` with the absolute path to your models directory on your host machine.
+- **`MODELS_ROOT_HOST`** — Replace `/path/to/your/models` with the absolute path to your models directory on your host machine.
+- **`USE_GPU`** — Set to `true` to enable GPU acceleration inside the inference server container, or leave as `false` to use CPU only. 
+When set to `true`, you must start the inference server using the GPU-enabled compose command (see [Using NVIDIA GPU](#using-nvidia-gpu-composegpuyaml) below) instead of the plain `docker compose up -d`.
 
 ### 2. Start the AI Inference Server
 
@@ -84,6 +87,7 @@ If you want the inference server container to access an NVIDIA GPU, the distribu
 The `compose.gpu.yaml` has to be used as an extension to the base `compose.yaml` when starting the services, it cannot be used on its own.
 
 Prerequisites:
+- Set `USE_GPU=true` in the `.env` file (it defaults to `false`).
 - NVIDIA drivers installed on the host (verify with `nvidia-smi` on the host).
 - NVIDIA Container Toolkit (a.k.a. nvidia-docker) configured so Docker can expose GPUs to containers. See the official docs: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
 - A recent Docker Engine that supports the NVIDIA Container Toolkit. Restart the Docker daemon after installing the toolkit.

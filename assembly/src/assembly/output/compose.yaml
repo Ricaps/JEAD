@@ -8,6 +8,7 @@ services:
       PORT: 8080
       MODELS_ROOT: /usr/models
       PIP_CACHE_DIR: /root/.cache/pip
+      USE_GPU: ${USE_GPU}
     volumes:
       - "${MODELS_ROOT_HOST}:/usr/models"
       - pip-cache:/root/.cache/pip
