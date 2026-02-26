@@ -215,7 +215,7 @@ class ModelStorage(ShutdownAware):
         _, _, pip_path, req_path = self.get_paths(model_root)
 
         self._logger.info(
-            f"Installing requirements for model root at '{model_root}'..."
+            f"Installing requirements for model root at '{model_root}' using '{req_path}'..."
         )
 
         process = await asyncio.create_subprocess_exec(
@@ -250,6 +250,12 @@ class ModelStorage(ShutdownAware):
         venv_path = model_root / self._server_config.models_venv_dir_name
         python_path = venv_path / "bin" / "python3"
         pip_path = venv_path / "bin" / "pip"
-        req_path = model_root / ModelWorkerManager.REQUIREMENTS_FILE
+
+        requirements_file_name = (
+            ModelWorkerManager.REQUIREMENTS_GPU_FILE
+            if self._server_config.use_gpu
+            else ModelWorkerManager.REQUIREMENTS_FILE
+        )
+        req_path = model_root / requirements_file_name
 
         return venv_path, python_path, pip_path, req_path

@@ -9,6 +9,7 @@ class ServerConfig(BaseSettings):
     port: str
     models_root: str
     models_venv_dir_name: str = ".venv"
+    use_gpu: bool = False
 
 
 server_config = ServerConfig()

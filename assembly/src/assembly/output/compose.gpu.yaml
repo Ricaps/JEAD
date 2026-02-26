@@ -1,0 +1,4 @@
+services:
+  inference-server:
+    devices:
+      - "nvidia.com/gpu=all"
