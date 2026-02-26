@@ -4,7 +4,7 @@ import json
 import numpy as np
 import logging
 
-from onnxruntime import InferenceSession
+from onnxruntime import InferenceSession, preload_dlls
 
 from transformers import (
     AutoTokenizer,
@@ -16,6 +16,7 @@ class MLWorker:
     labels = {0: "clean", 1: "code_comment", 2: "technical_debt"}
 
     def __init__(self):
+        preload_dlls(directory="")
         subfolder = Path(MLWorker.SUBFOLDER_NAME)
         self.tokenizer = AutoTokenizer.from_pretrained(subfolder)
         self.session = InferenceSession(
