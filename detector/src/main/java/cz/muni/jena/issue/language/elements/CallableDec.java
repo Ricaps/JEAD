@@ -72,6 +72,11 @@ public record CallableDec<T extends CallableDeclaration<? extends CallableDeclar
 
     public boolean isInjectionCallable()
     {
+        if (callableDeclaration.isConstructorDeclaration()) {
+            // Constructors are often used for injection, so we consider them as injection callables by default
+            return true;
+        }
+
         return injectionAnnotations.stream()
                 .anyMatch(
                         annotation -> callableDeclaration.getAnnotationByName(annotation.simpleName())

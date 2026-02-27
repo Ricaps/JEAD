@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class GodDIClassDetectorTest extends IssueDetectorTester
 {
     @Test
-    void godDIClassDetectorTest()
+    void godDIClassDetectorTestTwoConstructors()
     {
         Configuration configuration = TestConfigLoader.readConfiguration();
         verifyDetectorFindsIssues(
@@ -21,6 +21,29 @@ class GodDIClassDetectorTest extends IssueDetectorTester
                                 IssueType.GOD_DI_CLASS,
                                 null,
                                 "com.example.antipatterns.open_window_injection.OpenWindowInjectionGreetingController"
+                        )
+                },
+                new GodDIClassDetector(), new DIConfiguration(
+                        configuration.diConfiguration().injectionAnnotations(),
+                        configuration.diConfiguration().beanAnnotations(),
+                        1,
+                        configuration.diConfiguration().maxProducerMethodComplexity(),
+                        configuration.diConfiguration().producerAnnotations(),
+                        configuration.diConfiguration().directContainerCallMethods()
+                )
+        );
+    }
+
+    @Test
+    void godDIClassDetectorTestNoInjectConstructor()
+    {
+        Configuration configuration = TestConfigLoader.readConfiguration();
+        verifyDetectorFindsIssues(
+                new Issue[]{
+                        new Issue(
+                                IssueType.GOD_DI_CLASS,
+                                null,
+                                "com.example.antipatterns.open_window_injection.GodDIController"
                         )
                 },
                 new GodDIClassDetector(), new DIConfiguration(

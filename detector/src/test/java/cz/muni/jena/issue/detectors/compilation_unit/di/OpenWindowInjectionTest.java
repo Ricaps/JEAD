@@ -16,12 +16,12 @@ class OpenWindowInjectionTest extends IssueDetectorTester
                 new Issue[]{
                         new Issue(
                                 IssueType.OPEN_WINDOW_INJECTION,
-                                24,
+                                29,
                                 "com.example.antipatterns.open_window_injection.OpenWindowInjectionGreetingController"
                         ),
                         new Issue(
                                 IssueType.OPEN_WINDOW_INJECTION,
-                                29,
+                                34,
                                 "com.example.antipatterns.open_window_injection.OpenWindowInjectionGreetingController"
                         )
                 },

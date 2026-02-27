@@ -22,7 +22,7 @@ public record Class(ClassOrInterfaceDeclaration classOrInterfaceDeclaration)
     {
         List<FieldDeclaration> fields = classOrInterfaceDeclaration.findAll(FieldDeclaration.class);
         Stream<? extends CallableDeclaration<? extends CallableDeclaration<?>>> callableDeclarations = Stream.concat(
-                classOrInterfaceDeclaration.getConstructors().stream(),
+                findInjectableConstructors(injectionAnnotations),
                 classOrInterfaceDeclaration.getMethods().stream()
         );
         List<CallableDec<CallableDeclaration<?>>> injectionCallables = callableDeclarations
@@ -36,6 +36,18 @@ public record Class(ClassOrInterfaceDeclaration classOrInterfaceDeclaration)
                                         || new NodeWithAnnotation<>(field).hasAnyOfTheseAnnotations(injectionAnnotations)
                         )
         );
+    }
+
+    private Stream<? extends CallableDeclaration<? extends CallableDeclaration<?>>> findInjectableConstructors(List<Annotation> injectionAnnotations) {
+        long constructorsCount = classOrInterfaceDeclaration.getConstructors().size();
+        if (constructorsCount == 0) {
+            return Stream.empty();
+        }
+        if (constructorsCount == 1) {
+            return classOrInterfaceDeclaration.getConstructors().stream();
+        }
+        return classOrInterfaceDeclaration.getConstructors().stream()
+                .filter(constructor -> new NodeWithAnnotation<>(constructor).hasAnyOfTheseAnnotations(injectionAnnotations));
     }
 
     public Stream<ReturnStmt> findReturnStatementsLeakingInjectedFields(Collection<String> injectedFieldsNames)
