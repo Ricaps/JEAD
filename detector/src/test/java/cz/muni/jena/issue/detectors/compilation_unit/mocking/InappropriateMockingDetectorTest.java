@@ -1,9 +1,9 @@
 package cz.muni.jena.issue.detectors.compilation_unit.mocking;
 
-import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.IssueDetectorTester;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.Test;
 
 import static cz.muni.jena.utils.TestFixtures.POWER_MOCK_USAGE_PROJECT;
@@ -31,7 +31,7 @@ class InappropriateMockingDetectorTest extends IssueDetectorTester
                                 "cz.muni.antipatterns.MockingAntipatternsTest"
                         )
                 },
-                new InappropriateMethodMockingDetector(), Configuration.readConfiguration()
+                new InappropriateMethodMockingDetector(), TestConfigLoader.readConfiguration()
         );
     }
 
@@ -47,7 +47,7 @@ class InappropriateMockingDetectorTest extends IssueDetectorTester
                         )
                 },
                 new InappropriateMethodMockingDetector(),
-                Configuration.readConfiguration(),
+                TestConfigLoader.readConfiguration(),
                 POWER_MOCK_USAGE_PROJECT
         );
     }

@@ -14,6 +14,11 @@
             <outputDirectory>config</outputDirectory>
             <filtered>true</filtered>
         </file>
+        <file>
+            <source>${project.parent.basedir}/detector/src/main/resources/configuration</source>
+            <outputDirectory>config</outputDirectory>
+            <destName>configuration.json</destName>
+        </file>
     </files>
     <fileSets>
         <fileSet>

@@ -2,6 +2,7 @@ package cz.muni.jena.frontend.commands;
 
 import com.github.javaparser.utils.SourceRoot;
 import cz.muni.jena.configuration.Configuration;
+import cz.muni.jena.configuration.ConfigurationLoader;
 import cz.muni.jena.inference.InferenceFacade;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueCategory;
@@ -48,6 +49,7 @@ public class DetectIssuesCommand {
     private final IssueDao issueDao;
     private final IssueMetadataService issueMetadataService;
     private final InferenceFacade inferenceFacade;
+    private final ConfigurationLoader configLoader;
 
     @Inject
     public DetectIssuesCommand(
@@ -55,13 +57,14 @@ public class DetectIssuesCommand {
             List<ProjectIssueDetector> projectIssueDetectors,
             IssueDao issueDao,
             IssueMetadataService issueMetadataService,
-            InferenceFacade inferenceFacade
+            InferenceFacade inferenceFacade, ConfigurationLoader configLoader
     ) {
         this.compilationUnitIssueDetectors = compilationUnitIssueDetectors;
         this.projectIssueDetectors = projectIssueDetectors;
         this.issueDao = issueDao;
         this.issueMetadataService = issueMetadataService;
         this.inferenceFacade = inferenceFacade;
+        this.configLoader = configLoader;
     }
 
     @Command(command = "detectIssues", description = DETECT_ISSUE_DESCRIPTION)
@@ -73,9 +76,8 @@ public class DetectIssuesCommand {
             @Option(longNames = "projectLabel", shortNames = 'l', defaultValue = "0", description = LABEL_DESCRIPTION) String projectLabel,
             @Option(longNames = "machineLearning", shortNames = 'm', defaultValue = "true", description = USE_MACHINE_LEARNING) boolean useMachineLearning
     ) {
-        Configuration configuration = Optional.ofNullable(configPath)
-                .map(this::loadConfiguration)
-                .orElse(Configuration.readConfiguration());
+        Configuration configuration = configLoader.loadConfig(configPath);
+
         Set<IssueCategory> issueDetectorFilter = Optional.ofNullable(issueCategory)
                 .map(Set::of)
                 .orElse(Arrays.stream(IssueCategory.values()).collect(Collectors.toSet()));
@@ -160,12 +162,5 @@ public class DetectIssuesCommand {
     private String mapToStringAndJoin(Stream<?> objects) {
         return objects.map(Object::toString)
                 .collect(Collectors.joining("," + System.lineSeparator()));
-    }
-
-    public Configuration loadConfiguration(String configPath) {
-        return Configuration.readConfiguration(configPath)
-                .orElseThrow(
-                        () -> new IllegalArgumentException("There was a problem with loading of custom configuration.")
-                );
     }
 }

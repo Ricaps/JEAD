@@ -10,6 +10,7 @@ import cz.muni.jena.issue.detectors.compilation_unit.IssueDetector;
 import cz.muni.jena.issue.detectors.compilation_unit.dependency.DIIssueDetector;
 import cz.muni.jena.parser.AsyncCompilationUnitParser;
 import cz.muni.jena.parser.IssueDetectorCallback;
+import cz.muni.jena.utils.TestConfigLoader;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,7 +59,7 @@ public class IssueDetectorTester
         List<Issue> issues = Collections.synchronizedList(new ArrayList<>());
         SourceRoot.Callback callback = new IssueDetectorCallback(
                 issueDetector,
-                Configuration.readConfiguration(),
+                TestConfigLoader.readConfiguration(),
                 issues,
                 "projectLabel",
                 mock(IssueMetadataService.class)

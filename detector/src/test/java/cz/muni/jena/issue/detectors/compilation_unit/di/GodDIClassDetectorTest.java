@@ -6,6 +6,7 @@ import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.IssueDetectorTester;
 import cz.muni.jena.issue.detectors.compilation_unit.dependency.GodDIClassDetector;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.Test;
 
 class GodDIClassDetectorTest extends IssueDetectorTester
@@ -13,7 +14,7 @@ class GodDIClassDetectorTest extends IssueDetectorTester
     @Test
     void godDIClassDetectorTest()
     {
-        Configuration configuration = Configuration.readConfiguration();
+        Configuration configuration = TestConfigLoader.readConfiguration();
         verifyDetectorFindsIssues(
                 new Issue[]{
                         new Issue(

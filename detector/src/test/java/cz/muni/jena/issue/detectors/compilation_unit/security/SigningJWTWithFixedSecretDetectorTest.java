@@ -5,6 +5,7 @@ import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.IssueDetectorTester;
 import cz.muni.jena.issue.detectors.compilation_unit.IssueDetector;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.Test;
 
 import static cz.muni.jena.utils.TestFixtures.AUTHORIZATION_SERVER_PROJECT;
@@ -15,7 +16,7 @@ class SigningJWTWithFixedSecretDetectorTest extends IssueDetectorTester
     @Test
     void signingJWTWithFixedSecretDetectorTest()
     {
-        Configuration configuration = Configuration.readConfiguration();
+        Configuration configuration = TestConfigLoader.readConfiguration();
         IssueDetector issueDetector = new SigningJWTWithFixedSecretDetector();
         verifyDetectorFindsIssues(
                 new Issue[] {

@@ -1,10 +1,10 @@
 package cz.muni.jena.issue.detectors.compilation_unit.di;
 
-import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.IssueDetectorTester;
 import cz.muni.jena.issue.detectors.compilation_unit.dependency.FrameworkCouplingDetector;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.Test;
 
 class FrameworkCouplingTest extends IssueDetectorTester
@@ -30,7 +30,7 @@ class FrameworkCouplingTest extends IssueDetectorTester
                                 "com.example.antipatterns.framework_coupling_and_multiple_forms_of_injection.MultipleFormsOfInjectionGreetingController"
                         )
                 },
-                new FrameworkCouplingDetector(), Configuration.readConfiguration()
+                new FrameworkCouplingDetector(), TestConfigLoader.readConfiguration()
         );
     }
 }

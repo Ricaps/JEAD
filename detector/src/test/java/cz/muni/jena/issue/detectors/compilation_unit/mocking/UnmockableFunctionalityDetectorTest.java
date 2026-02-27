@@ -1,9 +1,9 @@
 package cz.muni.jena.issue.detectors.compilation_unit.mocking;
 
-import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.IssueDetectorTester;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.Test;
 
 class UnmockableFunctionalityDetectorTest extends IssueDetectorTester
@@ -34,7 +34,7 @@ class UnmockableFunctionalityDetectorTest extends IssueDetectorTester
                                 "com.example.antipatterns.AntiPatterns"
                         )
                 },
-                new UnmockableFunctionalityDetector(), Configuration.readConfiguration()
+                new UnmockableFunctionalityDetector(), TestConfigLoader.readConfiguration()
         );
     }
 }

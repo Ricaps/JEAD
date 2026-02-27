@@ -5,6 +5,7 @@ import cz.muni.jena.codeminer.extractor.CodeExtractor;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatterFactory;
 import cz.muni.jena.configuration.Configuration;
+import cz.muni.jena.configuration.ConfigurationLoader;
 import cz.muni.jena.frontend.commands.InvalidOptionException;
 import cz.muni.jena.frontend.commands.commands.CommandSettingsHashMap;
 import cz.muni.jena.frontend.commands.commands.CommandSettingsMap;
@@ -16,7 +17,6 @@ import org.springframework.shell.command.annotation.Option;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Optional;
 
 import static cz.muni.jena.codeminer.extractor.ExtractorUtils.getExtractorNames;
 
@@ -32,11 +32,13 @@ public class ExtractCodeCommand {
     private static final String EXTRACTOR_SPECIFIC_SETTINGS_DESCRIPTION = "Enter settings specific to current extractor";
     private final OutputFormatterFactory outputFormatterFactory;
     private final List<CodeExtractor<?>> codeExtractorList;
+    private final ConfigurationLoader configLoader;
 
     @Inject
-    public ExtractCodeCommand(OutputFormatterFactory outputFormatterFactory, List<CodeExtractor<?>> codeExtractorList) {
+    public ExtractCodeCommand(OutputFormatterFactory outputFormatterFactory, List<CodeExtractor<?>> codeExtractorList, ConfigurationLoader configLoader) {
         this.outputFormatterFactory = outputFormatterFactory;
         this.codeExtractorList = codeExtractorList;
+        this.configLoader = configLoader;
     }
 
     @Command(command = "extractCode", description = EXTRACT_COMMAND_DESCRIPTION)
@@ -59,9 +61,7 @@ public class ExtractCodeCommand {
                     .findFirst()
                     .orElseThrow(() -> new InvalidOptionException("Invalid code extractor. Possible values are: %s".formatted(getExtractorNames(codeExtractorList))));
 
-            Configuration configuration = Optional.ofNullable(configPath)
-                    .map(path -> Configuration.readConfiguration(path).orElseThrow(() -> new IllegalArgumentException("There was an issue with loading the configuration")))
-                    .orElse(Configuration.readConfiguration());
+            Configuration configuration = configLoader.loadConfig(configPath);
 
             CodeMinerCallback callback = new CodeMinerCallback(codeExtractor, outputFormatter, configuration, commandSettingsMap);
             AsyncCompilationUnitParser asyncCompilationUnitParser = new AsyncCompilationUnitParser(projectPath);
