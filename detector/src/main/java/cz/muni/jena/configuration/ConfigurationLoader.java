@@ -41,7 +41,6 @@ public class ConfigurationLoader {
                 throw new IllegalStateException("Configuration file not found in classpath: " + CLASSPATH_FILE_NAME);
             }
 
-            ObjectMapper objectMapper = new ObjectMapper();
             ObjectReader configurationReader = objectMapper.readerFor(Configuration.class);
             try (InputStream inputStream = configResource.getInputStream()) {
                 return configurationReader.readValue(inputStream);
