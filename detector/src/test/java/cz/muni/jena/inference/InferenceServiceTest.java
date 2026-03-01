@@ -76,13 +76,13 @@ class InferenceServiceTest {
 
     @Test
     void doInference_modelNameNull_throwsException() {
-        assertThatThrownBy(() -> inferenceService.doInference(List.of(), null))
+        assertThatThrownBy(() -> inferenceService.doInference(List.of(), null, 60000))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void doInference_emptyInput_emptyOutput() throws StatusException {
-        List<?> result = inferenceService.doInference(List.of(), "model-name").toList();
+        List<?> result = inferenceService.doInference(List.of(), "model-name", 60000).toList();
 
         assertThat(result).isEmpty();
         verify(stub, times(0)).modelInference(any());
@@ -110,7 +110,7 @@ class InferenceServiceTest {
         InferenceResponse expectedResponse = InferenceResponse.newBuilder().addAllContents(List.of(expectedResponseContent1, expectedResponseContent2)).build();
 
         when(stub.modelInference(any())).thenReturn(expectedResponse);
-        List<InferenceItem<Comment>> result = inferenceService.doInference(INPUTS, "model-name").toList();
+        List<InferenceItem<Comment>> result = inferenceService.doInference(INPUTS, "model-name", 60000).toList();
         verify(stub, times(1)).modelInference(any());
 
         checkResult(result.get(0), INPUTS.get(0), expectedResponseContent1, List.of(labelEvaluation1, labelEvaluation2));
@@ -123,7 +123,7 @@ class InferenceServiceTest {
         when(modelSerializer.getSerializedDto(COMMENT_1)).thenReturn(serialize(COMMENT_1));
         when(modelSerializer.getSerializedDto(COMMENT_2)).thenReturn(serialize(COMMENT_2));
 
-        assertThatThrownBy(() -> inferenceService.doInference(INPUTS, "model-name"))
+        assertThatThrownBy(() -> inferenceService.doInference(INPUTS, "model-name", 60000))
                 .isInstanceOf(InferenceFailedException.class)
                 .hasMessage("Evaluation of inference request failed with status %s".formatted(Status.CANCELLED));
     }

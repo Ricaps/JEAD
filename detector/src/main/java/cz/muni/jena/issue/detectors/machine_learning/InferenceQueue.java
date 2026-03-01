@@ -52,7 +52,7 @@ public class InferenceQueue<T extends EvaluationModel> {
         List<InferenceItem<T>> batch = new ArrayList<>();
         sendQueue.drainTo(batch, modelConfiguration.batchSize());
 
-        Stream<InferenceItem<T>> inferenceResult = inferenceService.doInference(batch, modelConfiguration.modelName());
+        Stream<InferenceItem<T>> inferenceResult = inferenceService.doInference(batch, modelConfiguration.modelName(), modelConfiguration.timeout());
         List<IssueWithLazyMeta> issues = inferenceResult
                 .map(inferenceItem -> inferenceItem.issueMappingFunction().mapToIssue(inferenceItem))
                 .filter(Objects::nonNull)
