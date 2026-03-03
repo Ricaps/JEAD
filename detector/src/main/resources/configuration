@@ -89,7 +89,14 @@
         "minServiceMethods" : 4,
         "maxServiceMethods" : 8,
         "serviceAnnotations" : [
-            "org.springframework.stereotype.Service"
+             {
+              "fullyQualifiedName" : "org.springframework.stereotype.Service",
+              "coupledToFramework" : true
+            },
+            {
+              "fullyQualifiedName" : "org.springframework.stereotype.Component",
+              "coupledToFramework" : true
+            }
         ]
     },
     "persistenceConfiguration" : {

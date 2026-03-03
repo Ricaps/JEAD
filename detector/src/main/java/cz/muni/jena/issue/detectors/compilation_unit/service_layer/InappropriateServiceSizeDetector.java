@@ -4,6 +4,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.nodeTypes.modifiers.NodeWithPublicModifier;
 import com.github.javaparser.resolution.declarations.ResolvedAnnotationDeclaration;
 import cz.muni.jena.configuration.Configuration;
+import cz.muni.jena.configuration.di.Annotation;
 import cz.muni.jena.configuration.service_layer.ServiceLayerConfiguration;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueCategory;
@@ -35,14 +36,14 @@ public class InappropriateServiceSizeDetector implements SpecificIssueDetector
             ClassOrInterfaceDeclaration classOrInterfaceDeclaration,
             int minServiceMethods,
             int maxServiceMethods,
-            Set<String> serviceAnnotations)
+            Set<Annotation> serviceAnnotations)
     {
         if (
                 classOrInterfaceDeclaration.getAnnotations()
                         .stream()
                         .flatMap(ResolvableNode::resolve)
                         .map(ResolvedAnnotationDeclaration::getQualifiedName)
-                        .noneMatch(serviceAnnotations::contains)
+                        .noneMatch(annotation -> serviceAnnotations.stream().map(Annotation::fullyQualifiedName).anyMatch(annotation::equals))
         )
         {
             return Stream.of();

@@ -69,7 +69,9 @@
         "minServiceMethods" : 1,
         "maxServiceMethods" : 2,
         "serviceAnnotations" : [
-            "dfe"
+            {
+              "fullyQualifiedName" : "cz.test.dfe"
+            }
         ]
     },
     "persistenceConfiguration" : {

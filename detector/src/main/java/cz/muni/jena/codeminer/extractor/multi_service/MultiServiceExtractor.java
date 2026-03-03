@@ -31,7 +31,7 @@ public class MultiServiceExtractor extends BaseCodeExtractor<MultiServiceMethods
     @Override
     public Stream<MultiServiceMethods> extract(ClassOrInterfaceDeclaration classOrInterface, Configuration configuration, CommandSettingsMap commandSettingsMap) {
         NodeWithAnnotation<ClassOrInterfaceDeclaration> nodeWithAnnotation = new NodeWithAnnotation<>(classOrInterface);
-        if (!nodeWithAnnotation.hasAnyOfTheseAnnotations(configuration.diConfiguration().beanAnnotations())) {
+        if (!nodeWithAnnotation.hasAnyOfTheseAnnotations(configuration.serviceLayerConfiguration().serviceAnnotations())) {
             return Stream.of();
         }
 

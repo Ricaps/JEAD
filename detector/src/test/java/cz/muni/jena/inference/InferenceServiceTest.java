@@ -109,7 +109,8 @@ class InferenceServiceTest {
 
         InferenceResponse expectedResponse = InferenceResponse.newBuilder().addAllContents(List.of(expectedResponseContent1, expectedResponseContent2)).build();
 
-        when(stub.modelInference(any())).thenReturn(expectedResponse);
+        when(stub.withDeadlineAfter(any())).thenReturn(stub);
+        when(stub.withDeadlineAfter(any()).modelInference(any())).thenReturn(expectedResponse);
         List<InferenceItem<Comment>> result = inferenceService.doInference(INPUTS, "model-name", 60000).toList();
         verify(stub, times(1)).modelInference(any());
 
@@ -119,7 +120,8 @@ class InferenceServiceTest {
 
     @Test
     void doInference_throwsStatusException_translatedToInferenceException() throws StatusException {
-        when(stub.modelInference(any())).thenThrow(new StatusException(Status.CANCELLED));
+        when(stub.withDeadlineAfter(any())).thenReturn(stub);
+        when(stub.withDeadlineAfter(any()).modelInference(any())).thenThrow(new StatusException(Status.CANCELLED));
         when(modelSerializer.getSerializedDto(COMMENT_1)).thenReturn(serialize(COMMENT_1));
         when(modelSerializer.getSerializedDto(COMMENT_2)).thenReturn(serialize(COMMENT_2));
 

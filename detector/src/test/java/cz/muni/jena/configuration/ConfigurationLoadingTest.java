@@ -84,7 +84,7 @@ class ConfigurationLoadingTest {
                                 diConfiguration,
                                 mockingConfiguration,
                                 securityConfiguration,
-                                new ServiceLayerConfiguration(2, 1, Set.of("dfe")),
+                                new ServiceLayerConfiguration(2, 1, Set.of(new Annotation("cz.test.dfe"))),
                                 new PersistenceConfiguration(Set.of("a.b.c"), "nPlusOne")
                         )
                 );
