@@ -11,6 +11,7 @@ import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.configuration.di.Annotation;
 import cz.muni.jena.configuration.di.DIConfiguration;
 import cz.muni.jena.frontend.commands.commands.CommandSettingsMap;
+import cz.muni.jena.issue.language.elements.NodeWrapper;
 import cz.muni.jena.issue.language.elements.ResolvableNode;
 import cz.muni.jena.util.NodeUtil;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,10 @@ public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetrics> {
 
     @Override
     public Stream<DIMetrics> extract(ClassOrInterfaceDeclaration classOrInterface, Configuration configuration, CommandSettingsMap commandSettingsMap) {
-        if (!containsAnnotation(classOrInterface, configuration.diConfiguration())) {
+        DIConfiguration diConfiguration = configuration.diConfiguration();
+        List<Annotation> configuredAnnotations = Stream.concat(diConfiguration.injectionAnnotations().stream(), diConfiguration.beanAnnotations().stream()).toList();
+
+        if (!new NodeWrapper<>(classOrInterface).containsAnnotation(configuredAnnotations)) {
             return Stream.empty();
         }
 
@@ -66,15 +70,5 @@ public class GodDIMetricsExtractor extends BaseCodeExtractor<DIMetrics> {
 
     private String getCode(ClassOrInterfaceDeclaration classOrInterfaceDeclaration) {
         return classOrInterfaceDeclaration.toString();
-    }
-
-    private boolean containsAnnotation(ClassOrInterfaceDeclaration classOrInterfaceDeclaration, DIConfiguration diConfiguration) {
-        List<String> configuredAnnotations = Stream.concat(diConfiguration.injectionAnnotations().stream(), diConfiguration.beanAnnotations().stream()).map(Annotation::fullyQualifiedName).toList();
-
-        return classOrInterfaceDeclaration.findAll(AnnotationExpr.class)
-                .stream()
-                .flatMap(ResolvableNode::resolve)
-                .map(ResolvedAnnotationDeclaration::getQualifiedName)
-                .anyMatch(configuredAnnotations::contains);
     }
 }

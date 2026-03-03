@@ -5,10 +5,13 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.*;
+import com.github.javaparser.resolution.declarations.ResolvedAnnotationDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedTypeDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedValueDeclaration;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
 import com.github.javaparser.resolution.types.ResolvedType;
+import cz.muni.jena.configuration.di.Annotation;
+import cz.muni.jena.configuration.di.DIConfiguration;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 
@@ -112,5 +115,15 @@ public record NodeWrapper<T extends Node>(T node)
                                 .matcher(stringLiteralExpr.getValue().toLowerCase(Locale.ROOT))
                                 .find()
                 );
+    }
+
+    public boolean containsAnnotation(List<Annotation> annotations) {
+        List<String> annotationNames = annotations.stream().map(Annotation::fullyQualifiedName).toList();
+
+        return node.findAll(AnnotationExpr.class)
+                .stream()
+                .flatMap(ResolvableNode::resolve)
+                .map(ResolvedAnnotationDeclaration::getQualifiedName)
+                .anyMatch(annotationNames::contains);
     }
 }
