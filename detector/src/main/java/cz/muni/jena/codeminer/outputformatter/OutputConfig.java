@@ -6,6 +6,7 @@ import tools.jackson.core.util.DefaultIndenter;
 import tools.jackson.core.util.DefaultPrettyPrinter;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.dataformat.csv.CsvMapper;
 
 @Configuration
 public class OutputConfig {
@@ -20,6 +21,11 @@ public class OutputConfig {
                 .build();
     }
 
+    @Bean
+    public CsvMapper csvMapper() {
+        return new CsvMapper();
+    }
+
     @Bean(destroyMethod = "")
     public OutputFormatter jsonOutputFormatter(ObjectMapper objectMapper) {
         return new JsonOutput(objectMapper);
@@ -28,5 +34,10 @@ public class OutputConfig {
     @Bean(destroyMethod = "", name = "jsonlOutputFormatter")
     public OutputFormatter jsonLinesOutputFormatter(ObjectMapper objectMapper) {
         return new JsonLinesOutput(objectMapper);
+    }
+
+    @Bean(destroyMethod = "", name = "csvOutputFormatter")
+    public OutputFormatter csvOutputFormatter(CsvMapper csvMapper, ObjectMapper objectMapper) {
+        return new CsvOutput(csvMapper, objectMapper);
     }
 }
