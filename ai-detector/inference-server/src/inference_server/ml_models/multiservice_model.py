@@ -101,7 +101,6 @@ class MLWorker:
             raw_results = self.session.run(None, {k: v for k, v in inputs.items()})
 
             embeddings = self._get_mean_pooled_embeddings(inputs, raw_results)
-            embeddings = self._normalize_embeddings(embeddings)
             embeddings = self._dimensional_reduction(embeddings)
             clusters_count = self._get_number_of_clusters(embeddings)
 
@@ -118,11 +117,6 @@ class MLWorker:
 
         model_inference_result_batch = {"contents": results}
         return model_inference_result_batch
-
-    @staticmethod
-    def _normalize_embeddings(embeddings) -> np.ndarray:
-        l2_normalized = np.linalg.norm(embeddings, ord=2, axis=1, keepdims=True)
-        return embeddings / np.maximum(l2_normalized, 1e-12)
 
     @staticmethod
     def _get_mean_pooled_embeddings(
@@ -161,7 +155,7 @@ class MLWorker:
             n_neighbors=n_neighbors,
             min_dist=0.0,
             n_components=15,
-            metric="euclidean",
+            metric="cosine",
             init="random",
         )
         return umap.fit_transform(embeddings)
