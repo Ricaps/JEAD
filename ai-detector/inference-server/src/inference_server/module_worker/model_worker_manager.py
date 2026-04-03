@@ -68,10 +68,12 @@ class ModelWorkerManager:
     WORKER_FILE = "worker.py"
     REQUIREMENTS_FILE = "requirements.txt"
     REQUIREMENTS_GPU_FILE = "requirements.gpu.txt"
+    TERMINATION_TIMEOUT = 10.0
 
     def __init__(self, worker_dir: AsyncPath, server_config: ServerConfig):
         self.__models_root: AsyncPath = AsyncPath(server_config.models_root)
         self.__venv_folder: AsyncPath = AsyncPath(server_config.models_venv_dir_name)
+        self.__model_command_timeout: int = server_config.model_command_timeout
         self.__worker_dir: AsyncPath = worker_dir
         self.__model_name: str = worker_dir.name
         self.__reader: Optional[asyncio.StreamReader] = None
@@ -228,7 +230,7 @@ class ModelWorkerManager:
         self.__pending_requests[message_id] = future
         await self._send_message(msg, message_id)
 
-        return await asyncio.wait_for(future, timeout=30.0)
+        return await asyncio.wait_for(future, timeout=self.__model_command_timeout)
 
     async def shutdown(self):
         self.__logger.info(f"Shutting down model process at {self.__worker_dir}")
@@ -238,19 +240,24 @@ class ModelWorkerManager:
             Message(command=WorkerCommand.SHUTDOWN, data={})
         )
 
-        await asyncio.wait_for(self.__processing_finished.wait(), timeout=10.0)
+        await asyncio.wait_for(
+            self.__processing_finished.wait(),
+            timeout=ModelWorkerManager.TERMINATION_TIMEOUT,
+        )
 
         if response.success:
             self.__writer.close()
             await self.__writer.wait_closed()
-            self.__process.wait(timeout=5)
+            self.__process.wait(timeout=ModelWorkerManager.TERMINATION_TIMEOUT)
 
             self._status = WorkerStatus.INACTIVE
 
-            self._stdout_thread.join(timeout=5)
-            self._stderr_thread.join(timeout=5)
+            self._stdout_thread.join(timeout=ModelWorkerManager.TERMINATION_TIMEOUT)
+            self._stderr_thread.join(timeout=ModelWorkerManager.TERMINATION_TIMEOUT)
 
-            await asyncio.wait_for(self.__reader_task, timeout=10.0)
+            await asyncio.wait_for(
+                self.__reader_task, timeout=ModelWorkerManager.TERMINATION_TIMEOUT
+            )
             self.__reader_task.cancel()
             self.__logger.info(f"Model process at {self.__worker_dir} shutdown!")
 

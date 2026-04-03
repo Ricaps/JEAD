@@ -26,18 +26,24 @@ class ModelDefinition(InferenceModelExecutable):
     def __init__(self, model_path: AsyncPath, server_config: ServerConfig):
         self.__model_path: Final[AsyncPath] = model_path
         self.__model_manager = ModelWorkerManager(model_path, server_config)
-        self.__logger = logging.getLogger(self.__class__.__name__)
+        self.__logger = logging.getLogger(
+            self.__class__.__name__ + f"#{self.__model_path.name}"
+        )
+        self.__loading_lock = asyncio.Lock()
 
     def is_loaded(self) -> bool:
         return self.__model_manager.is_loaded
 
     async def load_model(self):
-        if self.is_loaded():
-            return
+        async with self.__loading_lock:
+            if self.is_loaded():
+                return
 
-        await self.__model_manager.start_process()
-        await self.__model_manager.send(Message(command=WorkerCommand.LOAD, data={}))
-        self.__logger.info("Model %s loaded", self.name)
+            await self.__model_manager.start_process()
+            await self.__model_manager.send(
+                Message(command=WorkerCommand.LOAD, data={})
+            )
+            self.__logger.info("Model %s loaded", self.name)
 
     async def unload_model(self):
         await self.__model_manager.shutdown()
