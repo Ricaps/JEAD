@@ -10,6 +10,7 @@ class ServerConfig(BaseSettings):
     models_root: str
     models_venv_dir_name: str = ".venv"
     use_gpu: bool = False
+    model_command_timeout: int = 120
 
 
 server_config = ServerConfig()
