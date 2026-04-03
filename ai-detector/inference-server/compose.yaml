@@ -1,6 +1,6 @@
 services:
   inference-server-cpu:
-    image: ricaps/jead:latest
+    image: docker.io/ricaps/jead:latest
     pull_policy: always
     ports:
       - "8090:8080"
