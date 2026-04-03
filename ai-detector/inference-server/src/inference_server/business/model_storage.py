@@ -101,7 +101,7 @@ class ModelStorage(ShutdownAware):
         models_root = AsyncPath(self._server_config.models_root)
         self._logger.info("Looking for models in %s directory", models_root)
 
-        if not models_root.exists():
+        if not await models_root.exists():
             self._logger.error(
                 f"Models root directory '{models_root}' doesn't exist! No model will be loaded."
             )
