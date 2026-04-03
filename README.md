@@ -1,22 +1,34 @@
-#Jena
-Jena is application for detection of anti-patterns with focus especially on enterprise specific anti-patterns. 
-It has the following modules: 
-- The detector module is the one capable of the detection of anti-patterns.
-- The anti-pattern module contains many examples of anti-pattern.
-- PowerMockUsage module had to be separated out because if we would leave it in Antipatterns module it would interfere with regular mocking. It contains example if Powermock usage.
-- AuthorizationServer is a authorization server for the Antipatterns web application that is the reason why it is separate. It contains many security anti-patterns.
-- TestGradleProject module was created because all other modules use maven, and we
-  need Jena to work with both Gradle and Maven projects.
+# JEAD
+JEAD is application for detection of anti-patterns with focus especially on enterprise specific anti-patterns.
 
-**So in short, detector module is the one capable of detection anti-patterns
-and other modules intentionally contain anti-pattern for purposes of detector module tests.**
+Assembly releases: https://github.com/Ricaps/Jead/releases
 
-For more information on how to use Jena please see [README of the detector module](./detector/README.md).
+## Requirements
+- Java 25
+- Docker
 
-Build Jena using following command:
+## Project structure
+- `detector/`: Java detector responsible for anti-pattern detection.
+- `ai-detector/`: Python tooling, training, inference server, and GitHub mining utilities.
+  - `ai-detector/inference-server/`: gRPC/HTTP inference server used by the detector.
+  - `ai-detector/training/`: Training pipelines and experiments for model development.
+  - `ai-detector/github-miner/`: Data collection utilities.
+- `test-fixtures/`: Sample projects with intentional anti-patterns used for tests.
+- `assembly/`: Assembly packaging for distributing Jead.
+- `build-plugins/`: Maven/Gradle plugins and shared build tooling.
+- `common/`: Shared protobuf definitions.
+- `experiments/`: Local experiments and datasets.
+
+## Local development
+1) Start the inference server
+- See the inference server README: `ai-detector/inference-server/README.md`
+2) Start and run the detector
+- See the detector README: `detector/README.md`
+
+## Build from repository root
+Build JEAD using following command:
 ```shell
-mvn package -DskipTests
+mvn package
 ```
-When building Jena we skip tests because PowerMockUsage module only works with Java 11
-while the rest of the project uses Java 17. So if we would build the project without
-skipping tests then tests in PowerMockUsage module would fail.
+
+For more information on how to use JEAD please see [README of the detector module](./detector/README.md).
