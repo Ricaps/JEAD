@@ -1,11 +1,11 @@
 package cz.muni.jena.issue.detectors.project.persistence;
 
-import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.IssueDetectorTester;
 import cz.muni.jena.issue.detectors.project.NPlus1QueryProblemDetector;
 import cz.muni.jena.issue.detectors.project.ProjectIssueDetector;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -23,7 +23,7 @@ class NPlus1QueryProblemDetectorTest extends IssueDetectorTester
         ProjectIssueDetector issueDetector = new NPlus1QueryProblemDetector();
         List<Issue> issues = issueDetector.findIssues(
                 ANTIPATTERNS_PROJECT,
-                Configuration.readConfiguration()
+                TestConfigLoader.readConfiguration()
         ).toList();
         assertThat(issues).containsExactlyInAnyOrder(
                 new Issue(

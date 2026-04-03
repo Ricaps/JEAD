@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -36,7 +37,11 @@ public class InferenceService {
         this.modelSerializer = modelSerializer;
     }
 
-    public <T extends EvaluationModel> Stream<InferenceItem<T>> doInference(Collection<InferenceItem<T>> inferenceItemCollection, @Nonnull String modelName) {
+    public <T extends EvaluationModel> Stream<InferenceItem<T>> doInference(
+            Collection<InferenceItem<T>> inferenceItemCollection,
+            @Nonnull String modelName,
+            int requestTimeout
+    ) {
         Objects.requireNonNull(modelName, "Model name cannot be null!");
         if (inferenceItemCollection.isEmpty()) {
             return Stream.of();
@@ -51,7 +56,7 @@ public class InferenceService {
         LOGGER.info("Sending request with len {} to model {}", inferenceItemCollection.size(), modelName);
         InferenceRequest inferenceRequest = inferenceMapper.mapContentsToRequest(contents, modelName);
 
-        InferenceResponse response = runRequest(inferenceRequest);
+        InferenceResponse response = runRequest(inferenceRequest, requestTimeout);
         Map<UUID, InferenceItem<T>> inferenceItemMap = inferenceItemCollection.stream().collect(Collectors.toMap(InferenceItem::id, e -> e));
         Stream<InferenceItem<T>> nodes = response.getContentsList().stream().map(contentList -> this.inferenceMapper.mapResponseToItem(inferenceItemMap, contentList));
 
@@ -60,9 +65,9 @@ public class InferenceService {
         return debug.stream();
     }
 
-    private InferenceResponse runRequest(InferenceRequest inferenceRequest) {
+    private InferenceResponse runRequest(InferenceRequest inferenceRequest, int requestTimeout) {
         try {
-            return inferenceServiceStub.modelInference(inferenceRequest);
+            return inferenceServiceStub.withDeadlineAfter(Duration.ofMillis(requestTimeout)).modelInference(inferenceRequest);
         } catch (StatusException e) {
             throw new InferenceFailedException("Evaluation of inference request failed with status %s".formatted(e.getStatus()), e);
         }

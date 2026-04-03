@@ -10,6 +10,7 @@ public record ModelConfiguration(
         @Positive @DefaultValue("5") int batchSize,
         @Positive @DefaultValue("200") int batchPeriod,
         @Positive @DefaultValue("1000") int queueSize,
+        @Positive @DefaultValue("60000") int timeout,
         @Size(min = 3, max = 20) String modelName
 ) {
 }

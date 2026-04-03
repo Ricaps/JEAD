@@ -1,10 +1,10 @@
 package cz.muni.jena.issue.detectors.compilation_unit.di;
 
-import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.IssueDetectorTester;
 import cz.muni.jena.issue.detectors.compilation_unit.dependency.MultipleFormsOfInjectionDetector;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.Test;
 
 class MultipleFormsOfInjectionTest extends IssueDetectorTester
@@ -21,7 +21,7 @@ class MultipleFormsOfInjectionTest extends IssueDetectorTester
                         )
                 },
                 new MultipleFormsOfInjectionDetector(),
-                Configuration.readConfiguration()
+                TestConfigLoader.readConfiguration()
         );
     }
 }

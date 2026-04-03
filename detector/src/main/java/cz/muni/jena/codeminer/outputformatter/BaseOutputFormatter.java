@@ -31,4 +31,8 @@ public abstract class BaseOutputFormatter implements OutputFormatter {
             throw new RuntimeException(e);
         }
     }
+
+    protected String getOutputPath() {
+        return this.outputPath;
+    }
 }

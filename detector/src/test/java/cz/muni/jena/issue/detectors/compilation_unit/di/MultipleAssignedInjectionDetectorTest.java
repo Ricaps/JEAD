@@ -1,10 +1,10 @@
 package cz.muni.jena.issue.detectors.compilation_unit.di;
 
-import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.IssueDetectorTester;
 import cz.muni.jena.issue.detectors.compilation_unit.dependency.MultipleAssignedInjectionDetector;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.Test;
 
 class MultipleAssignedInjectionDetectorTest extends IssueDetectorTester
@@ -31,7 +31,7 @@ class MultipleAssignedInjectionDetectorTest extends IssueDetectorTester
                         )
                 },
                 new MultipleAssignedInjectionDetector(),
-                Configuration.readConfiguration()
+                TestConfigLoader.readConfiguration()
         );
     }
 }

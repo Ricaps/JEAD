@@ -7,21 +7,15 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.inject.Inject;
 
 @RestController
-public class OpenWindowInjectionGreetingController
+public class GodDIController
 {
     private final GreetingService greeting;
     private final DefaultValueService defaultValueService;
 
-    @Inject
-    public OpenWindowInjectionGreetingController(GreetingService greeting, DefaultValueService defaultValueService)
+    public GodDIController(GreetingService greeting, DefaultValueService defaultValueService)
     {
         this.greeting = greeting;
         this.defaultValueService = defaultValueService;
-    }
-
-    public OpenWindowInjectionGreetingController(GreetingService greeting) {
-        this.greeting = greeting;
-        this.defaultValueService = null;
     }
 
     @GetMapping("/open_window_injection/greeting")

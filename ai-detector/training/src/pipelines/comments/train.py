@@ -7,12 +7,11 @@ from transformers import (
     TrainingArguments,
     Trainer,
 )
-import evaluate
 import numpy as np
 import logging
+from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 
 CODEBERT_BASE = "microsoft/codebert-base"
-EVAL_METRICS = evaluate.combine(["accuracy", "f1", "precision", "recall"])
 
 
 class CommentsTrainer:
@@ -118,11 +117,34 @@ class CommentsTrainer:
     def __eval_fnc(prediction):
         predictions, labels = prediction
         predictions = CommentsTrainer.__get_sigmoid(predictions)
-        binary_predictions = (predictions > 0.5).astype(int).reshape(-1)
+        binary_predictions = (predictions > 0.5).astype(int)
+        labels = labels.astype(int)
 
-        return EVAL_METRICS.compute(
-            predictions=binary_predictions, references=labels.astype(int).reshape(-1)
-        )
+        # Use sklearn metrics which properly support multi-label classification
+        return {
+            "accuracy": accuracy_score(labels, binary_predictions),
+            "f1_micro": f1_score(
+                labels, binary_predictions, average="micro", zero_division=0
+            ),
+            "f1_macro": f1_score(
+                labels, binary_predictions, average="macro", zero_division=0
+            ),
+            "f1_weighted": f1_score(
+                labels, binary_predictions, average="weighted", zero_division=0
+            ),
+            "precision_micro": precision_score(
+                labels, binary_predictions, average="micro", zero_division=0
+            ),
+            "precision_macro": precision_score(
+                labels, binary_predictions, average="macro", zero_division=0
+            ),
+            "recall_micro": recall_score(
+                labels, binary_predictions, average="micro", zero_division=0
+            ),
+            "recall_macro": recall_score(
+                labels, binary_predictions, average="macro", zero_division=0
+            ),
+        }
 
     @staticmethod
     def __get_class2id(classes: list[str]):

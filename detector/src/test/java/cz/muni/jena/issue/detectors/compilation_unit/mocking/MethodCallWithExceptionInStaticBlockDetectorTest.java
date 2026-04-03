@@ -1,9 +1,9 @@
 package cz.muni.jena.issue.detectors.compilation_unit.mocking;
 
-import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.IssueDetectorTester;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.Test;
 
 class MethodCallWithExceptionInStaticBlockDetectorTest extends IssueDetectorTester
@@ -19,7 +19,7 @@ class MethodCallWithExceptionInStaticBlockDetectorTest extends IssueDetectorTest
                                 "com.example.antipatterns.AntiPatterns"
                         )
                 },
-                new MethodCallWithExceptionInStaticBlockDetector(), Configuration.readConfiguration()
+                new MethodCallWithExceptionInStaticBlockDetector(), TestConfigLoader.readConfiguration()
         );
     }
 }

@@ -1,10 +1,10 @@
 package cz.muni.jena.issue.detectors.project.security;
 
-import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.project.ExposedSensitiveInformationDetector;
 import cz.muni.jena.issue.detectors.project.ProjectIssueDetector;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -23,7 +23,7 @@ class ExposedSensitiveInformationDetectorTest
         ExposedSensitiveInformationDetector issueDetector = new ExposedSensitiveInformationDetector();
         List<String> configurationFiles = issueDetector.findConfigurationFiles(
                 ANTIPATTERNS_PROJECT,
-                Configuration.readConfiguration()
+                TestConfigLoader.readConfiguration()
         );
         assertThat(configurationFiles).hasSize(1);
     }
@@ -35,7 +35,7 @@ class ExposedSensitiveInformationDetectorTest
         ProjectIssueDetector issueDetector = new ExposedSensitiveInformationDetector();
         List<Issue> issues = issueDetector.findIssues(
                 ANTIPATTERNS_PROJECT,
-                Configuration.readConfiguration()
+                TestConfigLoader.readConfiguration()
         ).toList();
         assertThat(issues).isEqualTo(
                 List.of(

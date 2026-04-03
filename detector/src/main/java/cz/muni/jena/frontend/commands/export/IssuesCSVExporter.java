@@ -39,6 +39,7 @@ public class IssuesCSVExporter implements CSVExporter
                         printer.printRecord(
                                 issue.getId(),
                                 issue.getIssueType(),
+                                issue.getAnalysisType(),
                                 issue.getLineNumber(),
                                 issue.getFullyQualifiedName(),
                                 issue.getProjectLabel(),

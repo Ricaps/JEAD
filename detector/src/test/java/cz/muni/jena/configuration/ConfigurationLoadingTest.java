@@ -10,6 +10,7 @@ import cz.muni.jena.configuration.security.EncryptionAlgorithm;
 import cz.muni.jena.configuration.security.SecurityConfiguration;
 import cz.muni.jena.configuration.security.TokenLifetimeSettings;
 import cz.muni.jena.configuration.service_layer.ServiceLayerConfiguration;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +43,7 @@ class ConfigurationLoadingTest {
     @Test
     void jsonToAnnotationTest() {
         verifyCorrectWorkingDirectory();
-        Optional<Configuration> configuration = Configuration.readConfiguration(TEST_CONFIGURATION_PATH);
+        Optional<Configuration> configuration = TestConfigLoader.readConfiguration(TEST_CONFIGURATION_PATH);
         DIConfiguration diConfiguration = new DIConfiguration(
                 List.of(
                         new Annotation("b.cd", false),
@@ -83,7 +84,7 @@ class ConfigurationLoadingTest {
                                 diConfiguration,
                                 mockingConfiguration,
                                 securityConfiguration,
-                                new ServiceLayerConfiguration(2, 1, Set.of("dfe")),
+                                new ServiceLayerConfiguration(2, 1, Set.of(new Annotation("cz.test.dfe"))),
                                 new PersistenceConfiguration(Set.of("a.b.c"), "nPlusOne")
                         )
                 );

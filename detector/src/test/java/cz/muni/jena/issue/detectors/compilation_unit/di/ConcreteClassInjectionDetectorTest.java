@@ -1,10 +1,10 @@
 package cz.muni.jena.issue.detectors.compilation_unit.di;
 
-import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.issue.Issue;
 import cz.muni.jena.issue.IssueType;
 import cz.muni.jena.issue.detectors.IssueDetectorTester;
 import cz.muni.jena.issue.detectors.compilation_unit.dependency.ConcreteClassInjectionDetector;
+import cz.muni.jena.utils.TestConfigLoader;
 import org.junit.jupiter.api.Test;
 
 class ConcreteClassInjectionDetectorTest extends IssueDetectorTester
@@ -29,7 +29,7 @@ class ConcreteClassInjectionDetectorTest extends IssueDetectorTester
                                 12,
                                 "com.example.antipatterns.concrete_class_injection.GreetingsControllerWithFieldInjection"
                         )},
-                new ConcreteClassInjectionDetector(), Configuration.readConfiguration()
+                new ConcreteClassInjectionDetector(), TestConfigLoader.readConfiguration()
         );
     }
 }
