@@ -58,7 +58,7 @@ public class InferenceQueueHolderImpl implements InferenceQueueHolder<Evaluation
 
     private Stream<IssueWithLazyMeta> terminateQueueAndGet(InferenceQueue<?> inferenceQueue) {
         try {
-            return inferenceQueue.awaitTerminationAndGet(inferenceConfiguration.queueEndTimeout());
+            return inferenceQueue.awaitTerminationAndGet(inferenceConfiguration.queueTerminationTimeout());
         } catch (InterruptedException e) {
             InferenceQueueHolderImpl.LOGGER.error("Failed to terminate inference queue for model {}. Results might be incomplete!", inferenceQueue.getModelName(), e);
             return Stream.of();
