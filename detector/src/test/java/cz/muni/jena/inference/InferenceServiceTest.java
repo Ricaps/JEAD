@@ -4,6 +4,7 @@ import cz.muni.jena.codeminer.extractor.comments.model.Comment;
 import cz.muni.jena.codeminer.extractor.comments.CommentType;
 import cz.muni.jena.codeminer.extractor.comments.model.CommentsMapper;
 import cz.muni.jena.exception.InferenceFailedException;
+import cz.muni.jena.grpc.InferenceRequest;
 import cz.muni.jena.grpc.InferenceResponse;
 import cz.muni.jena.grpc.InferenceServiceGrpc;
 import cz.muni.jena.inference.model.InferenceItem;
@@ -11,12 +12,14 @@ import cz.muni.jena.inference.model.mapping.InferenceMapper;
 import cz.muni.jena.inference.model.mapping.ModelSerializer;
 import io.grpc.Status;
 import io.grpc.StatusException;
+import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -128,6 +132,140 @@ class InferenceServiceTest {
         assertThatThrownBy(() -> inferenceService.doInference(INPUTS, "model-name", 60000))
                 .isInstanceOf(InferenceFailedException.class)
                 .hasMessage("Evaluation of inference request failed with status %s".formatted(Status.CANCELLED));
+    }
+
+    @Test
+    void doInference_throwsStatusRuntimeException_notTranslated() throws StatusException {
+        when(stub.withDeadlineAfter(any())).thenReturn(stub);
+        when(stub.withDeadlineAfter(any()).modelInference(any())).thenThrow(new StatusRuntimeException(Status.CANCELLED));
+        when(modelSerializer.getSerializedDto(COMMENT_1)).thenReturn(serialize(COMMENT_1));
+        when(modelSerializer.getSerializedDto(COMMENT_2)).thenReturn(serialize(COMMENT_2));
+
+        assertThatThrownBy(() -> inferenceService.doInference(INPUTS, "model-name", 60000).toList())
+                .isInstanceOf(StatusRuntimeException.class);
+    }
+
+    @Test
+    void doInference_responseContainsInvalidUuid_throwsInferenceException() throws StatusException {
+        when(modelSerializer.getSerializedDto(COMMENT_1)).thenReturn(serialize(COMMENT_1));
+        when(modelSerializer.getSerializedDto(COMMENT_2)).thenReturn(serialize(COMMENT_2));
+
+        InferenceResponse response = InferenceResponse.newBuilder()
+                .addContents(InferenceResponse.InferenceResponseContent.newBuilder()
+                        .setId("invalid-uuid")
+                        .addLabelEvaluation(buildLabel("label-1", 1.0))
+                        .build())
+                .build();
+
+        when(stub.withDeadlineAfter(any())).thenReturn(stub);
+        when(stub.withDeadlineAfter(any()).modelInference(any())).thenReturn(response);
+
+        assertThatThrownBy(() -> inferenceService.doInference(INPUTS, "model-name", 60000).toList())
+                .isInstanceOf(InferenceFailedException.class)
+                .hasMessage("Failed to parse ID of the response item");
+    }
+
+    @Test
+    void doInference_responseContainsUnknownUuid_throwsInferenceException() throws StatusException {
+        when(modelSerializer.getSerializedDto(COMMENT_1)).thenReturn(serialize(COMMENT_1));
+        when(modelSerializer.getSerializedDto(COMMENT_2)).thenReturn(serialize(COMMENT_2));
+
+        String missingId = UUID.randomUUID().toString();
+        InferenceResponse response = InferenceResponse.newBuilder()
+                .addContents(InferenceResponse.InferenceResponseContent.newBuilder()
+                        .setId(missingId)
+                        .addLabelEvaluation(buildLabel("label-1", 1.0))
+                        .build())
+                .build();
+
+        when(stub.withDeadlineAfter(any())).thenReturn(stub);
+        when(stub.withDeadlineAfter(any()).modelInference(any())).thenReturn(response);
+
+        assertThatThrownBy(() -> inferenceService.doInference(INPUTS, "model-name", 60000).toList())
+                .isInstanceOf(InferenceFailedException.class)
+                .hasMessage("Cannot find reference inference item with ID %s".formatted(missingId));
+    }
+
+    @Test
+    void doInference_serializerThrowsException_requestIsNotSent() throws StatusException {
+        when(modelSerializer.getSerializedDto(COMMENT_1)).thenThrow(new RuntimeException("serialize-failed"));
+
+        assertThatThrownBy(() -> inferenceService.doInference(INPUTS, "model-name", 60000).toList())
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("serialize-failed");
+
+        verify(stub, never()).modelInference(any(InferenceRequest.class));
+    }
+
+    @Test
+    void doInference_passesConfiguredTimeoutToStub() throws StatusException {
+        int timeout = 1234;
+        when(modelSerializer.getSerializedDto(COMMENT_1)).thenReturn(serialize(COMMENT_1));
+        when(modelSerializer.getSerializedDto(COMMENT_2)).thenReturn(serialize(COMMENT_2));
+
+        InferenceResponse response = InferenceResponse.newBuilder()
+                .addAllContents(List.of(
+                        InferenceResponse.InferenceResponseContent.newBuilder().setId(INPUTS.get(0).id().toString()).build(),
+                        InferenceResponse.InferenceResponseContent.newBuilder().setId(INPUTS.get(1).id().toString()).build()
+                ))
+                .build();
+
+        when(stub.withDeadlineAfter(any())).thenReturn(stub);
+        when(stub.withDeadlineAfter(any()).modelInference(any())).thenReturn(response);
+
+        inferenceService.doInference(INPUTS, "model-name", timeout).toList();
+
+        verify(stub, times(1)).withDeadlineAfter(Duration.ofMillis(timeout));
+    }
+
+    @Test
+    void doInference_responseOrderIsPreservedInOutput() throws StatusException {
+        when(modelSerializer.getSerializedDto(COMMENT_1)).thenReturn(serialize(COMMENT_1));
+        when(modelSerializer.getSerializedDto(COMMENT_2)).thenReturn(serialize(COMMENT_2));
+
+        InferenceResponse response = InferenceResponse.newBuilder()
+                .addAllContents(List.of(
+                        InferenceResponse.InferenceResponseContent.newBuilder()
+                                .setId(INPUTS.get(1).id().toString())
+                                .addLabelEvaluation(buildLabel("label-2", 1.0))
+                                .build(),
+                        InferenceResponse.InferenceResponseContent.newBuilder()
+                                .setId(INPUTS.get(0).id().toString())
+                                .addLabelEvaluation(buildLabel("label-1", 1.0))
+                                .build()
+                ))
+                .build();
+
+        when(stub.withDeadlineAfter(any())).thenReturn(stub);
+        when(stub.withDeadlineAfter(any()).modelInference(any())).thenReturn(response);
+
+        List<InferenceItem<Comment>> result = inferenceService.doInference(INPUTS, "model-name", 60000).toList();
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).id()).isEqualTo(INPUTS.get(1).id());
+        assertThat(result.get(1).id()).isEqualTo(INPUTS.get(0).id());
+    }
+
+    @Test
+    void doInference_responseWithoutLabels_mapsToEmptyLabelList() throws StatusException {
+        when(modelSerializer.getSerializedDto(COMMENT_1)).thenReturn(serialize(COMMENT_1));
+        when(modelSerializer.getSerializedDto(COMMENT_2)).thenReturn(serialize(COMMENT_2));
+
+        InferenceResponse response = InferenceResponse.newBuilder()
+                .addAllContents(List.of(
+                        InferenceResponse.InferenceResponseContent.newBuilder().setId(INPUTS.get(0).id().toString()).build(),
+                        InferenceResponse.InferenceResponseContent.newBuilder().setId(INPUTS.get(1).id().toString()).build()
+                ))
+                .build();
+
+        when(stub.withDeadlineAfter(any())).thenReturn(stub);
+        when(stub.withDeadlineAfter(any()).modelInference(any())).thenReturn(response);
+
+        List<InferenceItem<Comment>> result = inferenceService.doInference(INPUTS, "model-name", 60000).toList();
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).labels()).isEmpty();
+        assertThat(result.get(1).labels()).isEmpty();
     }
 
     private String serialize(Comment comment) {
