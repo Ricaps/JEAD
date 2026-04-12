@@ -15,6 +15,9 @@ import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mapstruct.factory.Mappers;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -26,12 +29,12 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class InferenceServiceTest {
 
     public static final Comment COMMENT_1 = new Comment(CommentType.JAVADOC, "test", 0, "test");
@@ -40,15 +43,23 @@ class InferenceServiceTest {
             new InferenceItem<>(COMMENT_1, null),
             new InferenceItem<>(COMMENT_2, null)
     );
+    @Mock
     private InferenceServiceGrpc.InferenceServiceBlockingV2Stub stub;
+
+    @Mock
+    private ModelSerializer modelSerializer;
+
+    private final CommentsMapper commentsMapper = Mappers.getMapper(CommentsMapper.class);
+
+    final private ObjectMapper objectMapper = new ObjectMapper();
 
     private InferenceService inferenceService;
 
-    private ModelSerializer modelSerializer;
-
-    final private CommentsMapper commentsMapper = Mappers.getMapper(CommentsMapper.class);
-
-    final private ObjectMapper objectMapper = new ObjectMapper();
+    @BeforeEach
+    void setUp() {
+        InferenceMapper inferenceMapper = Mappers.getMapper(InferenceMapper.class);
+        inferenceService = new InferenceService(stub, inferenceMapper, modelSerializer);
+    }
 
     private static void checkResult(InferenceItem<Comment> result1, InferenceItem<Comment> inferenceItem, InferenceResponse.InferenceResponseContent expectedResponseContent1, List<InferenceResponse.LabelEvaluation> labelEvaluations) {
         assertThat(result1.id()).isEqualTo(UUID.fromString(expectedResponseContent1.getId()));
@@ -70,13 +81,6 @@ class InferenceServiceTest {
                 .build();
     }
 
-    @BeforeEach
-    void beforeEach() {
-        stub = mock(InferenceServiceGrpc.InferenceServiceBlockingV2Stub.class);
-        InferenceMapper inferenceMapper = Mappers.getMapper(InferenceMapper.class);
-        modelSerializer = mock(ModelSerializer.class);
-        inferenceService = new InferenceService(stub, inferenceMapper, modelSerializer);
-    }
 
     @Test
     void doInference_modelNameNull_throwsException() {

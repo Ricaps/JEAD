@@ -9,15 +9,21 @@ import cz.muni.jena.test_data.JavadocCommentsTestClass;
 import cz.muni.jena.test_data.LineCommentsParserTestClass;
 import cz.muni.jena.utils.ParserTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
+@ExtendWith(MockitoExtension.class)
 class CommentsCodeExtractorTest {
 
     private final CommentsCodeExtractor extractor = new CommentsCodeExtractor();
+
+    @Mock
+    private Configuration configuration;
 
     @Test
     void getIdentifier_returnsCommentsIdentifier() {
@@ -28,7 +34,7 @@ class CommentsCodeExtractorTest {
     void extract_lineComments_returnsLineCommentRecordsWithParsedFqn() {
         ClassOrInterfaceDeclaration parsedClass = ParserTest.getParsedClass(LineCommentsParserTestClass.class);
 
-        List<Comment> extractedComments = extractor.extract(parsedClass, mock(Configuration.class), new CommandSettingsHashMap())
+        List<Comment> extractedComments = extractor.extract(parsedClass, configuration, new CommandSettingsHashMap())
                 .toList();
 
         assertThat(extractedComments).isNotEmpty();
@@ -41,7 +47,7 @@ class CommentsCodeExtractorTest {
     void extract_javadocs_returnsJavadocCommentRecords() {
         ClassOrInterfaceDeclaration parsedClass = ParserTest.getParsedClass(JavadocCommentsTestClass.class);
 
-        List<Comment> extractedComments = extractor.extract(parsedClass, mock(Configuration.class), new CommandSettingsHashMap())
+        List<Comment> extractedComments = extractor.extract(parsedClass, configuration, new CommandSettingsHashMap())
                 .toList();
 
         assertThat(extractedComments).anyMatch(comment -> comment.commentType() == CommentType.JAVADOC);
@@ -53,7 +59,7 @@ class CommentsCodeExtractorTest {
         detachedClass.setName("DetachedClass");
         detachedClass.addOrphanComment(new BlockComment("  detached block comment  "));
 
-        List<Comment> extractedComments = extractor.extract(detachedClass, mock(Configuration.class), new CommandSettingsHashMap())
+        List<Comment> extractedComments = extractor.extract(detachedClass, configuration, new CommandSettingsHashMap())
                 .toList();
 
         assertThat(extractedComments).hasSize(1);
@@ -61,5 +67,3 @@ class CommentsCodeExtractorTest {
                 .isEqualTo(CommentsCodeExtractor.UNKNOWN_CLASS_NAME_MESSAGE);
     }
 }
-
-

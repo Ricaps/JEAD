@@ -11,6 +11,9 @@ import cz.muni.jena.test_data.extractors.AnnotatedServiceFixture;
 import cz.muni.jena.test_data.extractors.ServiceMarker;
 import cz.muni.jena.utils.ParserTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
@@ -20,7 +23,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class GodDIMetricsExtractorTest {
+
+    @Mock
+    private Configuration configuration;
+
+    @Mock
+    private DIConfiguration diConfiguration;
 
     @Test
     void getIdentifier_returnsGodMetricsIdentifier() {
@@ -84,9 +94,6 @@ class GodDIMetricsExtractorTest {
     }
 
     private Configuration mockConfiguration(List<Annotation> injectionAnnotations, List<Annotation> beanAnnotations) {
-        Configuration configuration = mock(Configuration.class);
-        DIConfiguration diConfiguration = mock(DIConfiguration.class);
-
         when(configuration.diConfiguration()).thenReturn(diConfiguration);
         when(diConfiguration.injectionAnnotations()).thenReturn(injectionAnnotations);
         when(diConfiguration.beanAnnotations()).thenReturn(beanAnnotations);
@@ -98,8 +105,3 @@ class GodDIMetricsExtractorTest {
         return ParserTest.getParsedClass(AnnotatedServiceFixture.class);
     }
 }
-
-
-
-
-

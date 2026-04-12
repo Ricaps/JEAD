@@ -11,27 +11,38 @@ import cz.muni.jena.test_data.extractors.AnnotatedServiceFixture;
 import cz.muni.jena.test_data.extractors.ServiceMarker;
 import cz.muni.jena.utils.ParserTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class MultiServiceExtractorTest {
+
+    @Mock
+    private LackOfCohesionOfMethodsMetric lcomCalculator;
+
+    @Mock
+    private Configuration configuration;
+
+    @Mock
+    private ServiceLayerConfiguration serviceLayerConfiguration;
 
     @Test
     void getIdentifier_returnsMultiServiceIdentifier() {
-        MultiServiceExtractor extractor = new MultiServiceExtractor(mock(LackOfCohesionOfMethodsMetric.class));
+        MultiServiceExtractor extractor = new MultiServiceExtractor(lcomCalculator);
 
         assertThat(extractor.getIdentifier()).isEqualTo("multi-service");
     }
 
     @Test
     void extract_withoutMatchingServiceAnnotation_returnsEmptyStream() {
-        LackOfCohesionOfMethodsMetric lcomCalculator = mock(LackOfCohesionOfMethodsMetric.class);
         MultiServiceExtractor extractor = new MultiServiceExtractor(lcomCalculator);
 
         List<MultiServiceMethods> extracted = extractor.extract(parsedFixture(), mockConfiguration(Set.of()), new CommandSettingsHashMap())
@@ -42,7 +53,6 @@ class MultiServiceExtractorTest {
 
     @Test
     void extract_withMatchingServiceAnnotation_returnsOnlyPublicAndPackageMethods() {
-        LackOfCohesionOfMethodsMetric lcomCalculator = mock(LackOfCohesionOfMethodsMetric.class);
         when(lcomCalculator.extractMetric(any(), any())).thenReturn(7);
 
         MultiServiceExtractor extractor = new MultiServiceExtractor(lcomCalculator);
@@ -66,9 +76,6 @@ class MultiServiceExtractorTest {
     }
 
     private Configuration mockConfiguration(Set<Annotation> serviceAnnotations) {
-        Configuration configuration = mock(Configuration.class);
-        ServiceLayerConfiguration serviceLayerConfiguration = mock(ServiceLayerConfiguration.class);
-
         when(configuration.serviceLayerConfiguration()).thenReturn(serviceLayerConfiguration);
         when(serviceLayerConfiguration.serviceAnnotations()).thenReturn(serviceAnnotations);
 
@@ -79,8 +86,3 @@ class MultiServiceExtractorTest {
         return ParserTest.getParsedClass(AnnotatedServiceFixture.class);
     }
 }
-
-
-
-
-

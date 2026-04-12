@@ -2,15 +2,27 @@ package cz.muni.jena.inference.config.converter;
 
 import cz.muni.jena.codeminer.extractor.CodeExtractor;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class CodeExtractorConverterTest {
+
+    @Mock
+    private CodeExtractor<?> firstExtractor;
+
+    @Mock
+    private CodeExtractor<?> secondExtractor;
+
+    @Mock
+    private CodeExtractor<?> metricsExtractor;
 
     @Test
     void convert_nullExtractorName_throwsIllegalArgumentException() {
@@ -23,8 +35,8 @@ class CodeExtractorConverterTest {
 
     @Test
     void convert_unknownExtractorName_throwsIllegalArgumentException() {
-        CodeExtractor<?> knownExtractor = mockExtractor("comments");
-        CodeExtractorConverter converter = new CodeExtractorConverter(List.of(knownExtractor));
+        when(firstExtractor.getIdentifier()).thenReturn("comments");
+        CodeExtractorConverter converter = new CodeExtractorConverter(List.of(firstExtractor));
 
         assertThatThrownBy(() -> converter.convert("missing"))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -33,9 +45,9 @@ class CodeExtractorConverterTest {
 
     @Test
     void convert_existingExtractorName_returnsMatchingExtractor() {
-        CodeExtractor<?> commentsExtractor = mockExtractor("comments");
-        CodeExtractor<?> metricsExtractor = mockExtractor("god-metrics");
-        CodeExtractorConverter converter = new CodeExtractorConverter(List.of(commentsExtractor, metricsExtractor));
+        when(firstExtractor.getIdentifier()).thenReturn("comments");
+        when(metricsExtractor.getIdentifier()).thenReturn("god-metrics");
+        CodeExtractorConverter converter = new CodeExtractorConverter(List.of(firstExtractor, metricsExtractor));
 
         CodeExtractor<?> resolvedExtractor = converter.convert("god-metrics");
 
@@ -44,19 +56,11 @@ class CodeExtractorConverterTest {
 
     @Test
     void convert_duplicateIdentifiers_returnsFirstMatchingExtractor() {
-        CodeExtractor<?> firstExtractor = mockExtractor("comments");
-        CodeExtractor<?> secondExtractor = mockExtractor("comments");
+        when(firstExtractor.getIdentifier()).thenReturn("comments");
         CodeExtractorConverter converter = new CodeExtractorConverter(List.of(firstExtractor, secondExtractor));
 
         CodeExtractor<?> resolvedExtractor = converter.convert("comments");
 
         assertThat(resolvedExtractor).isSameAs(firstExtractor);
     }
-
-    private CodeExtractor<?> mockExtractor(String identifier) {
-        CodeExtractor<?> extractor = mock(CodeExtractor.class);
-        when(extractor.getIdentifier()).thenReturn(identifier);
-        return extractor;
-    }
 }
-

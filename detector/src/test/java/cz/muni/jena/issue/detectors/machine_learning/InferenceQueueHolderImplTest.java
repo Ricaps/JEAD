@@ -7,6 +7,9 @@ import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.inference.model.InferenceItem;
 import cz.muni.jena.issue.IssueWithLazyMeta;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
@@ -22,9 +25,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class InferenceQueueHolderImplTest {
 
     private static final int QUEUE_TIMEOUT_SECONDS = 1;
+
+    @Mock
+    private InferenceService inferenceService;
 
     private static InferenceConfiguration inferenceConfiguration(ModelConfiguration... models) {
         return new InferenceConfiguration(true, QUEUE_TIMEOUT_SECONDS, List.of(), List.of(models));
@@ -36,7 +43,6 @@ class InferenceQueueHolderImplTest {
 
     @Test
     void startQueues_modelConfigured_createsQueuePerModel() {
-        InferenceService inferenceService = mock(InferenceService.class);
         InferenceQueueHolderImpl holder = new InferenceQueueHolderImpl(
                 inferenceConfiguration(
                         modelConfiguration("modelOne"),
@@ -57,7 +63,6 @@ class InferenceQueueHolderImplTest {
 
     @Test
     void addToQueue_unknownModel_ignored() {
-        InferenceService inferenceService = mock(InferenceService.class);
         InferenceQueueHolderImpl holder = new InferenceQueueHolderImpl(inferenceConfiguration(), inferenceService);
 
         holder.addToQueue("missingModel", Stream.of());
@@ -68,7 +73,6 @@ class InferenceQueueHolderImplTest {
     @Test
     @SuppressWarnings("unchecked")
     void addToQueue_knownModel_itemProcessedOnTermination() {
-        InferenceService inferenceService = mock(InferenceService.class);
         ModelConfiguration model = modelConfiguration("modelOne");
         InferenceQueueHolderImpl holder = new InferenceQueueHolderImpl(inferenceConfiguration(model), inferenceService);
 
@@ -88,7 +92,6 @@ class InferenceQueueHolderImplTest {
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
     void terminateQueuesAndWait_oneQueueInterrupted_returnsResultsFromOthers() throws InterruptedException {
-        InferenceService inferenceService = mock(InferenceService.class);
         InferenceQueueHolderImpl holder = new InferenceQueueHolderImpl(inferenceConfiguration(), inferenceService);
 
         InferenceQueue<EvaluationModel> interruptedQueue = (InferenceQueue) mock(InferenceQueue.class);
@@ -113,7 +116,6 @@ class InferenceQueueHolderImplTest {
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
     void terminateQueuesAndWait_queueExists_terminatesQueue() throws InterruptedException {
-        InferenceService inferenceService = mock(InferenceService.class);
         InferenceQueueHolderImpl holder = new InferenceQueueHolderImpl(inferenceConfiguration(), inferenceService);
 
         InferenceQueue<EvaluationModel> queue = (InferenceQueue) mock(InferenceQueue.class);
