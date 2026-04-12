@@ -52,22 +52,6 @@ public final class SharedDetectorContainers {
         }
     }
 
-    public static String jdbcUrl() {
-        return POSTGRES.getJdbcUrl();
-    }
-
-    public static String dbUsername() {
-        return POSTGRES.getUsername();
-    }
-
-    public static String dbPassword() {
-        return POSTGRES.getPassword();
-    }
-
-    public static String inferenceAddress() {
-        return INFERENCE_SERVER.getHost() + ":" + INFERENCE_SERVER.getMappedPort(8080);
-    }
-
     public static void waitForInferenceReady(InferenceFacade inferenceFacade, Duration timeoutDuration) {
         Instant timeout = Instant.now().plus(timeoutDuration);
         while (Instant.now().isBefore(timeout)) {
