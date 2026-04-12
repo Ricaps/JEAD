@@ -23,7 +23,7 @@ inference:
   enabled: true
   models:
     - &comments-model
-      model-name: test-model
+      model-name: existing-model
       batch-size: 30
       batch-period: 100
   detectors:
@@ -37,4 +37,15 @@ inference:
       - label-name: "test_label_2"
         threshold: 0.8
         issue-type: COMMENTED_OUT_CODE
+
+prepare-plugin:
+  maven-plugin:
+    group-id: "cz.muni.fi.jead"
+    artifact-id: "jead-maven-plugin"
+    version: "1.0-SNAPSHOT"
+  gradle-plugin:
+    group-id: "cz.muni.fi.jead"
+    artifact-id: "jead-gradle-plugin"
+    version: "1.0-SNAPSHOT"
+    plugin-id: "jead-gradle-plugin"
 
