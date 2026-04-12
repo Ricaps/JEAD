@@ -12,7 +12,6 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -41,8 +40,8 @@ class JavadocCommentsWrapperTest {
         dummyMethodCommentsWrapper = new JavadocCommentsWrapper(FULLY_QUALIFIED_NAME, getJavadocOfMethod(DUMMY_METHOD, allContainedComments));
         formatMethodCommentsWrapper = new JavadocCommentsWrapper(FULLY_QUALIFIED_NAME, getJavadocOfMethod(FORMAT_METHOD, allContainedComments));
 
-        dummyMethodJavadoc = allContainedComments.get(0).asJavadocComment().parse();
-        dummyMethodStartLine = NodeUtil.getStartLineNumber(allContainedComments.get(0).asJavadocComment()).orElseThrow();
+        dummyMethodJavadoc = allContainedComments.getFirst().asJavadocComment().parse();
+        dummyMethodStartLine = NodeUtil.getStartLineNumber(allContainedComments.getFirst().asJavadocComment()).orElseThrow();
     }
 
     @Test
@@ -58,7 +57,7 @@ class JavadocCommentsWrapperTest {
     void parseJavadocComments_description_isIncluded() {
         List<Comment> comments = dummyMethodCommentsWrapper.parseJavadocComments();
 
-        assertThat(comments.get(0).text()).isEqualTo(dummyMethodJavadoc.getDescription().toText());
+        assertThat(comments.getFirst().text()).isEqualTo(dummyMethodJavadoc.getDescription().toText());
     }
 
     @Test
@@ -120,7 +119,7 @@ class JavadocCommentsWrapperTest {
         List<Comment> comments = formatMethodCommentsWrapper.parseJavadocComments();
 
         assertThat(comments).hasSize(1);
-        assertThat(comments.get(0).text()).doesNotContainPattern(SPACES_PATTERN);
+        assertThat(comments.getFirst().text()).doesNotContainPattern(SPACES_PATTERN);
     }
 
     private void forEachIncludedTag(Consumer<JavadocBlockTag.Type> consumer) {

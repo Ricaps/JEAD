@@ -220,13 +220,14 @@ class OutputFormatterWorkflowIT {
         Path outputFile = tempDir.resolve("workflow-ms.csv");
         List<MultiServiceMethods> methods = sampleMultiServiceMethods();
 
-        OutputFormatter formatter = outputFormatterFactory.getCodeSerializer("csv").orElseThrow();
-        formatter.setOutputPath(outputFile.toString());
-        formatter.add(methods);
+        try (OutputFormatter formatter = outputFormatterFactory.getCodeSerializer("csv").orElseThrow()) {
+            formatter.setOutputPath(outputFile.toString());
+            formatter.add(methods);
 
-        // Current CsvOutput cannot serialize nested object values in a single cell.
-        assertThatThrownBy(formatter::close)
-                .isInstanceOf(tools.jackson.dataformat.csv.CsvWriteException.class);
+            // Current CsvOutput cannot serialize nested object values in a single cell.
+            assertThatThrownBy(formatter::close)
+                    .isInstanceOf(tools.jackson.dataformat.csv.CsvWriteException.class);
+        }
     }
 
     private List<Comment> sampleComments() {
