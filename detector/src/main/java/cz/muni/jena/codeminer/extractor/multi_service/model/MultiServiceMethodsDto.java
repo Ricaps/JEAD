@@ -4,5 +4,7 @@ import cz.muni.jena.inference.dto.BaseDto;
 
 import java.util.List;
 
-public record MultiServiceMethodsDto(List<MultiServiceMethods.Method> methods) implements BaseDto {
+public record MultiServiceMethodsDto(List<MethodDto> methods) implements BaseDto {
+
+    public record MethodDto(String name, String signature) {}
 }

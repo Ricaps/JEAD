@@ -1,5 +1,7 @@
 package cz.muni.jena.codeminer.outputformatter;
 
+import cz.muni.jena.inference.model.EvaluationModel;
+import cz.muni.jena.inference.model.mapping.ModelMapperRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.jackson.databind.ObjectMapper;
@@ -8,7 +10,6 @@ import tools.jackson.databind.SequenceWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class JsonLinesOutput extends BaseOutputFormatter {
@@ -18,18 +19,21 @@ public class JsonLinesOutput extends BaseOutputFormatter {
     private final ObjectMapper objectMapper;
     private final List<Object> buffer = new ArrayList<>();
 
-    public JsonLinesOutput(ObjectMapper objectMapper) {
+    public JsonLinesOutput(ObjectMapper objectMapper, ModelMapperRegistry modelMapperRegistry) {
+        super(modelMapperRegistry);
         this.objectMapper = objectMapper;
     }
 
     @Override
-    public void add(Collection<?> codeSnippets) {
+    public void add(List<? extends EvaluationModel> codeSnippets) {
         if (codeSnippets.isEmpty()) {
             return;
         }
 
+        var dtoSnippets = mapToDto(codeSnippets);
+
         synchronized (buffer) {
-            buffer.addAll(codeSnippets);
+            buffer.addAll(dtoSnippets);
 
             if (buffer.size() > BUFFER_SIZE) {
                 flush();

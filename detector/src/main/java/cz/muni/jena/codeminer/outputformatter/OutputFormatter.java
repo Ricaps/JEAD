@@ -1,10 +1,12 @@
 package cz.muni.jena.codeminer.outputformatter;
 
-import java.util.Collection;
+import cz.muni.jena.inference.model.EvaluationModel;
+
+import java.util.List;
 
 public interface OutputFormatter extends AutoCloseable {
 
-    void add(Collection<?> codeSnippets);
+    void add(List<? extends EvaluationModel> codeSnippets);
 
     void setOutputPath(String path);
 }

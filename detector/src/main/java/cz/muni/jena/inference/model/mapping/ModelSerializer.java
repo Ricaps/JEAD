@@ -11,10 +11,10 @@ import java.util.Map;
 @Component
 public class ModelSerializer {
 
-    private final Map<Class<? extends EvaluationModel>, ModelDtoMapper<?, ?>> mapperRegistry;
+    private final ModelMapperRegistry mapperRegistry;
     private final ObjectMapper objectMapper;
 
-    public ModelSerializer(Map<Class<? extends EvaluationModel>, ModelDtoMapper<?, ?>> mapperRegistry, ObjectMapper objectMapper) {
+    public ModelSerializer(ModelMapperRegistry mapperRegistry, ObjectMapper objectMapper) {
         this.mapperRegistry = mapperRegistry;
         this.objectMapper = objectMapper;
     }
@@ -29,11 +29,7 @@ public class ModelSerializer {
      */
     @SuppressWarnings("unchecked")
     public <Model extends EvaluationModel> String getSerializedDto(Model evaluationModel) {
-        var mapper = (ModelDtoMapper<Model, ? extends BaseDto>) mapperRegistry.get(evaluationModel.getClass());
-
-        if (mapper == null) {
-            throw new IllegalStateException("Failed to found mapper for model %s".formatted(evaluationModel));
-        }
+        var mapper = (ModelDtoMapper<Model, ? extends BaseDto>) mapperRegistry.getMapper(evaluationModel.getClass());
 
         BaseDto dto = mapper.toDto(evaluationModel);
         try {

@@ -1,40 +1,23 @@
 package cz.muni.jena.inference.model.mapping;
 
 import cz.muni.jena.inference.model.EvaluationModel;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.ResolvableType;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-@Configuration(proxyBeanMethods = false)
-public class ModelMapperRegistry {
+public final class ModelMapperRegistry  {
 
-    @Bean
-    public Map<Class<? extends EvaluationModel>, ModelDtoMapper<?, ?>> mapperRegistry(List<ModelDtoMapper<?, ?>> mappers) {
-        Map<Class<? extends EvaluationModel>, ModelDtoMapper<?, ?>> registry = new HashMap<>();
+    private final Map<Class<? extends EvaluationModel>, ModelDtoMapper<?, ?>> mapperMap;
 
-        for (ModelDtoMapper<?, ?> mapper : mappers) {
-            registry.put(resolveType(mapper).asSubclass(EvaluationModel.class), mapper);
-        }
-
-        return registry;
+    public ModelMapperRegistry(Map<Class<? extends EvaluationModel>, ModelDtoMapper<?, ?>> mapperMap) {
+        this.mapperMap = mapperMap;
     }
 
-    private Class<?> resolveType(ModelDtoMapper<?, ?> mapper) {
-        ResolvableType resolvableType = ResolvableType.forClass(mapper.getClass());
-
-        ResolvableType mapperType = resolvableType.as(ModelDtoMapper.class);
-
-        ResolvableType modelType = mapperType.getGeneric(0);
-
-        Class<?> resolved = modelType.resolve();
-        if (resolved == null) {
-            throw new IllegalStateException("Cannot resolve generic mapper %s".formatted(mapper.getClass()));
+    @SuppressWarnings("unchecked")
+    public <Model extends EvaluationModel> ModelDtoMapper<Model, ?> getMapper(Class<Model> modelClass) {
+        var mapper = (ModelDtoMapper<Model, ?>) mapperMap.get(modelClass);
+        if (mapper == null) {
+            throw new IllegalStateException("Failed to found mapper for model %s".formatted(modelClass));
         }
-
-        return resolved;
+        return mapper;
     }
 }
