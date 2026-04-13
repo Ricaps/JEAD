@@ -12,7 +12,7 @@ public class ObjectMapperConfig {
 
     @Bean
     @Primary
-    public ObjectMapper jacksonObjectMapper() {
+    public ObjectMapper configurationObjectMapper() {
         return JsonMapper.builder()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .build();

@@ -1,5 +1,6 @@
 package cz.muni.jena.codeminer.outputformatter;
 
+import cz.muni.jena.inference.model.mapping.ModelMapperRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import tools.jackson.core.util.DefaultIndenter;
@@ -27,17 +28,17 @@ public class OutputConfig {
     }
 
     @Bean(destroyMethod = "")
-    public OutputFormatter jsonOutputFormatter(ObjectMapper objectMapper) {
-        return new JsonOutput(objectMapper);
+    public OutputFormatterInstanceProvider jsonOutputFormatter(ObjectMapper objectMapper, ModelMapperRegistry modelMapperRegistry) {
+        return () -> new JsonOutput(objectMapper, modelMapperRegistry);
     }
 
     @Bean(destroyMethod = "", name = "jsonlOutputFormatter")
-    public OutputFormatter jsonLinesOutputFormatter(ObjectMapper objectMapper) {
-        return new JsonLinesOutput(objectMapper);
+    public OutputFormatterInstanceProvider jsonLinesOutputFormatter(ObjectMapper objectMapper, ModelMapperRegistry modelMapperRegistry) {
+        return () -> new JsonLinesOutput(objectMapper, modelMapperRegistry);
     }
 
     @Bean(destroyMethod = "", name = "csvOutputFormatter")
-    public OutputFormatter csvOutputFormatter(CsvMapper csvMapper, ObjectMapper objectMapper) {
-        return new CsvOutput(csvMapper, objectMapper);
+    public OutputFormatterInstanceProvider csvOutputFormatter(CsvMapper csvMapper, ObjectMapper objectMapper, ModelMapperRegistry modelMapperRegistry) {
+        return () -> new CsvOutput(csvMapper, objectMapper, modelMapperRegistry);
     }
 }

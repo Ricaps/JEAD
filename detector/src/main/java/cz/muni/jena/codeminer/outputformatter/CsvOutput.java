@@ -1,5 +1,7 @@
 package cz.muni.jena.codeminer.outputformatter;
 
+import cz.muni.jena.inference.model.EvaluationModel;
+import cz.muni.jena.inference.model.mapping.ModelMapperRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.jackson.databind.ObjectMapper;
@@ -12,7 +14,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -23,18 +24,22 @@ public class CsvOutput extends BaseOutputFormatter {
     private final CsvMapper csvMapper;
     private final ObjectMapper objectMapper;
 
-    public CsvOutput(CsvMapper csvMapper, ObjectMapper objectMapper) {
+    public CsvOutput(CsvMapper csvMapper, ObjectMapper objectMapper, ModelMapperRegistry modelMapperRegistry) {
+        super(modelMapperRegistry);
         this.csvMapper = csvMapper;
         this.objectMapper = objectMapper;
     }
 
     @Override
-    public void add(Collection<?> codeSnippets) {
+    public void add(List<? extends EvaluationModel> codeSnippets) {
         if (codeSnippets.isEmpty()) {
             return;
         }
+
+        var dtoSnippets = mapToDto(codeSnippets);
+
         synchronized (buffer) {
-            buffer.addAll(codeSnippets);
+            buffer.addAll(dtoSnippets);
             if (buffer.size() > BUFFER_SIZE) {
                 flush();
             }

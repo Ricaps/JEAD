@@ -10,11 +10,11 @@ import java.util.Optional;
 @Component
 public class OutputFormatterFactory {
 
-    private final Map<String, OutputFormatter> outputFormatterMap;
+    private final Map<String, OutputFormatterInstanceProvider> instanceProviderMap;
 
     @Inject
-    public OutputFormatterFactory(Map<String, OutputFormatter> outputFormatterMap) {
-        this.outputFormatterMap = outputFormatterMap;
+    public OutputFormatterFactory(Map<String, OutputFormatterInstanceProvider> instanceProviderMap) {
+        this.instanceProviderMap = instanceProviderMap;
     }
 
     /**
@@ -23,7 +23,7 @@ public class OutputFormatterFactory {
      * @return CodeSerializer wrapped in the Optional
      */
     public Optional<OutputFormatter> getCodeSerializer(@Nonnull String format) {
-        return Optional.ofNullable(outputFormatterMap.get(getBeanName(format)));
+        return Optional.ofNullable(instanceProviderMap.get(getBeanName(format)).createInstance());
     }
 
     private static String getBeanName(String format) {

@@ -8,6 +8,7 @@ import cz.muni.jena.codeminer.extractor.CodeExtractor;
 import cz.muni.jena.codeminer.outputformatter.OutputFormatter;
 import cz.muni.jena.configuration.Configuration;
 import cz.muni.jena.frontend.commands.commands.CommandSettingsMap;
+import cz.muni.jena.inference.model.EvaluationModel;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -35,7 +36,7 @@ public class CodeMinerCallback implements SourceRoot.Callback {
     }
 
     private void processCompilationUnit(CompilationUnit compilationUnit) {
-        List<?> extractedCode = compilationUnit.findAll(ClassOrInterfaceDeclaration.class)
+        List<? extends EvaluationModel> extractedCode = compilationUnit.findAll(ClassOrInterfaceDeclaration.class)
                 .stream()
                 .flatMap(classOrIf -> codeExtractor.extract(classOrIf, configuration, commandSettingsMap))
                 .toList();
