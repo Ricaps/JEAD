@@ -13,6 +13,7 @@ public class JoinedDataCSVExporter implements CSVExporter
     private static final String[] ISSUES_HEADER = {
             "id",
             "issue_type",
+            "analysis_type",
             "line_number",
             "fully_qualified_name",
             "project_label",

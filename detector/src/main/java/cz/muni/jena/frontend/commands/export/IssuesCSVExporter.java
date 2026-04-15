@@ -13,6 +13,7 @@ public class IssuesCSVExporter implements CSVExporter
     private static final String[] ISSUES_HEADER = {
             "id",
             "issue_type",
+            "analysis_type",
             "line_number",
             "fully_qualified_name",
             "project_label",
@@ -44,8 +45,7 @@ public class IssuesCSVExporter implements CSVExporter
                                 issue.getFullyQualifiedName(),
                                 issue.getProjectLabel(),
                                 Optional.ofNullable(issue.getMethod()).map(IssueMethod::getId).orElse(null),
-                                Optional.ofNullable(issue.getIssueClass()).map(IssueClass::getId).orElse(null),
-                                issue.getAnalysisType().name()
+                                Optional.ofNullable(issue.getIssueClass()).map(IssueClass::getId).orElse(null)
                         );
                     } catch (IOException e) {
                         e.printStackTrace();
