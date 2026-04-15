@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/build-plugins/jead-maven-plugin/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/build-plugins/jead-maven-plugin/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/test-fixtures/antipatterns/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/test-fixtures/antipatterns/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/test-fixtures/authorization-server/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/test-fixtures/authorization-server/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/test-fixtures/power-mock-usage/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/test-fixtures/power-mock-usage/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/test-fixtures/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/test-fixtures/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/test-fixtures/test-gradle-project/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/test-fixtures/test-gradle-project/src/main/resources" charset="UTF-8" />
+  </component>
+</project>
