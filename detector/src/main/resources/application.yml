@@ -81,5 +81,7 @@ prepare-plugin:
     plugin-id: "jead-gradle-plugin"
   repository:
     id: jead-github
-    # Repository pull token - it's safe to have it here until the GitHub repo is made public
-    url: https://x-access-token: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@maven.pkg.github.com/Ricaps/JEAD
+    url: https://x-access-token:${prepare-plugin.repository.access-token}@maven.pkg.github.com/Ricaps/JEAD
+    # Personal Access Token (classic) with read:packages scope is required to access the GitHub Packages repository
+    # See more in README.md or at https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
+    access-token: your_personal_access_token_here

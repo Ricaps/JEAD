@@ -57,7 +57,23 @@ USE_GPU=false
 - **`USE_GPU`** — Set to `true` to enable GPU acceleration inside the inference server container, or leave as `false` to use CPU only. 
 When set to `true`, you must start the inference server using the GPU-enabled compose command (see [Using NVIDIA GPU](#using-nvidia-gpu-composegpuyaml) below) instead of the plain `docker compose up -d`.
 
-### 2. Start the AI Inference Server
+### 2. Configure GitHub Packages Access Token
+
+To download JEAD plugins from GitHub Packages, configure the repository token in `application.yml` under `prepare-plugin.repository.access-token`.
+
+The token must be a **GitHub Classic Personal Access Token** with at least the `read:packages` permission. See [GitHub documentation for creating a PAT](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)
+
+```yaml
+prepare-plugin:
+  repository:
+    id: jead-github
+    url: https://x-access-token:${prepare-plugin.repository.access-token}@maven.pkg.github.com/Ricaps/JEAD
+    access-token: <your-github-classic-pat-with-read-packages>
+```
+
+This token will be inserted to the analyzed projects' build files when you run the `prepareProjects` command, allowing them to download the necessary JEAD plugins.
+
+### 3. Start the AI Inference Server
 
 The detector requires the inference server to be running. Start it with Docker Compose:
 
@@ -117,12 +133,40 @@ docker compose ps
 docker exec -it <inference-server-container-name> nvidia-smi
 ```
 
-### 3. Configure the Detector (Optional)
+### 4. Configure the Detector (Optional)
 
 Edit `config/application.yml` if you need to customize:
 - Inference server connection settings
 - Analysis parameters
 - Logging levels
+
+### 5. Prepare Target Projects for Analysis
+
+Before running `detectIssues`, the analyzed project must have dependencies available in `target/dependency`.
+
+Use JEAD's `prepareProjects` command (inside the detector shell) to insert preparation into target projects:
+
+```bash
+prepareProjects -d /absolute/path/to/Sample01
+```
+
+Or prepare all projects in a parent directory:
+
+```bash
+prepareProjects -d /absolute/path/to/workspace
+```
+
+What `prepareProjects` does:
+- For Maven projects, it inserts JEAD plugin configuration so you can run package and copy dependencies.
+- For Gradle projects, it appends a JEAD build script that adds repository/plugin setup and required JEAD tasks.
+
+After preparation, build each target project (Maven package or Gradle JEAD tasks), then verify jars exist in `target/dependency`.
+
+Then analyze the project in the detector shell:
+
+```bash
+detectIssues -p /absolute/path/to/Sample01
+```
 
 ## Running the Detector
 

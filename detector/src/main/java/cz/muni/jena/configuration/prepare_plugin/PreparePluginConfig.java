@@ -49,8 +49,9 @@ public record PreparePluginConfig(@NotNull PreparePluginConfig.MavenPlugin maven
      * @param url      The URL of the repository.
      * @param password The password for authentication, if required.
      * @param username The username for authentication, if required.
+     * @param accessToken The access token for authentication, if required. Not used in the code, just provided for type completeness.
      */
     public record Repository(@NotBlank String id, @NotBlank String url, @Nullable String password,
-                             @Nullable String username) {
+                             @Nullable String username, @Nullable String accessToken) {
     }
 }

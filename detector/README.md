@@ -11,6 +11,21 @@ After running the database you can run JEAD using the main method.
 - Docker (with Docker Compose)
 - For local development, update the JEAD Maven and Gradle plugin versions in `application.yml` to match the versions you have available.
 
+### GitHub Packages token configuration
+To download JEAD plugins from GitHub Packages, configure the repository token in `application.yml` under `prepare-plugin.repository.access-token`.
+
+The token must be a **GitHub Classic Personal Access Token** with at least the `read:packages` permission.
+
+```yaml
+prepare-plugin:
+  repository:
+    id: jead-github
+    url: https://x-access-token:${prepare-plugin.repository.access-token}@maven.pkg.github.com/Ricaps/JEAD
+    access-token: <your-github-classic-pat-with-read-packages>
+```
+
+This token will be inserted to the analyzed projects' build files when you run the `prepareProjects` command, allowing them to download the necessary JEAD plugins.
+
 ### Example usage
 Run the database with Docker Compose:
 ```bash
@@ -61,7 +76,7 @@ You might need to add also plugin repository definition:
         <enabled>true</enabled>
       </snapshots>
       <id>jead-github</id>
-      <url>https://x-access-token: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@maven.pkg.github.com/Ricaps/Jead</url>
+      <url>https://x-access-token:<personal-access-token>@maven.pkg.github.com/Ricaps/Jead</url>
     </pluginRepository>
   </pluginRepositories>
 ```
@@ -80,7 +95,7 @@ buildscript {
         mavenLocal()
         maven {
             name = "jead-github"
-            url = uri('https://x-access-token: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@maven.pkg.github.com/Ricaps/Jead')
+            url = uri('https://x-access-token:<personal-access-token>@maven.pkg.github.com/Ricaps/Jead')
         }
     }
 
