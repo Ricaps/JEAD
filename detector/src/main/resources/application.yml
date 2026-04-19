@@ -82,4 +82,4 @@ prepare-plugin:
   repository:
     id: jead-github
     # Repository pull token - it's safe to have it here until the GitHub repo is made public
-    url: https://x-access-token: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@maven.pkg.github.com/Ricaps/Jead
+    url: https://x-access-token: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@maven.pkg.github.com/Ricaps/JEAD
