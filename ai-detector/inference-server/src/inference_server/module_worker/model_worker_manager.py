@@ -8,7 +8,6 @@ import subprocess
 import threading
 import time
 from contextlib import suppress
-from pathlib import Path
 from threading import Thread
 from typing import Optional, Any, IO, AnyStr
 
