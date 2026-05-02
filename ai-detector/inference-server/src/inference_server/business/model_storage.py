@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 import urllib.request
@@ -20,6 +21,7 @@ from inference_server.module_worker.model_worker_manager import (
     Message,
     WorkerCommand,
 )
+from inference_server.util.path_resolver import PathResolver
 
 
 class ModelDefinition(InferenceModelExecutable):
@@ -70,7 +72,6 @@ class ModelDefinition(InferenceModelExecutable):
 
 class ModelStorage(ShutdownAware):
     PIP_SCRIPT_URL = "https://bootstrap.pypa.io/get-pip.py"
-    PIP_SCRIPT_NAME = "get-pip.py"
 
     def __init__(
         self,
@@ -79,6 +80,7 @@ class ModelStorage(ShutdownAware):
         self._server_config: Final[ServerConfig] = server_config
         self.__model_holder: dict[str, ModelDefinition] = dict()
         self.__model_holder_lock = asyncio.Lock()
+        self._path_resolver = PathResolver(server_config)
         self._logger = logging.getLogger(self.__class__.__name__)
 
     def get_model(self, model_name: str) -> Optional[ModelDefinition]:
@@ -142,7 +144,7 @@ class ModelStorage(ShutdownAware):
 
     async def on_shutdown(self) -> None:
         async with self.__model_holder_lock:
-            for model_name, model in self.__model_holder.items():
+            for _, model in self.__model_holder.items():
                 await model.unload_model()
 
     async def ensure_venv(self, model_root: AsyncPath) -> bool:
@@ -157,14 +159,14 @@ class ModelStorage(ShutdownAware):
         Returns: True if the virtual environment exists or was created successfully, False otherwise.
 
         """
-        venv_path, python_path, pip_path, req_path = self.get_paths(model_root)
+        venv_path, python_path, pip_path = self._path_resolver.get_python_paths()
 
         if await venv_path.exists():
             if await python_path.exists() and await pip_path.exists():
                 return True
 
             self._logger.warning(
-                f"Model root '{model_root}' already include .venv folder, but it's not correctly installed!"
+                f"Model root '{model_root}' already include {venv_path.name} folder, but it's not correctly installed!"
             )
             # TODO: remove incorrect venv
 
@@ -181,7 +183,7 @@ class ModelStorage(ShutdownAware):
 
         try:
             get_pip_url = ModelStorage.PIP_SCRIPT_URL
-            get_pip_path = venv_path / ModelStorage.PIP_SCRIPT_NAME
+            get_pip_path = self._path_resolver.get_pip_script_path()
 
             self._logger.info(
                 f"Downloading get-pip.py for models root at '{model_root}'"
@@ -190,13 +192,16 @@ class ModelStorage(ShutdownAware):
                 urllib.request.urlretrieve, get_pip_url, str(get_pip_path)
             )
 
+            if not await python_path.exists():
+                self._logger.error(f"Python executable not found in {venv_path}!")
+
             process = await asyncio.create_subprocess_exec(
                 str(python_path),
                 str(get_pip_path),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await process.communicate()
+            _, stderr = await process.communicate()
 
             if process.returncode != 0:
                 self._logger.error(
@@ -224,7 +229,8 @@ class ModelStorage(ShutdownAware):
         Returns: True if installation was successful, False otherwise.
 
         """
-        _, _, pip_path, req_path = self.get_paths(model_root)
+        _, _, pip_path = self._path_resolver.get_python_paths()
+        req_path = self._path_resolver.get_requirements_path()
 
         self._logger.info(
             f"Installing requirements for model root at '{model_root}' using '{req_path}'..."
@@ -257,17 +263,3 @@ class ModelStorage(ShutdownAware):
         )
 
         return True
-
-    def get_paths(self, model_root: AsyncPath):
-        venv_path = model_root / self._server_config.models_venv_dir_name
-        python_path = venv_path / "bin" / "python3"
-        pip_path = venv_path / "bin" / "pip"
-
-        requirements_file_name = (
-            ModelWorkerManager.REQUIREMENTS_GPU_FILE
-            if self._server_config.use_gpu
-            else ModelWorkerManager.REQUIREMENTS_FILE
-        )
-        req_path = model_root / requirements_file_name
-
-        return venv_path, python_path, pip_path, req_path

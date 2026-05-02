@@ -16,9 +16,11 @@ from pydantic import BaseModel
 
 from inference_server.configuration.config import ServerConfig
 from inference_server.exception.model import (
+    ModelTimeoutError,
     WorkerStatusException,
-    WrongModelConfiguration,
+    ModelError,
 )
+from inference_server.util.path_resolver import PathResolver
 
 
 class WorkerCommand(Enum):
@@ -66,13 +68,9 @@ class WorkerStatus(Enum):
 
 class ModelWorkerManager:
     WORKER_FILE = "worker.py"
-    REQUIREMENTS_FILE = "requirements.txt"
-    REQUIREMENTS_GPU_FILE = "requirements.gpu.txt"
     TERMINATION_TIMEOUT = 10.0
 
     def __init__(self, worker_dir: AsyncPath, server_config: ServerConfig):
-        self.__models_root: AsyncPath = AsyncPath(server_config.models_root)
-        self.__venv_folder: AsyncPath = AsyncPath(server_config.models_venv_dir_name)
         self.__model_command_timeout: int = server_config.model_command_timeout
         self.__worker_dir: AsyncPath = worker_dir
         self.__model_name: str = worker_dir.name
@@ -89,6 +87,7 @@ class ModelWorkerManager:
         self.__logger = logging.getLogger(
             self.__class__.__name__ + f"#{self.__model_name}"
         )
+        self.__path_resolver = PathResolver(server_config)
 
     @staticmethod
     def _get_port():
@@ -101,7 +100,7 @@ class ModelWorkerManager:
 
         return port
 
-    async def _connect_and_wait(self, host, port, timeout=120):
+    async def _connect_and_wait(self, host, port, timeout=360):
         timeout_time = time.time() + timeout
 
         while time.time() < timeout_time:
@@ -125,30 +124,33 @@ class ModelWorkerManager:
         raise TimeoutError("Worker was not loaded properly!")
 
     async def start_process(self):
+        """
+        Starts the model subprocess and reading threads
+        """
+
         if self._status != WorkerStatus.INACTIVE:
             raise WorkerStatusException("Worker cannot be started when running!")
+        
+        try:
+            await self._start_process()
+        except Exception as e:
+            self._shutdown_process()
+            raise ModelError(f"Failed to start model {self.__model_name}!") from e
 
+    async def _start_process(self):
         self._status = WorkerStatus.LOADING
         port = self._get_port()
-
         host = "localhost"
-        venv_path = self.__models_root / self.__venv_folder
-        python_bin = venv_path / "bin" / "python3"
-        python_bin = await python_bin.absolute()
-
-        socket_worker_path = await AsyncPath(
-            "src/inference_server/module_worker/socket_worker.py"
-        ).absolute()
-
-        if not await venv_path.exists():
-            self.__logger.warning(f"Starting '{self.__model_name}' without .venv!")
-            python_bin = Path("python3")
+        
+        _, python_bin, _ = self.__path_resolver.get_python_paths()
+        cwd = await AsyncPath.cwd()
+        socket_worker_path = cwd / self.__path_resolver.get_socket_worker_path()
 
         self.__logger.info(f"Starting model process at path {self.__worker_dir}")
         self.__process = subprocess.Popen(
             [
-                str(python_bin),
-                str(socket_worker_path),
+                str(await python_bin.absolute()),
+                str(await socket_worker_path.absolute()),
                 str(self.WORKER_FILE),
                 host,
                 str(port),
@@ -172,11 +174,7 @@ class ModelWorkerManager:
 
             self.__logger.info(f"Model process at {self.__worker_dir} started!")
         except TimeoutError as e:
-            self.__logger.error(
-                f"Model process at {self.__worker_dir} failed to start: {e}"
-            )
-            self._status = WorkerStatus.INACTIVE
-            raise WrongModelConfiguration("Failed to load the model worker!") from e
+            raise ModelTimeoutError("Model worker timed out!") from e
 
     async def _create_out_thread(self, out: IO[AnyStr]):
         return threading.Thread(target=self._forward_stream, args=(out,), daemon=True)
@@ -233,6 +231,9 @@ class ModelWorkerManager:
         return await asyncio.wait_for(future, timeout=self.__model_command_timeout)
 
     async def shutdown(self):
+        """
+        Sends a shutdown signal, terminates the subprocess and reading threads
+        """
         self.__logger.info(f"Shutting down model process at {self.__worker_dir}")
 
         self._status = WorkerStatus.SHUTTING_DOWN
@@ -245,12 +246,16 @@ class ModelWorkerManager:
             timeout=ModelWorkerManager.TERMINATION_TIMEOUT,
         )
 
-        if response.success:
+        if not response.success:
+            self.__logger.error("Failed to gracefuly shutdown model! Shutting down by force.")
+
+        await self._shutdown_process()
+
+    async def _shutdown_process(self):
+        try:
             self.__writer.close()
             await self.__writer.wait_closed()
             self.__process.wait(timeout=ModelWorkerManager.TERMINATION_TIMEOUT)
-
-            self._status = WorkerStatus.INACTIVE
 
             self._stdout_thread.join(timeout=ModelWorkerManager.TERMINATION_TIMEOUT)
             self._stderr_thread.join(timeout=ModelWorkerManager.TERMINATION_TIMEOUT)
@@ -260,6 +265,10 @@ class ModelWorkerManager:
             )
             self.__reader_task.cancel()
             self.__logger.info(f"Model process at {self.__worker_dir} shutdown!")
+
+        finally:
+            self._status = WorkerStatus.INACTIVE
+
 
     def _forward_stream(self, stream: IO[AnyStr]):
         for line in iter(stream.readline, ""):
