@@ -1,3 +1,4 @@
+import os
 import asyncio
 import signal
 from typing import Any
@@ -64,9 +65,15 @@ async def _notify_shutdown_listeners() -> None:
 async def _wait_on_termination():
     stop_event = asyncio.Event()
     loop = asyncio.get_running_loop()
-    for sig in (signal.SIGTERM, signal.SIGINT):
-        loop.add_signal_handler(sig, stop_event.set)
-    await stop_event.wait()
+    if os.name != "nt":
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            loop.add_signal_handler(sig, stop_event.set)
+
+        await stop_event.wait()
+    else:
+        # Windows does not support loop.add_signal_handler()
+        await asyncio.Future()
+        return
 
 
 async def run_and_wait():
@@ -82,8 +89,11 @@ async def run_and_wait():
     grpc_server.add_insecure_port(address)
     await grpc_server.start()
 
-    await _wait_on_termination()
-
-    __LOGGER.info("Shutting down GRPC server...")
-    await grpc_server.stop(None)
-    await _notify_shutdown_listeners()
+    try:
+        await _wait_on_termination()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        __LOGGER.info("Shutting down GRPC server...")
+        await grpc_server.stop(None)
+        await _notify_shutdown_listeners()

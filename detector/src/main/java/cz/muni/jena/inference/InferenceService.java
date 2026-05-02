@@ -1,6 +1,5 @@
 package cz.muni.jena.inference;
 
-import cz.muni.jena.exception.InferenceFailedException;
 import cz.muni.jena.grpc.*;
 import cz.muni.jena.inference.model.EvaluationModel;
 import cz.muni.jena.inference.model.InferenceItem;
@@ -18,6 +17,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,24 +53,27 @@ public class InferenceService {
                 )
                 .collect(Collectors.toSet());
 
-        LOGGER.info("Sending request with len {} to model {}", inferenceItemCollection.size(), modelName);
+        LOGGER.info("Sending request with '{}' items to model '{}'", inferenceItemCollection.size(), modelName);
         InferenceRequest inferenceRequest = inferenceMapper.mapContentsToRequest(contents, modelName);
 
-        InferenceResponse response = runRequest(inferenceRequest, requestTimeout);
-        Map<UUID, InferenceItem<T>> inferenceItemMap = inferenceItemCollection.stream().collect(Collectors.toMap(InferenceItem::id, e -> e));
-        Stream<InferenceItem<T>> nodes = response.getContentsList().stream().map(contentList -> this.inferenceMapper.mapResponseToItem(inferenceItemMap, contentList));
+        Optional<InferenceResponse> responseOptional = runRequest(inferenceRequest, requestTimeout, modelName);
 
-        var debug = nodes.toList();
-
-        return debug.stream();
+        return responseOptional.map(response -> handleResponse(response, inferenceItemCollection)).orElse(Stream.of());
     }
 
-    private InferenceResponse runRequest(InferenceRequest inferenceRequest, int requestTimeout) {
+    private Optional<InferenceResponse> runRequest(InferenceRequest inferenceRequest, int requestTimeout, String modelName) {
         try {
-            return inferenceServiceStub.withDeadlineAfter(Duration.ofMillis(requestTimeout)).modelInference(inferenceRequest);
+            return Optional.of(inferenceServiceStub.withDeadlineAfter(Duration.ofMillis(requestTimeout)).modelInference(inferenceRequest));
         } catch (StatusException e) {
-            throw new InferenceFailedException("Evaluation of inference request failed with status %s".formatted(e.getStatus()), e);
+            LOGGER.error("Evaluation of inference request failed with status '{}' for model '{}'", e.getStatus(), modelName, e);
         }
+
+        return Optional.empty();
+    }
+
+    private <T extends EvaluationModel> Stream<InferenceItem<T>> handleResponse(InferenceResponse response,  Collection<InferenceItem<T>> inferenceItemCollection) {
+        Map<UUID, InferenceItem<T>> inferenceItemMap = inferenceItemCollection.stream().collect(Collectors.toMap(InferenceItem::id, e -> e));
+        return response.getContentsList().stream().map(contentList -> this.inferenceMapper.mapResponseToItem(inferenceItemMap, contentList));
     }
 
     @PostConstruct

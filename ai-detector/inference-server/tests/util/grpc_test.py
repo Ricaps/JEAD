@@ -18,6 +18,7 @@ from inference_server.model.inference_model import (
 from inference_server.proto import inference_pb2_grpc
 from inference_server.server.grpc_server import create_server
 from inference_server.proto.inference_pb2_grpc import InferenceServiceStub
+from util.test_config import create_test_server_config
 
 
 class DummyModel(InferenceModel):
@@ -50,9 +51,7 @@ class AsyncGrpcTestCase(IsolatedAsyncioTestCase):
     EXISTING_MODEL_NAME = "existing-model"
 
     async def asyncSetUp(self):
-        test_config = ServerConfig(
-            address="0.0.0.0", port="0", models_root="tests/resources/model_root"
-        )
+        test_config = create_test_server_config(port="0")
         self.server = await create_server()
         await self._add_services(self.server, test_config)
         self.server.add_insecure_port(self.ADDRESS)

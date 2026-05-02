@@ -10,7 +10,9 @@ services:
       PIP_CACHE_DIR: /root/.cache/pip
       USE_GPU: ${USE_GPU}
     volumes:
-      - "${MODELS_ROOT_HOST}:/usr/models"
+      - type: bind
+        source: ${MODELS_ROOT_HOST}
+        target: ${MODELS_ROOT}
       - pip-cache:/root/.cache/pip
 
   database:

@@ -10,7 +10,9 @@ services:
       MODELS_ROOT: /usr/models
       PIP_CACHE_DIR: /root/.cache/pip
     volumes:
-      - "${MODELS_ROOT_HOST}:/usr/models"
+      - type: bind
+        source: ${MODELS_ROOT_HOST}
+        target: ${MODELS_ROOT}
       - pip-cache:/root/.cache/pip
 
 volumes:

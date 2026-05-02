@@ -21,7 +21,7 @@ import org.springframework.validation.annotation.Validated;
  *                    batched. Must be a positive integer. Default: 1000.
  * @param timeout     Maximum time (in milliseconds) to wait for an inference
  *                    response before treating it as timed out. Must be a positive
- *                    integer. Default: 120000 ms (120 seconds).
+ *                    integer. Default: 360000 ms (360 seconds).
  * @param modelName   Name or identifier of the model to use for inference. Must be
  *                    between 3 and 20 characters.
  */
@@ -30,7 +30,7 @@ public record ModelConfiguration(
         @Positive @DefaultValue("5") int batchSize,
         @Positive @DefaultValue("200") int batchPeriod,
         @Positive @DefaultValue("1000") int queueSize,
-        @Positive @DefaultValue("120000") int timeout,
+        @Positive @DefaultValue("360000") int timeout,
         @Size(min = 3, max = 20) String modelName
 ) {
 }

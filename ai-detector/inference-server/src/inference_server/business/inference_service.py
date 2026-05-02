@@ -1,4 +1,5 @@
 from typing import Final
+import logging
 
 from inference_server.business.model_storage import ModelStorage, ModelDefinition
 from inference_server.exception.model import ModelNotExistsException
@@ -10,6 +11,7 @@ from inference_server.model.inference_model import (
 class InferenceService:
     def __init__(self, model_storage: ModelStorage):
         self.__model_storage: Final[ModelStorage] = model_storage
+        self._logger = logging.getLogger(self.__class__.__name__)
 
     async def execute_request(self, request: ModelInferenceRequestBatch):
         model = self.__get_model_or_throw(request.model_name)
@@ -41,7 +43,9 @@ class InferenceService:
         model = self.__get_model_or_throw(model_name)
 
         if not model.is_loaded():
-            return False
+            self._logger.warning(
+                "Attempting to unload already unloaded model '%s'!", model_name
+            )
 
         await model.unload_model()
 

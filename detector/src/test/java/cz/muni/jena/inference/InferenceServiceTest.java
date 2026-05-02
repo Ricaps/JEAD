@@ -25,6 +25,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -133,9 +134,9 @@ class InferenceServiceTest {
         when(modelSerializer.getSerializedDto(COMMENT_1)).thenReturn(serialize(COMMENT_1));
         when(modelSerializer.getSerializedDto(COMMENT_2)).thenReturn(serialize(COMMENT_2));
 
-        assertThatThrownBy(() -> inferenceService.doInference(INPUTS, "model-name", 60000))
-                .isInstanceOf(InferenceFailedException.class)
-                .hasMessage("Evaluation of inference request failed with status %s".formatted(Status.CANCELLED));
+        Stream<InferenceItem<Comment>> inferenceItemStream = inferenceService.doInference(INPUTS, "model-name", 60000);
+        assertThat(inferenceItemStream).isNotNull();
+        assertThat(inferenceItemStream).isEmpty();
     }
 
     @Test

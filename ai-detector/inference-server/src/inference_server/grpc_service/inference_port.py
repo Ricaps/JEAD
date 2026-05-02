@@ -2,6 +2,7 @@ import logging
 from typing import Final
 
 from pydantic import BaseModel
+import asyncio
 import time
 
 
@@ -43,19 +44,25 @@ class InferenceServicerPort(InferenceServiceServicer):
         )
 
     async def LoadModel(self, request: ModelNameRequest, context) -> SuccessResponse:
-        loaded = await self._inference_service.load_model(request.model_name)
+        loaded = await asyncio.shield(
+            self._inference_service.load_model(request.model_name)
+        )
 
         return SuccessResponse(success=loaded)
 
     async def UnloadModel(self, request: ModelNameRequest, context) -> SuccessResponse:
-        unloaded = await self._inference_service.unload_model(request.model_name)
+        unloaded = await asyncio.shield(
+            self._inference_service.unload_model(request.model_name)
+        )
 
         return SuccessResponse(success=unloaded)
 
     async def ModelInference(self, request: InferenceRequest, context):
         start_time = time.time()
-        result = await self._inference_service.execute_request(
-            grpc_to_model(request, ModelInferenceRequestBatch)
+        result = await asyncio.shield(
+            self._inference_service.execute_request(
+                grpc_to_model(request, ModelInferenceRequestBatch)
+            )
         )
         end_time = time.time()
         self._logger.info(
