@@ -44,7 +44,7 @@ class InferenceService:
 
         if not model.is_loaded():
             self._logger.warning(
-                "Attempting to unload already loaded model '%s'!", model_name
+                "Attempting to unload already unloaded model '%s'!", model_name
             )
 
         await model.unload_model()
