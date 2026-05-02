@@ -143,8 +143,7 @@ class ModelWorkerManager:
         host = "localhost"
         
         _, python_bin, _ = self.__path_resolver.get_python_paths()
-        cwd = await AsyncPath.cwd()
-        socket_worker_path = cwd / self.__path_resolver.get_socket_worker_path()
+        socket_worker_path = self.__path_resolver.get_socket_worker_path()
 
         self.__logger.info(f"Starting model process at path {self.__worker_dir}")
         self.__process = subprocess.Popen(

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from inference_server.configuration.config import ServerConfig
 from aiopath import AsyncPath
 
@@ -17,7 +18,10 @@ class PathResolver:
         self._python_path = self.__get_os_specific_venv_folder(self._venv_path, "python")
         self._pip_path = self.__get_os_specific_venv_folder(self._venv_path, "pip")
         self._requirements_path = self.models_root / self.__get_requirements_file_name()
-        self._socket_worker_path: AsyncPath = AsyncPath("src") / "inference_server" / "module_worker" / "socket_worker.py"
+        src_root = Path(__file__).resolve().parents[2]
+        self._socket_worker_path: AsyncPath = AsyncPath(
+            src_root / "inference_server" / "module_worker" / "socket_worker.py"
+        )
      
     def get_python_paths(self) -> tuple[AsyncPath, AsyncPath, AsyncPath]:
         """
