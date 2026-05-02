@@ -85,7 +85,7 @@ class TestInferenceService(IsolatedAsyncioTestCase):
 
     async def test_unloadUnloadedModel(self):
         storage = self._createDummyStorage()
-        model_mock = MagicMock()
+        model_mock = AsyncMock()
         model_mock.is_loaded.return_value = False
         storage.get_model = MagicMock(return_value=model_mock)
 
@@ -96,8 +96,8 @@ class TestInferenceService(IsolatedAsyncioTestCase):
 
         storage.get_model.assert_called_once_with(model_name)
         model_mock.is_loaded.assert_called_once()
-        model_mock.unload_model.assert_not_called()
-        self.assertFalse(return_value)
+        model_mock.unload_model.assert_called_once()
+        self.assertTrue(return_value)
 
     async def test_loadUnloadedModel(self):
         storage = self._createDummyStorage()
