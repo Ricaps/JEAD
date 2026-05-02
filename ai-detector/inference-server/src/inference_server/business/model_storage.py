@@ -337,20 +337,18 @@ class ModelStorage(ShutdownAware):
             if line_str:
                 self._logger.info(f"[pip] {line_str}")
 
-
         return_code = await process.wait()
 
         if process.returncode != 0:
             self._logger.error(
                 "Failed to install requirements for model at '%s'. Exit code: %s",
                 model_root,
-                return_code
+                return_code,
             )
             return False
 
         self._logger.info(
-            "Successfully installed requirements for model root at '%s'",
-            model_root
+            "Successfully installed requirements for model root at '%s'", model_root
         )
 
         return True
