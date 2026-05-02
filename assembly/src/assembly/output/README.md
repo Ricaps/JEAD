@@ -32,6 +32,11 @@ Before running JEAD, ensure you have the following installed:
      ```
    - Usually included with Docker Desktop, or install separately: [Docker Compose](https://docs.docker.com/compose/install/)
 
+4. **Download Models Root** (if not already provided)
+    - Download models root from [Google Drive](https://drive.google.com/file/d/1WdbWYgl9AGuR9D05vGyUwJABdJHeCPNU/view?usp=sharing) !NOT RELEVANT FOR THESIS SUBMISSION! (models root is included in the thesis attachment)
+    - Unzip the downloaded file
+    - Copy path to the models root folder in the unzipped archive
+
 ## Package Contents
 
 This distribution contains:
@@ -78,7 +83,7 @@ This token will be inserted to the analyzed projects' build files when you run t
 The detector requires the inference server to be running. Start it with Docker Compose:
 
 ```bash
-docker compose up -d
+docker compose up
 ```
 
 This will:
