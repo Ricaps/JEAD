@@ -332,21 +332,25 @@ class ModelStorage(ShutdownAware):
             )
             return False
 
-        stdout, _ = await process.communicate()
+        async for line in process.stdout:
+            line_str = line.decode().rstrip()
+            if line_str:
+                self._logger.info(f"[pip] {line_str}")
 
-        output = stdout.decode(errors="replace")
-        for line in output.splitlines():
-            if line.strip():
-                self._logger.info(f"[pip] {line.rstrip()}")
+
+        return_code = await process.wait()
 
         if process.returncode != 0:
             self._logger.error(
-                f"Failed to install requirements for model at '{model_root}'. Exit code: {process.returncode}"
+                "Failed to install requirements for model at '%s'. Exit code: %s",
+                model_root,
+                return_code
             )
             return False
 
         self._logger.info(
-            f"Successfully installed requirements for model root at '{model_root}'"
+            "Successfully installed requirements for model root at '%s'",
+            model_root
         )
 
         return True
