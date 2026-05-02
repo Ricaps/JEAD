@@ -8,6 +8,7 @@ from inference_server.model.inference_model import (
     ModelInferenceRequestBatch,
     ModelInferenceResultBatch,
 )
+from util.test_config import create_test_server_config
 
 
 class TestInferenceService(IsolatedAsyncioTestCase):
@@ -137,4 +138,4 @@ class TestInferenceService(IsolatedAsyncioTestCase):
 
     @staticmethod
     def _createDummyStorage():
-        return ModelStorage(Mock())
+        return ModelStorage(create_test_server_config())
