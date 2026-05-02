@@ -9,28 +9,28 @@ Before running JEAD, ensure you have the following installed:
 ### Required Dependencies
 
 1. **Java 25**
-   - JEAD requires Java Development Kit (JDK) 25 or higher
-   - Check your Java version:
-     ```bash
-     java -version
-     ```
-   - Download from: [Oracle JDK](https://www.oracle.com/java/technologies/downloads/) or [OpenJDK](https://openjdk.org/)
+    - JEAD requires Java Development Kit (JDK) 25 or higher
+    - Check your Java version:
+      ```bash
+      java -version
+      ```
+    - Download from: [Oracle JDK](https://www.oracle.com/java/technologies/downloads/) or [OpenJDK](https://openjdk.org/)
 
 2. **Docker**
-   - Required for running the AI inference server
-   - Check if Docker is installed:
-     ```bash
-     docker --version
-     ```
-   - Download from: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+    - Required for running the AI inference server
+    - Check if Docker is installed:
+      ```bash
+      docker --version
+      ```
+    - Download from: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 3. **Docker Compose**
-   - Required for orchestrating the inference server container
-   - Check if Docker Compose is installed:
-     ```bash
-     docker compose version
-     ```
-   - Usually included with Docker Desktop, or install separately: [Docker Compose](https://docs.docker.com/compose/install/)
+    - Required for orchestrating the inference server container
+    - Check if Docker Compose is installed:
+      ```bash
+      docker compose version
+      ```
+    - Usually included with Docker Desktop, or install separately: [Docker Compose](https://docs.docker.com/compose/install/)
 
 4. **Download Models Root** (if not already provided)
     - Download models root from [Google Drive](https://drive.google.com/file/d/1WdbWYgl9AGuR9D05vGyUwJABdJHeCPNU/view?usp=sharing) !NOT RELEVANT FOR THESIS SUBMISSION! (models root is included in the thesis attachment)
@@ -43,6 +43,7 @@ This distribution contains:
 
 - `detector.jar` - The main JEAD detector application (Spring Boot executable JAR)
 - `compose.yaml` - Docker Compose configuration for the AI inference server
+- `config/configuration.json` - Rule-based detectors configuration
 - `config/application.yml` - Configuration file for the detector
 - `.env` - Environment configuration file (edit to set your models path)
 - `README.md` - This file
@@ -59,8 +60,8 @@ USE_GPU=false
 ```
 
 - **`MODELS_ROOT_HOST`** — Replace `/path/to/your/models` with the absolute path to your models directory on your host machine.
-- **`USE_GPU`** — Set to `true` to enable GPU acceleration inside the inference server container, or leave as `false` to use CPU only. 
-When set to `true`, you must start the inference server using the GPU-enabled compose command (see [Using NVIDIA GPU](#using-nvidia-gpu-composegpuyaml) below) instead of the plain `docker compose up -d`.
+- **`USE_GPU`** — Set to `true` to enable GPU acceleration inside the inference server container, or leave as `false` to use CPU only.
+  When set to `true`, you must start the inference server using the GPU-enabled compose command (see [Using NVIDIA GPU](#using-nvidia-gpu-composegpuyaml) below) instead of the plain `docker compose up -d`.
 
 ### 2. Configure GitHub Packages Access Token
 
@@ -88,9 +89,9 @@ docker compose up
 
 This will:
 - Pull the JEAD inference server image
-- Start the server on port 8090
+- Start the server on port 8081
 - Mount your models directory
-- Run in detached mode (background)
+- Install all Python dependencies related to models (it might take several minutes, check logs!)
 
 Check if the server is running:
 ```bash
@@ -104,7 +105,7 @@ docker compose logs -f inference-server
 
 #### Using NVIDIA GPU (compose.gpu.yaml)
 
-If you want the inference server container to access an NVIDIA GPU, the distribution includes `compose.gpu.yaml` which adds the required device mapping (it sets `devices: - "nvidia.com/gpu=all"`). 
+If you want the inference server container to access an NVIDIA GPU, the distribution includes `compose.gpu.yaml` which adds the required device mapping (it sets `devices: - "nvidia.com/gpu=all"`).
 The `compose.gpu.yaml` has to be used as an extension to the base `compose.yaml` when starting the services, it cannot be used on its own.
 
 Prerequisites:
@@ -122,7 +123,7 @@ docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
 Start the GPU-enabled compose in the following way:
 
 ```bash
-docker compose -f compose.yaml -f compose.gpu.yaml up -d
+docker compose -f compose.yaml -f compose.gpu.yaml up
 ```
 
 Verify GPU usage:
@@ -145,6 +146,25 @@ Edit `config/application.yml` if you need to customize:
 - Analysis parameters
 - Logging levels
 
+
+### 4. Run the detector
+
+#### Basic Usage
+
+Run the detector with:
+
+```bash
+java -jar detector.jar [options]
+```
+
+#### With Custom Configuration
+
+To use the other configuration file (provided file in ./config/application.yml is used automatically):
+
+```bash
+java -jar detector.jar --spring.config.location=./<some-path>/application.yml
+```
+
 ### 5. Prepare Target Projects for Analysis
 
 Before running `detectIssues`, the analyzed project must have dependencies available in `target/dependency`.
@@ -163,7 +183,7 @@ prepareProjects -d /absolute/path/to/workspace
 
 What `prepareProjects` does:
 - For Maven projects, it inserts JEAD plugin configuration so you can run package and copy dependencies.
-- For Gradle projects, it appends a JEAD build script that adds repository/plugin setup and required JEAD tasks.
+- For Gradle projects, it appends a JEAD build script that adds repository/plugin setup and required JEAD tasks (Gradle script might need manual adjustments after preparation!).
 
 After preparation, build each target project (Maven package or Gradle JEAD tasks), then verify jars exist in `target/dependency`.
 
@@ -173,30 +193,6 @@ Then analyze the project in the detector shell:
 detectIssues -p /absolute/path/to/Sample01
 ```
 
-## Running the Detector
-
-### Basic Usage
-
-Run the detector with:
-
-```bash
-java -jar detector.jar [options]
-```
-
-### With Custom Configuration
-
-To use the provided configuration file:
-
-```bash
-java -jar detector.jar --spring.config.location=./config/application.yml
-```
-
-### Common Options
-
-```bash
-# Specify a different server port
-java -jar detector.jar --server.port=8080
-```
 
 ## Stopping the Services
 
@@ -251,4 +247,4 @@ docker compose down -v
 
 ## Version
 
-This distribution was built from version: **@project.version@**
+This distribution was built from version: **0.7.0**
