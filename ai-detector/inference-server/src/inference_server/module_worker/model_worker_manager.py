@@ -342,7 +342,9 @@ class ModelWorkerManager:
             self.__logger.error("Model shutdown command timed out, forcing shutdown.")
 
         if response is not None and not response.success:
-            self.__logger.error("Failed to gracefuly shutdown model! Shutting down by force.")
+            self.__logger.error(
+                "Failed to gracefuly shutdown model! Shutting down by force."
+            )
 
         await self._shutdown_process()
 
@@ -395,7 +397,8 @@ class ModelWorkerManager:
                     self.__reader_task.cancel()
                 with suppress(asyncio.CancelledError, asyncio.TimeoutError):
                     await asyncio.wait_for(
-                        self.__reader_task, timeout=ModelWorkerManager.TERMINATION_TIMEOUT
+                        self.__reader_task,
+                        timeout=ModelWorkerManager.TERMINATION_TIMEOUT,
                     )
             self.__logger.info(f"Model process at {self.__worker_dir} shutdown!")
 
@@ -420,7 +423,6 @@ class ModelWorkerManager:
             if not future.done():
                 future.set_exception(error)
         self.__pending_requests.clear()
-
 
     def _forward_stream(self, stream: IO[AnyStr]):
         for line in iter(stream.readline, ""):

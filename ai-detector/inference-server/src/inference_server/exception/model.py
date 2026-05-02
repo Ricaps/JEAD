@@ -12,6 +12,7 @@ class ModelTimeoutError(BaseServerException):
     def __init__(self, message: str):
         super().__init__(StatusCode.FAILED_PRECONDITION, message)
 
+
 class ModelNotExistsException(BaseServerException):
     def __init__(self, message: str):
         super().__init__(StatusCode.FAILED_PRECONDITION, message)
