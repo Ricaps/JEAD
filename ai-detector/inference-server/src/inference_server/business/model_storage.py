@@ -42,9 +42,7 @@ class ModelDefinition(InferenceModelExecutable):
                 return
 
             await self.__model_manager.start_process()
-            await self.__model_manager.send(
-                Message(command=WorkerCommand.LOAD, data={})
-            )
+            await self.__model_manager.send_load_command()
             self.__logger.info("Model %s loaded", self.name)
 
     async def unload_model(self):
