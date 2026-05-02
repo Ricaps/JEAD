@@ -317,7 +317,7 @@ class ModelWorkerManager:
 
         If graceful shutdown fails or times out, process termination is forced.
         """
-        self.__logger.info(f"Shutting down model process at {self.__worker_dir}")
+        self.__logger.info("Shutting down model process at %s", self.__worker_dir)
 
         if self._status == WorkerStatus.INACTIVE:
             return
