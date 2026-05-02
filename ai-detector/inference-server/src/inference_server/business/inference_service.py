@@ -40,9 +40,6 @@ class InferenceService:
     async def unload_model(self, model_name: str) -> bool:
         model = self.__get_model_or_throw(model_name)
 
-        if not model.is_loaded():
-            return False
-
         await model.unload_model()
 
         return True
